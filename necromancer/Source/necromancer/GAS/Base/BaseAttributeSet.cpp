@@ -23,8 +23,21 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
+	if (Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
 	{
-		SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
+		const float Damage = GetIncomingDamage();
+		SetIncomingDamage(0.0f);
+
+		if (Damage > 0.0f)
+		{
+			// 데미지 = 원본데미지 * (100 / (100 + 방어력))
+			const float DefenseValue = GetDefense();
+			const float FinalDamage = Damage * (100.0f / (100.0f + DefenseValue));
+
+			const float NewHealth = GetHealth() - FinalDamage;
+			SetHealth(FMath::Clamp(NewHealth, 0.0f, GetMaxHealth()));
+
+			// TODO: 사망 처리
+		}
 	}
 }

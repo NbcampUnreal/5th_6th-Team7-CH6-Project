@@ -23,3 +23,6 @@ Saved/
 # Visual Studio cache
 .vs/
 *.ipch
+
+# MD 파일 폴더 (개인 문서)
+MD 파일/

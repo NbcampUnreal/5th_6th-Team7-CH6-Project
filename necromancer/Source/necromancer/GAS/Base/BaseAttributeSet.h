@@ -40,4 +40,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	FGameplayAttributeData MoveSpeed;
 	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MoveSpeed)
+
+	// Meta Attribute (데미지 계산용, 실제 저장 안 됨)
+	UPROPERTY(BlueprintReadOnly, Category = "Damage")
+	FGameplayAttributeData IncomingDamage;
+	ATTRIBUTE_ACCESSORS(UBaseAttributeSet, IncomingDamage)
 };
