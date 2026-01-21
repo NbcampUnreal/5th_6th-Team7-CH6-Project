@@ -2,7 +2,19 @@
 
 #include "necromancer.h"
 #include "Modules/ModuleManager.h"
+#include "GAS/Base/BaseGameplayTags.h"
+#include "GAS/Monster/MonsterGameplayTags.h"
 
-IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, necromancer, "necromancer" );
+class FNecromancerGameModule : public FDefaultGameModuleImpl
+{
+public:
+	virtual void StartupModule() override
+	{
+		FBaseGameplayTags::InitializeNativeTags();
+		FMonsterGameplayTags::InitializeNativeTags();
+	}
+};
+
+IMPLEMENT_PRIMARY_GAME_MODULE(FNecromancerGameModule, necromancer, "necromancer");
 
 DEFINE_LOG_CATEGORY(Lognecromancer)

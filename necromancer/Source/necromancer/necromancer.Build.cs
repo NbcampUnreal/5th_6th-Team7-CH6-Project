@@ -18,7 +18,11 @@ public class necromancer : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"Slate"
+			"Slate",
+			// GAS (Gameplay Ability System) 모듈
+			"GameplayAbilities",    // GAS 핵심 - Ability, Effect 사용
+			"GameplayTags",         // GameplayTag 사용
+			"GameplayTasks"         // GameplayTask 사용 (비동기 작업)
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
@@ -37,7 +41,11 @@ public class necromancer : ModuleRules
 			"necromancer/Variant_SideScrolling/AI",
 			"necromancer/Variant_SideScrolling/Gameplay",
 			"necromancer/Variant_SideScrolling/Interfaces",
-			"necromancer/Variant_SideScrolling/UI"
+			"necromancer/Variant_SideScrolling/UI",
+			// GAS 관련 폴더
+			"necromancer/GAS",
+			"necromancer/GAS/Base",
+			"necromancer/GAS/Monster"
 		});
 
 		// Uncomment if you are using Slate UI
