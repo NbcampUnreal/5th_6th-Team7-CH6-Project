@@ -100,6 +100,7 @@ void ANecPlayerCharacter::InitAbilityActorInfo()
 	{
 		AbilitySystemComponent = PS->GetAbilitySystemComponent();
 		AbilitySystemComponent->InitAbilityActorInfo(PS, this);
+		AttributeSet = Cast<UCharacterAttributeSet>(PS->GetAttributeSet());
 	}
 }
 
