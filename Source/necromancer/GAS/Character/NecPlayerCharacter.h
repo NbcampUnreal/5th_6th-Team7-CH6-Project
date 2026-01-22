@@ -17,27 +17,14 @@ class NECROMANCER_API ANecPlayerCharacter : public ABaseCharacter
 public:
 	ANecPlayerCharacter();
 		
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* CameraBoom;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FollowCamera;
-
-protected:	
-	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* JumpAction;
-		
-	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* MoveAction;
-
-	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* LookAction;
-		
-	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* MouseLookAction;
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
 
 protected:	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+	void InitAbilityActorInfo();
 
 protected:	
 	void Move(const FInputActionValue& Value);		
@@ -56,7 +43,25 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoJumpEnd();
 
-public:	
-	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }	
-	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }	
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	USpringArmComponent* CameraBoom;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UCameraComponent* FollowCamera;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* JumpAction;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* MoveAction;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* LookAction;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* MouseLookAction;
 };

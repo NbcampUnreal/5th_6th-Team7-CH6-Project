@@ -17,7 +17,7 @@ void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (AbilitySystemComponent)
+	if (!IsPlayerControlled() && AbilitySystemComponent)
 	{
 		AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	}

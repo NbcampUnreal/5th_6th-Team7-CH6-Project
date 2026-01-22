@@ -9,6 +9,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "necromancer.h"
+#include "Game/NecPlayerState.h"
+#include "AbilitySystemComponent.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
@@ -38,6 +40,20 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	FollowCamera->bUsePawnControlRotation = false;
 }
 
+void ANecPlayerCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	InitAbilityActorInfo();
+}
+
+void ANecPlayerCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	InitAbilityActorInfo();
+}
+
 void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
@@ -53,6 +69,16 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	else
 	{
 		UE_LOG(Lognecromancer, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+	}
+}
+
+void ANecPlayerCharacter::InitAbilityActorInfo()
+{
+	ANecPlayerState* PS = GetPlayerState<ANecPlayerState>();
+	if (PS)
+	{
+		AbilitySystemComponent = PS->GetAbilitySystemComponent();
+		AbilitySystemComponent->InitAbilityActorInfo(PS, this);
 	}
 }
 
