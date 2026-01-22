@@ -37,7 +37,7 @@ void UBaseAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 			const float NewHealth = GetHealth() - FinalDamage;
 			SetHealth(FMath::Clamp(NewHealth, 0.0f, GetMaxHealth()));
 
-			// TODO: 사망 처리
+			// 사망 처리는 몬스터와 플레이어 각각 오버라이드 해서 처리
 		}
 	}
 }
