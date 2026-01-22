@@ -1,5 +1,5 @@
 #include "Game/NecPlayerState.h"
-#include "GAS/Base/BaseAttributeSet.h"
+#include "GAS/Character/CharacterAttributeSet.h"
 #include "AbilitySystemComponent.h"
 
 ANecPlayerState::ANecPlayerState()
@@ -8,7 +8,7 @@ ANecPlayerState::ANecPlayerState()
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed); // Temp
 
-	AttributeSet = CreateDefaultSubobject<UBaseAttributeSet>(TEXT("AttributeSet"));
+	AttributeSet = CreateDefaultSubobject<UCharacterAttributeSet>(TEXT("AttributeSet"));
 }
 
 UAbilitySystemComponent* ANecPlayerState::GetAbilitySystemComponent() const

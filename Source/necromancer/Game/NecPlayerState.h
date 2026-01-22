@@ -6,7 +6,7 @@
 #include "GameplayEffectTypes.h"
 #include "NecPlayerState.generated.h"
 
-class UBaseAttributeSet;
+class UCharacterAttributeSet;
 
 UCLASS()
 class NECROMANCER_API ANecPlayerState : public APlayerState, public IAbilitySystemInterface
@@ -17,12 +17,12 @@ public:
 	ANecPlayerState();
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-	UBaseAttributeSet* GetAttributeSet() const { return AttributeSet; }
+	UCharacterAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
 	UPROPERTY()
-	TObjectPtr<UBaseAttributeSet> AttributeSet;
+	TObjectPtr<UCharacterAttributeSet> AttributeSet;
 };
