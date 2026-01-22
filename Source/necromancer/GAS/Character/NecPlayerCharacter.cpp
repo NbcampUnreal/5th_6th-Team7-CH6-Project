@@ -11,6 +11,7 @@
 #include "necromancer.h"
 #include "Game/NecPlayerState.h"
 #include "AbilitySystemComponent.h"
+#include "GAS/Character/CharacterAttributeSet.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
@@ -45,6 +46,26 @@ void ANecPlayerCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	InitAbilityActorInfo();
+
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+		if (HasAuthority())
+		{
+			for (const TSubclassOf<UGameplayAbility>& AbilityClass : DefaultAbilities)
+			{
+				if (AbilityClass)
+				{
+					FGameplayAbilitySpec Spec(AbilityClass, 1, -1, this);
+					AbilitySystemComponent->GiveAbility(Spec);
+				}
+			}
+		}
+
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddUObject(this, &ANecPlayerCharacter::OnHealthChangedCallback);
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetStaminaAttribute()).AddUObject(this, &ANecPlayerCharacter::OnStaminaChangedCallback);
+	}
 }
 
 void ANecPlayerCharacter::OnRep_PlayerState()
@@ -96,6 +117,11 @@ void ANecPlayerCharacter::Look(const FInputActionValue& Value)
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
 }
 
+void ANecPlayerCharacter::Attack(const FInputActionValue& Value)
+{
+
+}
+
 void ANecPlayerCharacter::DoMove(float Right, float Forward)
 {
 	if (GetController() != nullptr)
@@ -128,4 +154,20 @@ void ANecPlayerCharacter::DoJumpStart()
 void ANecPlayerCharacter::DoJumpEnd()
 {
 	StopJumping();
+}
+
+void ANecPlayerCharacter::OnHealthChangedCallback(const FOnAttributeChangeData& Data) const
+{
+	OnHealthChanged.Broadcast(Data.NewValue, AttributeSet->GetMaxHealth());
+}
+
+void ANecPlayerCharacter::OnStaminaChangedCallback(const FOnAttributeChangeData& Data) const
+{
+	OnHealthChanged.Broadcast(Data.NewValue, AttributeSet->GetMaxStamina());
+}
+
+void ANecPlayerCharacter::NotifyControllerChanged()
+{
+	Super::NotifyControllerChanged();
+	
 }
