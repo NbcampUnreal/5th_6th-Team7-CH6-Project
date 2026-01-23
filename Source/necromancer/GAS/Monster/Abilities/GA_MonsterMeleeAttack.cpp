@@ -7,7 +7,6 @@
 #include "GameFramework/Character.h"
 #include "Interface/MonsterCombatInterface.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "GAS/Monster/MonsterGameplayTags.h"
 
 
 UGA_MonsterMeleeAttack::UGA_MonsterMeleeAttack()
@@ -17,44 +16,55 @@ UGA_MonsterMeleeAttack::UGA_MonsterMeleeAttack()
 	//클라이언트에서 먼저 시작하고 서버검증
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
 
-	// StateTree에서 태그로 어빌리티를 찾기 위해 태그 설정
-	const FMonsterGameplayTags& MonsterTags = FMonsterGameplayTags::Get();
-	AbilityTags.AddTag(MonsterTags.Monster_Ability_Attack_Melee);
+	// === GAS 태그 설정 (공식 권장 패턴) ===
+
+	// 1. Ability Tags - 이 능력의 식별자 (TryActivateAbilitiesByTag에서 사용)
+	AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Monster.Ability.Attack.Melee")));
+
+	// 2. Activation Owned Tags - 활성화 중 ASC에 자동으로 추가되는 태그
+	//    EndAbility 호출 시 자동으로 제거됨 → StateTree에서 이 태그로 상태 확인 가능!
+	ActivationOwnedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Monster.State.Attacking")));
+
+	// 3. Activation Blocked Tags - 이 태그가 있으면 활성화 차단
+	ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("State.Dead")));
+	ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Monster.State.Attacking"))); // 연속 공격 방지
+
+	// 4. Block Abilities With Tags - 활성화 중 다른 공격 능력 차단
+	BlockAbilitiesWithTag.AddTag(FGameplayTag::RequestGameplayTag(FName("Monster.Ability.Attack")));
 }
 
 void UGA_MonsterMeleeAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
-		EndAbility(Handle, ActorInfo, ActivationInfo,true,true);
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-	
+
 	ACharacter* Character = Cast<ACharacter>(ActorInfo->AvatarActor.Get());
-	if (!Character||!AtteckMontage)
+	if (!Character || !AttackMontage)
 	{
-		EndAbility(Handle, ActorInfo, ActivationInfo, true,true);
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-	
-	//공격 시작
+
+	// 공격 시작
 	if (Character->Implements<UMonsterCombatInterface>())
 	{
 		IMonsterCombatInterface::Execute_OnAttackStarted(Character);
 	}
-	
-	//몽타주 재생
+
+	// 몽타주 재생
 	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
-		AnimInstance->Montage_Play(AtteckMontage);
-		
-		//몽타주 종료 바인딩
+		AnimInstance->Montage_Play(AttackMontage);
+
+		// 몽타주 종료 바인딩
 		FOnMontageEnded EndDelegate;
-		EndDelegate.BindUObject(this,&UGA_MonsterMeleeAttack::OnMontageCompleted);
-		AnimInstance->Montage_SetEndDelegate(EndDelegate,AtteckMontage);
+		EndDelegate.BindUObject(this, &UGA_MonsterMeleeAttack::OnMontageCompleted);
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontage);
 	}
-	
 }
 void UGA_MonsterMeleeAttack::EndAbility(const FGameplayAbilitySpecHandle Handle,const FGameplayAbilityActorInfo* ActorInfo,const FGameplayAbilityActivationInfo ActivationInfo,bool bReplicateEndAbility,bool bWasCancelled)
   {

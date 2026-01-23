@@ -31,7 +31,7 @@ protected:
 	
 	//공격 애니메이션 몽타주
 	UPROPERTY(EditDefaultsOnly, Category="Animation")
-	TObjectPtr<UAnimMontage> AtteckMontage;
+	TObjectPtr<UAnimMontage> AttackMontage;
 	
 	//데미지 GE
 	UPROPERTY(EditDefaultsOnly, Category="Damage")

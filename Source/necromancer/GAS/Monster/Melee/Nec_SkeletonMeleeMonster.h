@@ -19,6 +19,8 @@ public:
 	
 	ANec_SkeletonMeleeMonster();
 	
+	
+	
 	//인터페이스 구현
 	virtual void ExecuteAttackTrace_Implementation(FName AttackBoneName) override;
 	virtual void OnAttackStarted_Implementation() override;

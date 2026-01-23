@@ -25,6 +25,9 @@ public:
 	FGameplayTag Monster_Ability_Attack_Melee;
 	FGameplayTag Monster_Ability_Attack_Ranged;
 
+	// 몬스터 동작 상태 태그 (Ability의 ActivationOwnedTags용)
+	FGameplayTag Monster_State_Attacking;
+
 protected:
 	void AddAllTags(class UGameplayTagsManager& Manager);
 	void AddTag(FGameplayTag& OutTag, const ANSICHAR* TagName, const ANSICHAR* TagComment);

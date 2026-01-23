@@ -24,13 +24,17 @@ void ANec_SkeletonMeleeMonster::BeginPlay()
 
 void ANec_SkeletonMeleeMonster::InitializeAbilities()
 {
+	
+
 	if (!AbilitySystemComponent || !MeleeAttackAbilityClass)
 	{
+		
 		return;
 	}
 
 	FGameplayAbilitySpec AbilitySpec(MeleeAttackAbilityClass, 1, INDEX_NONE, this);
-	AbilitySystemComponent->GiveAbility(AbilitySpec);
+	FGameplayAbilitySpecHandle Handle = AbilitySystemComponent->GiveAbility(AbilitySpec);
+	
 }
 
 bool ANec_SkeletonMeleeMonster::TryActivateMeleeAttack()

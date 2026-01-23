@@ -2,30 +2,79 @@
 
 #include "MonsterStateTreeTasks.h"
 #include "MonsterAIController.h"
-#include "MonsterBase.h"
-#include "MonsterAttributeSet.h"
+#include "GAS/Monster/MonsterBase.h"
+#include "GAS/Monster/MonsterAttributeSet.h"
+#include "GAS/Monster/MonsterGameplayTags.h"
+#include "GAS/Base/BaseGameplayTags.h"
 #include "StateTreeExecutionContext.h"
 #include "AbilitySystemComponent.h"
-#include "MonsterCombatInterface.h"
-#include "GameplayTagContainer.h"
-#include "MonsterGameplayTags.h"
 #include "Navigation/PathFollowingComponent.h"
-#include "BaseGameplayTags.h"
 
-bool FSTCondition_IsPlayerInRange::TestCondition(FStateTreeExecutionContext& Context) const
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+namespace MonsterStateTreeHelpers
 {
-	AMonsterAIController* AIController = Cast<AMonsterAIController>(Context.GetOwner());
+	AMonsterAIController* GetAIController(FStateTreeExecutionContext& Context)
+	{
+		return Cast<AMonsterAIController>(Context.GetOwner());
+	}
+
+	APawn* GetPawn(FStateTreeExecutionContext& Context)
+	{
+		if (AMonsterAIController* AIController = GetAIController(Context))
+		{
+			return AIController->GetPawn();
+		}
+		return nullptr;
+	}
+
+	UAbilitySystemComponent* GetASC(FStateTreeExecutionContext& Context)
+	{
+		if (APawn* Pawn = GetPawn(Context))
+		{
+			return Pawn->FindComponentByClass<UAbilitySystemComponent>();
+		}
+		return nullptr;
+	}
+}
+
+// ============================================================================
+// Conditions
+// ============================================================================
+
+bool FSTCondition_HasGameplayTag::TestCondition(FStateTreeExecutionContext& Context) const
+{
+	if (!TagToCheck.IsValid())
+	{
+		return bInvert;
+	}
+
+	UAbilitySystemComponent* ASC = MonsterStateTreeHelpers::GetASC(Context);
+	if (!ASC)
+	{
+		return bInvert;
+	}
+
+	bool bHasTag = ASC->HasMatchingGameplayTag(TagToCheck);
+	return bInvert ? !bHasTag : bHasTag;
+}
+
+bool FSTCondition_HasTarget::TestCondition(FStateTreeExecutionContext& Context) const
+{
+	AMonsterAIController* AIController = MonsterStateTreeHelpers::GetAIController(Context);
 	if (!AIController)
 	{
 		return false;
 	}
-	AActor* Target = AIController->GetCurrentTarget();
-	return Target != nullptr;
+
+	return AIController->GetCurrentTarget() != nullptr;
 }
 
-bool FSTCondition_IsPlayerInAttackRange::TestCondition(FStateTreeExecutionContext& Context) const
+bool FSTCondition_IsTargetInAttackRange::TestCondition(FStateTreeExecutionContext& Context) const
 {
-	AMonsterAIController* AIController = Cast<AMonsterAIController>(Context.GetOwner());
+	AMonsterAIController* AIController = MonsterStateTreeHelpers::GetAIController(Context);
 	if (!AIController)
 	{
 		return false;
@@ -37,208 +86,271 @@ bool FSTCondition_IsPlayerInAttackRange::TestCondition(FStateTreeExecutionContex
 		return false;
 	}
 
-	APawn* ControlledPawn = AIController->GetPawn();
-	if (!ControlledPawn)
+	APawn* Pawn = AIController->GetPawn();
+	if (!Pawn)
 	{
 		return false;
 	}
 
-	// MonsterBase에서 AttributeSet 가져오기
-	AMonsterBase* Monster = Cast<AMonsterBase>(ControlledPawn);
-	if (!Monster)
+	// MonsterBase에서 AttackRange 가져오기
+	float AttackRange = 150.0f; // 기본값
+	if (AMonsterBase* Monster = Cast<AMonsterBase>(Pawn))
 	{
-		return false;
+		if (UMonsterAttributeSet* AttributeSet = Monster->GetMonsterAttributeSet())
+		{
+			AttackRange = AttributeSet->GetAttackRange();
+		}
 	}
 
-	UMonsterAttributeSet* AttributeSet = Monster->GetMonsterAttributeSet();
-	if (!AttributeSet)
-	{
-		return false;
-	}
-
-	// 거리 계산
-	float Distance = FVector::Dist(ControlledPawn->GetActorLocation(), Target->GetActorLocation());
-	float AttackRange = AttributeSet->GetAttackRange();
-
+	float Distance = FVector::Dist(Pawn->GetActorLocation(), Target->GetActorLocation());
 	return Distance <= AttackRange;
 }
 
-EStateTreeRunStatus FSTTask_ExecuteMeleeAttack::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
-  {
-        AMonsterAIController* AIController = Cast<AMonsterAIController>(Context.GetOwner());
-        if (!AIController)
-        {
-                return EStateTreeRunStatus::Failed;
-        }
-
-        APawn* ControlledPawn = AIController->GetPawn();
-        if (!ControlledPawn)
-        {
-                return EStateTreeRunStatus::Failed;
-        }
-
-        // IMonsterCombatInterface를 통해 공격 가능 여부 확인 후 공격 실행
-        if (ControlledPawn->Implements<UMonsterCombatInterface>())
-        {
-                bool bCanAttack = IMonsterCombatInterface::Execute_CanAttack(ControlledPawn);
-                if (bCanAttack)
-                {
-                        // ASC에서 공격 어빌리티 활성화
-                        if (UAbilitySystemComponent* ASC = ControlledPawn->FindComponentByClass<UAbilitySystemComponent>())
-                        {
-                                // 태그로 공격 어빌리티 활성화
-                        	const FMonsterGameplayTags& Tags = FMonsterGameplayTags::Get();
-                        	FGameplayTagContainer AttackTags;
-                        	AttackTags.AddTag(Tags.Monster_Ability_Attack_Melee);
-                        	ASC->TryActivateAbilitiesByTag(AttackTags);
-                        }
-                }
-        }
-
-        return EStateTreeRunStatus::Running;
-  }
-
-  EStateTreeRunStatus FSTTask_ExecuteMeleeAttack::Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const
-  {
-        AMonsterAIController* AIController = Cast<AMonsterAIController>(Context.GetOwner());
-        if (!AIController)
-        {
-                return EStateTreeRunStatus::Failed;
-        }
-
-        APawn* ControlledPawn = AIController->GetPawn();
-        if (!ControlledPawn || !ControlledPawn->Implements<UMonsterCombatInterface>())
-        {
-                return EStateTreeRunStatus::Failed;
-        }
-
-        
-        bool bCanAttack = IMonsterCombatInterface::Execute_CanAttack(ControlledPawn);
-        if (bCanAttack)
-        {
-                return EStateTreeRunStatus::Succeeded;
-        }
-
-        return EStateTreeRunStatus::Running;
-  }
-
-  void FSTTask_ExecuteMeleeAttack::ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
-  {
-        
-  }
-
-  
-
-bool FSTCondition_IsMonsterDead::TestCondition(FStateTreeExecutionContext& Context) const
+bool FSTCondition_HasLastKnownLocation::TestCondition(FStateTreeExecutionContext& Context) const
 {
-	AMonsterAIController* AIController = Cast<AMonsterAIController>(Context.GetOwner());
+	AMonsterAIController* AIController = MonsterStateTreeHelpers::GetAIController(Context);
 	if (!AIController)
 	{
 		return false;
 	}
 
-	APawn* ControlledPawn = AIController->GetPawn();
-	if (!ControlledPawn)
-	{
-		return true; // Pawn이 없으면 죽은 것으로 간주
-	}
-
-	// 태그로 확인
-	if (UAbilitySystemComponent* ASC = ControlledPawn->FindComponentByClass<UAbilitySystemComponent>())
-	{
-		const FBaseGameplayTags& BaseTags = FBaseGameplayTags::Get();
-		return ASC->HasMatchingGameplayTag(BaseTags.State_Dead);
-	}
-
-	return false;
+	// 타겟이 없고 마지막 위치가 있으면 true
+	return AIController->GetCurrentTarget() == nullptr && AIController->HasLastKnownLocation();
 }
 
-EStateTreeRunStatus FSTTask_MoveToTarget::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
-  {
-        AMonsterAIController* AIController = Cast<AMonsterAIController>(Context.GetOwner());
-        if (!AIController)
-        {
-                return EStateTreeRunStatus::Failed;
-        }
+// ============================================================================
+// Tasks
+// ============================================================================
 
-        AActor* Target = AIController->GetCurrentTarget();
-        if (!Target)
-        {
-                return EStateTreeRunStatus::Failed;
-        }
+// ----- FSTTask_ActivateAbilityByTag -----
 
-        // MoveTo 시작
-        EPathFollowingRequestResult::Type Result = AIController->MoveToActor(Target, AcceptanceRadius);
-
-        if (Result == EPathFollowingRequestResult::Failed)
-        {
-                return EStateTreeRunStatus::Failed;
-        }
-
-        if (Result == EPathFollowingRequestResult::AlreadyAtGoal)
-        {
-                return EStateTreeRunStatus::Succeeded;
-        }
-
-        return EStateTreeRunStatus::Running;
-  }
-
-  EStateTreeRunStatus FSTTask_MoveToTarget::Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const
-  {
-        AMonsterAIController* AIController = Cast<AMonsterAIController>(Context.GetOwner());
-        if (!AIController)
-        {
-                return EStateTreeRunStatus::Failed;
-        }
-
-        AActor* Target = AIController->GetCurrentTarget();
-        if (!Target)
-        {
-                AIController->StopMovement();
-                return EStateTreeRunStatus::Failed;
-        }
-
-        EPathFollowingStatus::Type Status = AIController->GetMoveStatus();
-
-        switch (Status)
-        {
-        case EPathFollowingStatus::Idle:
-                {
-                        EPathFollowingRequestResult::Type Result = AIController->MoveToActor(Target, AcceptanceRadius);
-                        if (Result == EPathFollowingRequestResult::AlreadyAtGoal)
-                        {
-                                return EStateTreeRunStatus::Succeeded;
-                        }
-                }
-                return EStateTreeRunStatus::Running;
-
-        case EPathFollowingStatus::Moving:
-                return EStateTreeRunStatus::Running;
-
-        case EPathFollowingStatus::Paused:
-                return EStateTreeRunStatus::Running;
-
-        default:
-                return EStateTreeRunStatus::Failed;
-        }
-  }
-
-  void FSTTask_MoveToTarget::ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
-  {
-        AMonsterAIController* AIController = Cast<AMonsterAIController>(Context.GetOwner());
-        if (AIController)
-        {
-                AIController->StopMovement();
-        }
-  }
-
-bool FSTCondition_IsPlayerOutOfRange::TestCondition(FStateTreeExecutionContext& Context) const
+EStateTreeRunStatus FSTTask_ActivateAbilityByTag::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {
-	AMonsterAIController* AIController = Cast<AMonsterAIController>(Context.GetOwner());
+	if (!AbilityTag.IsValid())
+	{
+		return EStateTreeRunStatus::Failed;
+	}
+
+	UAbilitySystemComponent* ASC = MonsterStateTreeHelpers::GetASC(Context);
+	if (!ASC)
+	{
+		return EStateTreeRunStatus::Failed;
+	}
+
+	// 태그로 Ability 활성화
+	FGameplayTagContainer AbilityTags;
+	AbilityTags.AddTag(AbilityTag);
+
+	bool bActivated = ASC->TryActivateAbilitiesByTag(AbilityTags);
+	if (!bActivated)
+	{
+		// 활성화 실패 (쿨다운, 차단 태그 등)
+		return EStateTreeRunStatus::Failed;
+	}
+
+	return EStateTreeRunStatus::Running;
+}
+
+EStateTreeRunStatus FSTTask_ActivateAbilityByTag::Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const
+{
+	// RunningStateTag로 Ability 실행 상태 확인
+	if (!RunningStateTag.IsValid())
+	{
+		// RunningStateTag가 없으면 한 번 실행 후 성공
+		return EStateTreeRunStatus::Succeeded;
+	}
+
+	UAbilitySystemComponent* ASC = MonsterStateTreeHelpers::GetASC(Context);
+	if (!ASC)
+	{
+		return EStateTreeRunStatus::Failed;
+	}
+
+	// ActivationOwnedTags에 설정된 태그가 있으면 아직 실행 중
+	if (ASC->HasMatchingGameplayTag(RunningStateTag))
+	{
+		return EStateTreeRunStatus::Running;
+	}
+
+	// 태그가 없으면 Ability 종료됨
+	return EStateTreeRunStatus::Succeeded;
+}
+
+// ----- FSTTask_MoveToTarget -----
+
+EStateTreeRunStatus FSTTask_MoveToTarget::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	AMonsterAIController* AIController = MonsterStateTreeHelpers::GetAIController(Context);
 	if (!AIController)
 	{
-		return true; // 컨트롤러 없으면 범위 밖으로 간주
+		return EStateTreeRunStatus::Failed;
 	}
+
 	AActor* Target = AIController->GetCurrentTarget();
-	return Target == nullptr; // 타겟이 없으면 true
+	if (!Target)
+	{
+		return EStateTreeRunStatus::Failed;
+	}
+
+	EPathFollowingRequestResult::Type Result = AIController->MoveToActor(Target, AcceptanceRadius);
+
+	if (Result == EPathFollowingRequestResult::Failed)
+	{
+		return EStateTreeRunStatus::Failed;
+	}
+
+	if (Result == EPathFollowingRequestResult::AlreadyAtGoal)
+	{
+		return EStateTreeRunStatus::Succeeded;
+	}
+
+	return EStateTreeRunStatus::Running;
+}
+
+EStateTreeRunStatus FSTTask_MoveToTarget::Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const
+{
+	AMonsterAIController* AIController = MonsterStateTreeHelpers::GetAIController(Context);
+	if (!AIController)
+	{
+		return EStateTreeRunStatus::Failed;
+	}
+
+	AActor* Target = AIController->GetCurrentTarget();
+	if (!Target)
+	{
+		AIController->StopMovement();
+		return EStateTreeRunStatus::Failed;
+	}
+
+	EPathFollowingStatus::Type Status = AIController->GetMoveStatus();
+
+	switch (Status)
+	{
+	case EPathFollowingStatus::Idle:
+		{
+			// 이동 재시도
+			EPathFollowingRequestResult::Type Result = AIController->MoveToActor(Target, AcceptanceRadius);
+			if (Result == EPathFollowingRequestResult::AlreadyAtGoal)
+			{
+				return EStateTreeRunStatus::Succeeded;
+			}
+		}
+		return EStateTreeRunStatus::Running;
+
+	case EPathFollowingStatus::Moving:
+		return EStateTreeRunStatus::Running;
+
+	case EPathFollowingStatus::Paused:
+		return EStateTreeRunStatus::Running;
+
+	default:
+		return EStateTreeRunStatus::Failed;
+	}
+}
+
+void FSTTask_MoveToTarget::ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	if (AMonsterAIController* AIController = MonsterStateTreeHelpers::GetAIController(Context))
+	{
+		AIController->StopMovement();
+	}
+}
+
+// ----- FSTTask_MoveToLastKnownLocation -----
+
+EStateTreeRunStatus FSTTask_MoveToLastKnownLocation::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	AMonsterAIController* AIController = MonsterStateTreeHelpers::GetAIController(Context);
+	if (!AIController)
+	{
+		return EStateTreeRunStatus::Failed;
+	}
+
+	if (!AIController->HasLastKnownLocation())
+	{
+		return EStateTreeRunStatus::Failed;
+	}
+
+	FVector TargetLocation = AIController->GetLastKnownTargetLocation();
+	EPathFollowingRequestResult::Type Result = AIController->MoveToLocation(TargetLocation, AcceptanceRadius);
+
+	if (Result == EPathFollowingRequestResult::Failed)
+	{
+		AIController->ClearLastKnownLocation();
+		return EStateTreeRunStatus::Failed;
+	}
+
+	if (Result == EPathFollowingRequestResult::AlreadyAtGoal)
+	{
+		AIController->ClearLastKnownLocation();
+		return EStateTreeRunStatus::Succeeded;
+	}
+
+	return EStateTreeRunStatus::Running;
+}
+
+EStateTreeRunStatus FSTTask_MoveToLastKnownLocation::Tick(FStateTreeExecutionContext& Context, const float DeltaTime) const
+{
+	AMonsterAIController* AIController = MonsterStateTreeHelpers::GetAIController(Context);
+	if (!AIController)
+	{
+		return EStateTreeRunStatus::Failed;
+	}
+
+	// 타겟이 다시 발견되면 즉시 종료 (Chase로 전환)
+	if (AIController->GetCurrentTarget())
+	{
+		return EStateTreeRunStatus::Succeeded;
+	}
+
+	EPathFollowingStatus::Type Status = AIController->GetMoveStatus();
+
+	switch (Status)
+	{
+	case EPathFollowingStatus::Idle:
+		// 도착함 - 마지막 위치 클리어
+		AIController->ClearLastKnownLocation();
+		return EStateTreeRunStatus::Succeeded;
+
+	case EPathFollowingStatus::Moving:
+		return EStateTreeRunStatus::Running;
+
+	case EPathFollowingStatus::Paused:
+		return EStateTreeRunStatus::Running;
+
+	default:
+		AIController->ClearLastKnownLocation();
+		return EStateTreeRunStatus::Failed;
+	}
+}
+
+void FSTTask_MoveToLastKnownLocation::ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	if (AMonsterAIController* AIController = MonsterStateTreeHelpers::GetAIController(Context))
+	{
+		AIController->StopMovement();
+	}
+}
+
+// ----- FSTTask_ClearCombatState -----
+
+EStateTreeRunStatus FSTTask_ClearCombatState::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	AMonsterAIController* AIController = MonsterStateTreeHelpers::GetAIController(Context);
+	if (!AIController)
+	{
+		return EStateTreeRunStatus::Succeeded;
+	}
+
+	// Combat 상태 정리
+	AIController->ClearLastKnownLocation();
+
+	// Combat 태그 제거
+	if (UAbilitySystemComponent* ASC = MonsterStateTreeHelpers::GetASC(Context))
+	{
+		const FMonsterGameplayTags& Tags = FMonsterGameplayTags::Get();
+		ASC->RemoveLooseGameplayTag(Tags.Monster_State_Combat);
+	}
+
+	return EStateTreeRunStatus::Succeeded;
 }

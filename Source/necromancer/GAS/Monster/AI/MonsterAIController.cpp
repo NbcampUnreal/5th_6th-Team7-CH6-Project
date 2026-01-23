@@ -1,38 +1,22 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MonsterAIController.h"
+#include "GAS/Monster/MonsterBase.h"
 #include "Components/StateTreeAIComponent.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
-#include "GameFramework/Character.h"
-
+#include "Perception/AISense_Sight.h"
+#include "AbilitySystemComponent.h"
+#include "MonsterGameplayTags.h"
 
 AMonsterAIController::AMonsterAIController()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	
+
 	StateTreeAIComponent = CreateDefaultSubobject<UStateTreeAIComponent>(TEXT("StateTreeAIComponent"));
-	AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerceptionComponent"));
-	SetPerceptionComponent(*AIPerceptionComponent);
-	
-	//시야 감지 범위
-	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
-	SightConfig->SightRadius = 1000.0f; //감지 범위
-	SightConfig->LoseSightRadius = 1200.0f; //시야 소실
-	SightConfig->PeripheralVisionAngleDegrees = 90.0f; //각도
-	SightConfig->SetMaxAge(5.0f); //감지 정보 유지 시간
-	SightConfig->AutoSuccessRangeFromLastSeenLocation = 500.0f;
-	
-	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
-	SightConfig->DetectionByAffiliation.bDetectFriendlies = false;
-	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
-	
-	AIPerceptionComponent->ConfigureSense(*SightConfig);
-	AIPerceptionComponent->SetDominantSense(UAISense_Sight::StaticClass());
+
 	
 }
-
 
 void AMonsterAIController::BeginPlay()
 {
@@ -40,25 +24,12 @@ void AMonsterAIController::BeginPlay()
 	SetupPerceptionSystem();
 }
 
-void AMonsterAIController::OnPossess(APawn* InPawn)
-{
-	Super::OnPossess(InPawn);
-	UE_LOG(LogTemp, Log, TEXT("MonsterAIController: Possessed %s"), *GetNameSafe(InPawn));
-}
-
-void AMonsterAIController::OnUnPossess()
-{
-	Super::OnUnPossess();
-
-	// 타겟 초기화
-	ClearCurrentTarget();
-}
-
 void AMonsterAIController::SetupPerceptionSystem()
 {
-	if (AIPerceptionComponent)
+	// AAIController의 기본 PerceptionComponent 사용
+	if (UAIPerceptionComponent* PerceptionComp = GetPerceptionComponent())
 	{
-		AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AMonsterAIController::OnTargetPerceptionUpdated);
+		PerceptionComp->OnTargetPerceptionUpdated.AddDynamic(this, &AMonsterAIController::OnTargetPerceptionUpdated);
 	}
 }
 
@@ -68,25 +39,55 @@ void AMonsterAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 	{
 		return;
 	}
-	
+
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		if (Actor->ActorHasTag(TEXT("Player"))||Cast<ACharacter>(Actor))
+		// Player 태그가 있는 액터만 타겟으로 설정
+		if (Actor->ActorHasTag(TEXT("Player")))
 		{
 			SetCurrentTarget(Actor);
-			UE_LOG(LogTemp, Log, TEXT("MonsterAI: Target Acquired - %s"), *Actor->GetName());
+
+			// Combat 태그 부여
+			if (APawn* ControlledPawn = GetPawn())
+			{
+				if (UAbilitySystemComponent* ASC = ControlledPawn->FindComponentByClass<UAbilitySystemComponent>())
+				{
+					const FMonsterGameplayTags& MonsterTags = FMonsterGameplayTags::Get();
+					ASC->AddLooseGameplayTag(MonsterTags.Monster_State_Combat);
+				}
+			}
+
+			// 마지막 위치 클리어 (타겟이 있으니 불필요)
+			ClearLastKnownLocationInternal();
 		}
-		
 	}
 	else
 	{
-		if (CurrentTarget == Actor)
+		if (GetCurrentTarget() == Actor)
 		{
+			// 마지막 목격 위치 저장
+			SetLastKnownLocation(Actor->GetActorLocation());
 			ClearCurrentTarget();
-			UE_LOG(LogTemp, Log, TEXT("MonsterAI: Target Lost - %s"), *Actor->GetName());
 		}
 	}
 }
+
+void AMonsterAIController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	if (StateTreeAIComponent)
+	{
+		StateTreeAIComponent->StartLogic();
+	}
+}
+
+void AMonsterAIController::OnUnPossess()
+{
+	Super::OnUnPossess();
+	ClearCurrentTarget();
+}
+
 void AMonsterAIController::SetCurrentTarget(AActor* NewTarget)
 {
 	CurrentTarget = NewTarget;
@@ -95,4 +96,45 @@ void AMonsterAIController::SetCurrentTarget(AActor* NewTarget)
 void AMonsterAIController::ClearCurrentTarget()
 {
 	CurrentTarget = nullptr;
+}
+
+void AMonsterAIController::SetLastKnownLocation(const FVector& Location)
+{
+	LastKnownTargetLocation = Location;
+	bHasLastKnownLocation = true;
+}
+
+void AMonsterAIController::ClearLastKnownLocationInternal()
+{
+	bHasLastKnownLocation = false;
+	LastKnownTargetLocation = FVector::ZeroVector;
+}
+
+void AMonsterAIController::ClearLastKnownLocation()
+{
+	ClearLastKnownLocationInternal();
+
+	// Combat 태그 제거
+	if (APawn* ControlledPawn = GetPawn())
+	{
+		if (UAbilitySystemComponent* ASC = ControlledPawn->FindComponentByClass<UAbilitySystemComponent>())
+		{
+			const FMonsterGameplayTags& MonsterTags = FMonsterGameplayTags::Get();
+			ASC->RemoveLooseGameplayTag(MonsterTags.Monster_State_Combat);
+		}
+	}
+}
+
+FVector AMonsterAIController::GetFocalPointOnActor(const AActor* Actor) const
+{
+	// Pawn의 GetActorEyesViewPoint를 사용하여 시점 결정
+	if (const APawn* ControlledPawn = GetPawn())
+	{
+		FVector EyeLocation;
+		FRotator EyeRotation;
+		ControlledPawn->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+		return EyeLocation;
+	}
+
+	return Super::GetFocalPointOnActor(Actor);
 }
