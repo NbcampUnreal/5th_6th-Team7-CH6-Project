@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "Interface/MonsterCombatInterface.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "EngineUtils.h"
 
 
 UGA_MonsterMeleeAttack::UGA_MonsterMeleeAttack()
@@ -98,6 +99,15 @@ void UGA_MonsterMeleeAttack::EndAbility(const FGameplayAbilitySpecHandle Handle,
         TArray<FHitResult> HitResults;
         TArray<AActor*> ActorsToIgnore;
         ActorsToIgnore.Add(AvatarActor);
+
+        // 다른 몬스터들도 Trace에서 제외 (몬스터끼리 충돌 방지)
+        for (TActorIterator<AActor> It(GetWorld()); It; ++It)
+        {
+                if (*It != AvatarActor && (*It)->Implements<UMonsterCombatInterface>())
+                {
+                        ActorsToIgnore.Add(*It);
+                }
+        }
 
         bool bHit = UKismetSystemLibrary::SphereTraceMulti(GetWorld(),Start,End,AttackTraceRadius,UEngineTypes::ConvertToTraceType(ECC_Pawn),false,ActorsToIgnore,EDrawDebugTrace::ForDuration,HitResults,true,FLinearColor::Red,FLinearColor::Green,2.0f
         );

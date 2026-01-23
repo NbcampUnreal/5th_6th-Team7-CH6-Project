@@ -33,6 +33,10 @@ void FMonsterGameplayTags::AddAllTags(UGameplayTagsManager& Manager)
 	// 몬스터 버프 태그
 	AddTag(Monster_Ability_Buff_CombatPersistence, "Monster.Ability.Buff.CombatPersistence", "Combat persistence buff ability");
 	AddTag(Monster_Buff_CombatPersistence, "Monster.Buff.CombatPersistence", "Combat persistence buff is active");
+
+	// 몬스터 사망 태그
+	AddTag(Monster_Ability_Death, "Monster.Ability.Death", "Monster death ability");
+	AddTag(Monster_State_Dying, "Monster.State.Dying", "Monster is playing death animation");
 }
 
 void FMonsterGameplayTags::AddTag(FGameplayTag& OutTag, const ANSICHAR* TagName, const ANSICHAR* TagComment)

@@ -32,6 +32,10 @@ public:
 	FGameplayTag Monster_Ability_Buff_CombatPersistence;  // Ability 식별용
 	FGameplayTag Monster_Buff_CombatPersistence;          // 버프 활성화 표시용
 
+	// 몬스터 사망 태그
+	FGameplayTag Monster_Ability_Death;   // Death Ability 식별용
+	FGameplayTag Monster_State_Dying;     // 사망 애니메이션 재생 중
+
 protected:
 	void AddAllTags(class UGameplayTagsManager& Manager);
 	void AddTag(FGameplayTag& OutTag, const ANSICHAR* TagName, const ANSICHAR* TagComment);
