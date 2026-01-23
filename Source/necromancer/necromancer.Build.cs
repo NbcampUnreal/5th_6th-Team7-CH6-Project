@@ -17,6 +17,7 @@ public class necromancer : ModuleRules
 			"AIModule",
 			"StateTreeModule",
 			"GameplayStateTreeModule",
+			"NavigationSystem",
 			"UMG",
 			"Slate",
 			// GAS (Gameplay Ability System) 모듈
@@ -45,7 +46,12 @@ public class necromancer : ModuleRules
 			// GAS 관련 폴더
 			"necromancer/GAS",
 			"necromancer/GAS/Base",
-			"necromancer/GAS/Monster"
+			"necromancer/GAS/Monster",
+			"necromancer/GAS/Monster/AI",
+			"necromancer/GAS/Monster/Interface",
+			"necromancer/GAS/Monster/Abilities",
+			"necromancer/GAS/Monster/Animation",
+			"necromancer/GAS/Monster/Melee"
 		});
 
 		// Uncomment if you are using Slate UI

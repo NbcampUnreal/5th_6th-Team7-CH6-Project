@@ -11,6 +11,9 @@ class NECROMANCER_API UMonsterAttributeSet : public UBaseAttributeSet
 
 public:
 	UMonsterAttributeSet();
+	
+	// 사망 처리를 위해 오버라이드
+	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Damage")
 	FGameplayAttributeData AttackPower;
