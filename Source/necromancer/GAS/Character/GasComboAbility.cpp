@@ -21,3 +21,8 @@ void UGasComboAbility::ResetCombo()
 	CurrentComboIndex = 0;
 	bNextComboInput = false;
 }
+
+void UGasComboAbility::CommitComboCost()
+{
+	CommitAbilityCost(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo());
+}

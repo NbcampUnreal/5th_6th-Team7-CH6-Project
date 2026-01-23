@@ -62,6 +62,16 @@ void ANecPlayerCharacter::PossessedBy(AController* NewController)
 					AbilitySystemComponent->GiveAbility(Spec);
 				}
 			}
+
+			if (RegainStaminaEffectClass)
+			{
+				FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
+				FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(RegainStaminaEffectClass, 1.f, ContextHandle);
+				if (SpecHandle.IsValid())
+				{
+					AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+				}
+			}
 		}
 
 		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddUObject(this, &ANecPlayerCharacter::OnHealthChangedCallback);

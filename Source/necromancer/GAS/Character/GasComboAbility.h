@@ -30,4 +30,7 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Combo")
 	void ResetCombo();
+
+	UFUNCTION(BlueprintCallable, Category = "Combo")
+	void CommitComboCost();
 };

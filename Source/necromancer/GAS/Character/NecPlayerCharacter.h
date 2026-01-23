@@ -111,6 +111,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Effect|Test")
 	TSubclassOf<UGameplayEffect> HealingEffectClass;
 
+	UPROPERTY(EditAnywhere, Category = "Effect|Test")
+	TSubclassOf<UGameplayEffect> RegainStaminaEffectClass;
+
 	void ApplyPoisonDebuff();
 	void ApplyHealingBuff();
 };
