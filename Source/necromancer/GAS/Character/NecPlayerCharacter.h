@@ -9,6 +9,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
 class UCharacterAttributeSet;
+class UGameplayEffect;
 struct FInputActionValue;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAttributeChangedDelegate, float, CurrentValue, float, MaxValue);
@@ -93,4 +94,20 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = GAS)
 	FGameplayTag ComboInputTag;
+
+protected:
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* TestPoisonAction;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* TestHealingAction;
+
+	UPROPERTY(EditAnywhere, Category = "Effect|Test")
+	TSubclassOf<UGameplayEffect> PoisonEffectClass;
+
+	UPROPERTY(EditAnywhere, Category = "Effect|Test")
+	TSubclassOf<UGameplayEffect> HealingEffectClass;
+
+	void ApplyPoisonDebuff();
+	void ApplyHealingBuff();
 };

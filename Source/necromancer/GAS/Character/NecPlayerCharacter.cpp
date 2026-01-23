@@ -12,6 +12,7 @@
 #include "Game/NecPlayerState.h"
 #include "AbilitySystemComponent.h"
 #include "GAS/Character/CharacterAttributeSet.h"
+#include "GameplayEffect.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
@@ -86,6 +87,9 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ANecPlayerCharacter::Look);
 
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ANecPlayerCharacter::Look);
+
+		EnhancedInputComponent->BindAction(TestPoisonAction, ETriggerEvent::Started, this, &ANecPlayerCharacter::ApplyPoisonDebuff);
+		EnhancedInputComponent->BindAction(TestHealingAction, ETriggerEvent::Started, this, &ANecPlayerCharacter::ApplyHealingBuff);
 	}
 	else
 	{
@@ -171,4 +175,42 @@ void ANecPlayerCharacter::NotifyControllerChanged()
 {
 	Super::NotifyControllerChanged();
 	
+}
+
+void ANecPlayerCharacter::ApplyPoisonDebuff()
+{
+	if (!AbilitySystemComponent || !PoisonEffectClass)
+	{
+		return;
+	}
+
+	FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
+	ContextHandle.AddSourceObject(this);
+
+	FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(PoisonEffectClass, 1.0f, ContextHandle);
+	if (SpecHandle.IsValid())
+	{
+		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+
+		UE_LOG(LogTemp, Warning, TEXT("On Poison Debuff"));
+	}
+}
+
+void ANecPlayerCharacter::ApplyHealingBuff()
+{
+	if (!AbilitySystemComponent || !HealingEffectClass)
+	{
+		return;
+	}
+
+	FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
+	ContextHandle.AddSourceObject(this);
+
+	FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(HealingEffectClass, 1.0f, ContextHandle);
+	if (SpecHandle.IsValid())
+	{
+		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+
+		UE_LOG(LogTemp, Warning, TEXT("On Healing Buff"));
+	}
 }
