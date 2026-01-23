@@ -88,7 +88,7 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ANecPlayerCharacter::Look);
 
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ANecPlayerCharacter::Attack);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ANecPlayerCharacter::Attack);
 
 		EnhancedInputComponent->BindAction(TestPoisonAction, ETriggerEvent::Started, this, &ANecPlayerCharacter::ApplyPoisonDebuff);
 		EnhancedInputComponent->BindAction(TestHealingAction, ETriggerEvent::Started, this, &ANecPlayerCharacter::ApplyHealingBuff);
