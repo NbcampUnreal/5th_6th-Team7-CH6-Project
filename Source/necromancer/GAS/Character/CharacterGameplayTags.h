@@ -18,6 +18,7 @@ public:
 	FGameplayTag Character_Ability_Attack;
 
 	FGameplayTag Character_Event_Montage_NextStep;
+	FGameplayTag Character_Event_Input_Combo;
 
 protected:
 	void AddAllTags(class UGameplayTagsManager& Manager);

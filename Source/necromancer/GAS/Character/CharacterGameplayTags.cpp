@@ -20,6 +20,7 @@ void FCharacterGameplayTags::AddAllTags(UGameplayTagsManager& Manager)
 	AddTag(Character_Ability_Attack, "Character.Ability.Attack", "Attack");	
 
 	AddTag(Character_Event_Montage_NextStep, "Character.Event.Montage.NextStep", "NextStep");
+	AddTag(Character_Event_Input_Combo, "Character.Event.Input.Combo", "Combo");
 }
 
 void FCharacterGameplayTags::AddTag(FGameplayTag& OutTag, const ANSICHAR* TagName, const ANSICHAR* TagComment)
