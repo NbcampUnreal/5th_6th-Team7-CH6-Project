@@ -2,12 +2,16 @@
 
 #include "CoreMinimal.h"
 #include "GAS/Base/BaseCharacter.h"
+#include "GameplayEffectTypes.h"
 #include "NecPlayerCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
+class UCharacterAttributeSet;
 struct FInputActionValue;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAttributeChangedDelegate, float, CurrentValue, float, MaxValue);
 
 UCLASS()
 class NECROMANCER_API ANecPlayerCharacter : public ABaseCharacter
@@ -17,31 +21,25 @@ class NECROMANCER_API ANecPlayerCharacter : public ABaseCharacter
 public:
 	ANecPlayerCharacter();
 		
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* CameraBoom;
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FollowCamera;
+	UPROPERTY(BlueprintAssignable, Category = "Combat|UI")
+	FOnAttributeChangedDelegate OnHealthChanged;
 
-protected:	
-	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* JumpAction;
-		
-	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* MoveAction;
-
-	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* LookAction;
-		
-	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* MouseLookAction;
+	UPROPERTY(BlueprintAssignable, Category = "Combat|UI")
+	FOnAttributeChangedDelegate OnStaminaChanged;
 
 protected:	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+private:
+	void InitAbilityActorInfo();
+
 protected:	
 	void Move(const FInputActionValue& Value);		
 	void Look(const FInputActionValue& Value);
+	void Attack(const FInputActionValue& Value);
 
 public:	
 	UFUNCTION(BlueprintCallable, Category = "Input")
@@ -56,7 +54,43 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoJumpEnd();
 
-public:	
-	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }	
-	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }	
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	USpringArmComponent* CameraBoom;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UCameraComponent* FollowCamera;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* JumpAction;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* MoveAction;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* LookAction;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* MouseLookAction;
+
+protected:
+	UPROPERTY()
+	UCharacterAttributeSet* AttributeSet;
+
+	UPROPERTY(EditAnywhere, Category = "GAS")
+	TArray<TSubclassOf<UGameplayAbility>> DefaultAbilities;
+
+	void OnHealthChangedCallback(const FOnAttributeChangeData& Data) const;
+	void OnStaminaChangedCallback(const FOnAttributeChangeData& Data) const;
+
+	virtual void NotifyControllerChanged() override;	
+
+	UPROPERTY(EditDefaultsOnly, Category = GAS)
+	FGameplayTag AttackAbilityTag;
+
+	UPROPERTY(EditDefaultsOnly, Category = GAS)
+	FGameplayTag ComboInputTag;
 };

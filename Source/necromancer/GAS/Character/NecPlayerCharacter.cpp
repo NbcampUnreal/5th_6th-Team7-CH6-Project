@@ -9,6 +9,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "necromancer.h"
+#include "Game/NecPlayerState.h"
+#include "AbilitySystemComponent.h"
+#include "GAS/Character/CharacterAttributeSet.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
@@ -38,6 +41,40 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	FollowCamera->bUsePawnControlRotation = false;
 }
 
+void ANecPlayerCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	InitAbilityActorInfo();
+
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+		if (HasAuthority())
+		{
+			for (const TSubclassOf<UGameplayAbility>& AbilityClass : DefaultAbilities)
+			{
+				if (AbilityClass)
+				{
+					FGameplayAbilitySpec Spec(AbilityClass, 1, -1, this);
+					AbilitySystemComponent->GiveAbility(Spec);
+				}
+			}
+		}
+
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddUObject(this, &ANecPlayerCharacter::OnHealthChangedCallback);
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetStaminaAttribute()).AddUObject(this, &ANecPlayerCharacter::OnStaminaChangedCallback);
+	}
+}
+
+void ANecPlayerCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	InitAbilityActorInfo();
+}
+
 void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
@@ -56,6 +93,17 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	}
 }
 
+void ANecPlayerCharacter::InitAbilityActorInfo()
+{
+	ANecPlayerState* PS = GetPlayerState<ANecPlayerState>();
+	if (PS)
+	{
+		AbilitySystemComponent = PS->GetAbilitySystemComponent();
+		AbilitySystemComponent->InitAbilityActorInfo(PS, this);
+		AttributeSet = Cast<UCharacterAttributeSet>(PS->GetAttributeSet());
+	}
+}
+
 void ANecPlayerCharacter::Move(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -68,6 +116,11 @@ void ANecPlayerCharacter::Look(const FInputActionValue& Value)
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
+}
+
+void ANecPlayerCharacter::Attack(const FInputActionValue& Value)
+{
+
 }
 
 void ANecPlayerCharacter::DoMove(float Right, float Forward)
@@ -102,4 +155,20 @@ void ANecPlayerCharacter::DoJumpStart()
 void ANecPlayerCharacter::DoJumpEnd()
 {
 	StopJumping();
+}
+
+void ANecPlayerCharacter::OnHealthChangedCallback(const FOnAttributeChangeData& Data) const
+{
+	OnHealthChanged.Broadcast(Data.NewValue, AttributeSet->GetMaxHealth());
+}
+
+void ANecPlayerCharacter::OnStaminaChangedCallback(const FOnAttributeChangeData& Data) const
+{
+	OnHealthChanged.Broadcast(Data.NewValue, AttributeSet->GetMaxStamina());
+}
+
+void ANecPlayerCharacter::NotifyControllerChanged()
+{
+	Super::NotifyControllerChanged();
+	
 }
