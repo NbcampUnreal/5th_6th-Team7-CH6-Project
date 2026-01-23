@@ -15,7 +15,6 @@ ANec_SkeletonMeleeMonster::ANec_SkeletonMeleeMonster()
 {
 }
 
-// Called when the game starts or when spawned
 void ANec_SkeletonMeleeMonster::BeginPlay()
 {
 	Super::BeginPlay();
@@ -24,17 +23,13 @@ void ANec_SkeletonMeleeMonster::BeginPlay()
 
 void ANec_SkeletonMeleeMonster::InitializeAbilities()
 {
-	
-
 	if (!AbilitySystemComponent || !MeleeAttackAbilityClass)
 	{
-		
 		return;
 	}
 
 	FGameplayAbilitySpec AbilitySpec(MeleeAttackAbilityClass, 1, INDEX_NONE, this);
-	FGameplayAbilitySpecHandle Handle = AbilitySystemComponent->GiveAbility(AbilitySpec);
-	
+	AbilitySystemComponent->GiveAbility(AbilitySpec);
 }
 
 bool ANec_SkeletonMeleeMonster::TryActivateMeleeAttack()
@@ -64,20 +59,17 @@ void ANec_SkeletonMeleeMonster::ExecuteAttackTrace_Implementation(FName AttackBo
 		return;
 	}
 
-	const FMonsterGameplayTags& MonsterTags = FMonsterGameplayTags::Get();
-	TArray<FGameplayAbilitySpec*> AbilitySpecs;
-	FGameplayTagContainer AttackTags;
-	AttackTags.AddTag(MonsterTags.Monster_Ability_Attack_Melee);
-	AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(AttackTags, AbilitySpecs);
-
-	for (FGameplayAbilitySpec* Spec : AbilitySpecs)
+	// 모든 Ability를 순회하여 GA_MonsterMeleeAttack 찾기
+	for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
 	{
-		if (Spec && Spec->IsActive())
+		if (Spec.IsActive())
 		{
-			UGA_MonsterMeleeAttack* AttackAbility = Cast<UGA_MonsterMeleeAttack>(Spec->GetPrimaryInstance());
-			if (AttackAbility)
+			for (UGameplayAbility* Instance : Spec.GetAbilityInstances())
 			{
-				AttackAbility->PerformAttackTrace();
+				if (UGA_MonsterMeleeAttack* AttackAbility = Cast<UGA_MonsterMeleeAttack>(Instance))
+				{
+					AttackAbility->PerformAttackTrace();
+				}
 			}
 		}
 	}

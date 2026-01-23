@@ -122,25 +122,32 @@ void UGA_MonsterMeleeAttack::ApplyDamageToTarget(AActor* Target)
 		return;
 	}
 
-	UAbilitySystemComponent* TargetASC = nullptr;
-
-	
-	if (IAbilitySystemInterface* ASCInterface = Cast<IAbilitySystemInterface>(Target))
+	// 같은 몬스터끼리는 데미지를 입히지 않음
+	if (Target->Implements<UMonsterCombatInterface>())
 	{
-		TargetASC = ASCInterface->GetAbilitySystemComponent();
+		return;
 	}
 
-	if (TargetASC)
+	// ASC 가져오기
+	IAbilitySystemInterface* ASCInterface = Cast<IAbilitySystemInterface>(Target);
+	if (!ASCInterface)
 	{
-		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(DamageEffectClass, GetAbilityLevel());
-		if (SpecHandle.IsValid())
+		return;
+	}
+
+	UAbilitySystemComponent* TargetASC = ASCInterface->GetAbilitySystemComponent();
+	if (!TargetASC)
+	{
+		return;
+	}
+
+	FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(DamageEffectClass, GetAbilityLevel());
+	if (SpecHandle.IsValid())
+	{
+		UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
+		if (SourceASC)
 		{
-			
-			UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
-			if (SourceASC)
-			{
-				SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
-			}
+			SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
 		}
 	}
 }

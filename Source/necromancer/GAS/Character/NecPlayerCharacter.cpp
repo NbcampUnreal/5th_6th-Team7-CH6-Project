@@ -104,6 +104,16 @@ void ANecPlayerCharacter::InitAbilityActorInfo()
 	}
 }
 
+UAbilitySystemComponent* ANecPlayerCharacter::GetAbilitySystemComponent() const
+{
+	// PlayerState의 ASC 반환 (BaseCharacter의 빈 ASC가 아닌)
+	if (ANecPlayerState* PS = GetPlayerState<ANecPlayerState>())
+	{
+		return PS->GetAbilitySystemComponent();
+	}
+	return nullptr;
+}
+
 void ANecPlayerCharacter::Move(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
