@@ -23,13 +23,25 @@ void ANec_SkeletonMeleeMonster::BeginPlay()
 
 void ANec_SkeletonMeleeMonster::InitializeAbilities()
 {
-	if (!AbilitySystemComponent || !MeleeAttackAbilityClass)
+	if (!AbilitySystemComponent)
 	{
 		return;
 	}
 
-	FGameplayAbilitySpec AbilitySpec(MeleeAttackAbilityClass, 1, INDEX_NONE, this);
-	AbilitySystemComponent->GiveAbility(AbilitySpec);
+	// 근접 공격 어빌리티 부여
+	if (MeleeAttackAbilityClass)
+	{
+		FGameplayAbilitySpec AbilitySpec(MeleeAttackAbilityClass, 1, INDEX_NONE, this);
+		AbilitySystemComponent->GiveAbility(AbilitySpec);
+	}
+
+	// 전투 지속 버프 Passive Ability 부여 및 즉시 활성화
+	if (CombatPersistenceBuffAbilityClass)
+	{
+		FGameplayAbilitySpec BuffSpec(CombatPersistenceBuffAbilityClass, 1, INDEX_NONE, this);
+		FGameplayAbilitySpecHandle BuffHandle = AbilitySystemComponent->GiveAbility(BuffSpec);
+		AbilitySystemComponent->TryActivateAbility(BuffHandle);
+	}
 }
 
 bool ANec_SkeletonMeleeMonster::TryActivateMeleeAttack()

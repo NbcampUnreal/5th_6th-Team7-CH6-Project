@@ -28,6 +28,10 @@ public:
 	// 몬스터 동작 상태 태그 (Ability의 ActivationOwnedTags용)
 	FGameplayTag Monster_State_Attacking;
 
+	// 몬스터 버프 태그
+	FGameplayTag Monster_Ability_Buff_CombatPersistence;  // Ability 식별용
+	FGameplayTag Monster_Buff_CombatPersistence;          // 버프 활성화 표시용
+
 protected:
 	void AddAllTags(class UGameplayTagsManager& Manager);
 	void AddTag(FGameplayTag& OutTag, const ANSICHAR* TagName, const ANSICHAR* TagComment);

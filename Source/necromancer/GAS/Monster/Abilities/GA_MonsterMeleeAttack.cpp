@@ -19,7 +19,9 @@ UGA_MonsterMeleeAttack::UGA_MonsterMeleeAttack()
 	// === GAS 태그 설정 (공식 권장 패턴) ===
 
 	// 1. Ability Tags - 이 능력의 식별자 (TryActivateAbilitiesByTag에서 사용)
-	AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Monster.Ability.Attack.Melee")));
+	FGameplayTagContainer Tags;
+	Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Monster.Ability.Attack.Melee")));
+	SetAssetTags(Tags);
 
 	// 2. Activation Owned Tags - 활성화 중 ASC에 자동으로 추가되는 태그
 	//    EndAbility 호출 시 자동으로 제거됨 → StateTree에서 이 태그로 상태 확인 가능!
