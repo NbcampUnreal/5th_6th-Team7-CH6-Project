@@ -4,6 +4,7 @@
 #include "Modules/ModuleManager.h"
 #include "GAS/Base/BaseGameplayTags.h"
 #include "GAS/Monster/MonsterGameplayTags.h"
+#include "GAS/Character/CharacterGameplayTags.h"
 
 class FNecromancerGameModule : public FDefaultGameModuleImpl
 {
@@ -12,6 +13,7 @@ public:
 	{
 		FBaseGameplayTags::InitializeNativeTags();
 		FMonsterGameplayTags::InitializeNativeTags();
+		FCharacterGameplayTags::InitializeNativeTags();
 	}
 };
 
