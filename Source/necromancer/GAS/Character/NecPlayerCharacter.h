@@ -77,6 +77,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* MouseLookAction;
 
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* AttackAction;
+
 protected:
 	UPROPERTY()
 	UCharacterAttributeSet* AttributeSet;
@@ -89,10 +92,10 @@ protected:
 
 	virtual void NotifyControllerChanged() override;	
 
-	UPROPERTY(EditDefaultsOnly, Category = GAS)
+	UPROPERTY(EditDefaultsOnly, Category = "GAS")
 	FGameplayTag AttackAbilityTag;
 
-	UPROPERTY(EditDefaultsOnly, Category = GAS)
+	UPROPERTY(EditDefaultsOnly, Category = "GAS")
 	FGameplayTag ComboInputTag;
 
 protected:

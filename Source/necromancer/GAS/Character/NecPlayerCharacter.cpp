@@ -88,6 +88,8 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ANecPlayerCharacter::Look);
 
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ANecPlayerCharacter::Attack);
+
 		EnhancedInputComponent->BindAction(TestPoisonAction, ETriggerEvent::Started, this, &ANecPlayerCharacter::ApplyPoisonDebuff);
 		EnhancedInputComponent->BindAction(TestHealingAction, ETriggerEvent::Started, this, &ANecPlayerCharacter::ApplyHealingBuff);
 	}
@@ -124,7 +126,19 @@ void ANecPlayerCharacter::Look(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::Attack(const FInputActionValue& Value)
 {
+	if (!AbilitySystemComponent)
+	{
+		return;
+	}
 
+	if (!AbilitySystemComponent->TryActivateAbilitiesByTag(FGameplayTagContainer(AttackAbilityTag)))
+	{
+		FGameplayEventData Payload;
+		Payload.Instigator = this;
+		Payload.EventTag = ComboInputTag;
+
+		AbilitySystemComponent->HandleGameplayEvent(ComboInputTag, &Payload);
+	}
 }
 
 void ANecPlayerCharacter::DoMove(float Right, float Forward)
@@ -168,7 +182,7 @@ void ANecPlayerCharacter::OnHealthChangedCallback(const FOnAttributeChangeData& 
 
 void ANecPlayerCharacter::OnStaminaChangedCallback(const FOnAttributeChangeData& Data) const
 {
-	OnHealthChanged.Broadcast(Data.NewValue, AttributeSet->GetMaxStamina());
+	OnStaminaChanged.Broadcast(Data.NewValue, AttributeSet->GetMaxStamina());
 }
 
 void ANecPlayerCharacter::NotifyControllerChanged()
