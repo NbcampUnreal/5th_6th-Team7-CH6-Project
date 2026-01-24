@@ -15,7 +15,6 @@ ANec_SkeletonMeleeMonster::ANec_SkeletonMeleeMonster()
 {
 }
 
-// Called when the game starts or when spawned
 void ANec_SkeletonMeleeMonster::BeginPlay()
 {
 	Super::BeginPlay();
@@ -24,17 +23,32 @@ void ANec_SkeletonMeleeMonster::BeginPlay()
 
 void ANec_SkeletonMeleeMonster::InitializeAbilities()
 {
-	
-
-	if (!AbilitySystemComponent || !MeleeAttackAbilityClass)
+	if (!AbilitySystemComponent)
 	{
-		
 		return;
 	}
 
-	FGameplayAbilitySpec AbilitySpec(MeleeAttackAbilityClass, 1, INDEX_NONE, this);
-	FGameplayAbilitySpecHandle Handle = AbilitySystemComponent->GiveAbility(AbilitySpec);
-	
+	// 근접 공격 어빌리티 부여
+	if (MeleeAttackAbilityClass)
+	{
+		FGameplayAbilitySpec AbilitySpec(MeleeAttackAbilityClass, 1, INDEX_NONE, this);
+		AbilitySystemComponent->GiveAbility(AbilitySpec);
+	}
+
+	// 전투 지속 버프 Passive Ability 부여 및 즉시 활성화
+	if (CombatPersistenceBuffAbilityClass)
+	{
+		FGameplayAbilitySpec BuffSpec(CombatPersistenceBuffAbilityClass, 1, INDEX_NONE, this);
+		FGameplayAbilitySpecHandle BuffHandle = AbilitySystemComponent->GiveAbility(BuffSpec);
+		AbilitySystemComponent->TryActivateAbility(BuffHandle);
+	}
+
+	// Death Ability 부여 (Event.Death 이벤트로 트리거됨)
+	if (DeathAbilityClass)
+	{
+		FGameplayAbilitySpec DeathSpec(DeathAbilityClass, 1, INDEX_NONE, this);
+		AbilitySystemComponent->GiveAbility(DeathSpec);
+	}
 }
 
 bool ANec_SkeletonMeleeMonster::TryActivateMeleeAttack()
@@ -64,20 +78,17 @@ void ANec_SkeletonMeleeMonster::ExecuteAttackTrace_Implementation(FName AttackBo
 		return;
 	}
 
-	const FMonsterGameplayTags& MonsterTags = FMonsterGameplayTags::Get();
-	TArray<FGameplayAbilitySpec*> AbilitySpecs;
-	FGameplayTagContainer AttackTags;
-	AttackTags.AddTag(MonsterTags.Monster_Ability_Attack_Melee);
-	AbilitySystemComponent->GetActivatableGameplayAbilitySpecsByAllMatchingTags(AttackTags, AbilitySpecs);
-
-	for (FGameplayAbilitySpec* Spec : AbilitySpecs)
+	// 모든 Ability를 순회하여 GA_MonsterMeleeAttack 찾기
+	for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
 	{
-		if (Spec && Spec->IsActive())
+		if (Spec.IsActive())
 		{
-			UGA_MonsterMeleeAttack* AttackAbility = Cast<UGA_MonsterMeleeAttack>(Spec->GetPrimaryInstance());
-			if (AttackAbility)
+			for (UGameplayAbility* Instance : Spec.GetAbilityInstances())
 			{
-				AttackAbility->PerformAttackTrace();
+				if (UGA_MonsterMeleeAttack* AttackAbility = Cast<UGA_MonsterMeleeAttack>(Instance))
+				{
+					AttackAbility->PerformAttackTrace();
+				}
 			}
 		}
 	}
@@ -109,20 +120,14 @@ void ANec_SkeletonMeleeMonster::HandleDeath_Implementation()
 
 	if (AbilitySystemComponent)
 	{
-		// Dead 태그 추가
+		// Event.Death 이벤트로 Death Ability 트리거
+		FGameplayEventData EventData;
+		EventData.Instigator = this;
+		EventData.Target = this;
+
 		const FBaseGameplayTags& BaseTags = FBaseGameplayTags::Get();
-		AbilitySystemComponent->AddLooseGameplayTag(BaseTags.State_Dead);
-
-		AbilitySystemComponent->CancelAllAbilities();
+		AbilitySystemComponent->HandleGameplayEvent(BaseTags.Event_Death, &EventData);
 	}
-
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	GetCharacterMovement()->DisableMovement();
-
-	GetMesh()->SetSimulatePhysics(true);
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
-	SetLifeSpan(5.0f);
 }
 
 bool ANec_SkeletonMeleeMonster::IsAlive_Implementation() const

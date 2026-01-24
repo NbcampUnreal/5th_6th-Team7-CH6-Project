@@ -8,29 +8,26 @@
   {
   }
 
-void UAnimNotify_MonsterAttackTrace::Notify(USkeletalMeshComponent* MeshComp,
-	  UAnimSequenceBase* Animation,
-	  const FAnimNotifyEventReference& EventReference)
-  {
-  	Super::Notify(MeshComp, Animation, EventReference);
+void UAnimNotify_MonsterAttackTrace::Notify(USkeletalMeshComponent* MeshComp,UAnimSequenceBase* Animation,const FAnimNotifyEventReference& EventReference)
+{
+	Super::Notify(MeshComp, Animation, EventReference);
 
-  	if (!MeshComp)
-  	{
-  		return;
-  	}
+	if (!MeshComp)
+	{
+		return;
+	}
 
-  	AActor* Owner = MeshComp->GetOwner();
-  	if (!Owner)
-  	{
-  		return;
-  	}
+	AActor* Owner = MeshComp->GetOwner();
+	if (!Owner)
+	{
+		return;
+	}
 
-  	
-  	if (Owner->Implements<UMonsterCombatInterface>())
-  	{
-  		IMonsterCombatInterface::Execute_ExecuteAttackTrace(Owner, AttackBoneName);
-  	}
-  }
+	if (Owner->Implements<UMonsterCombatInterface>())
+	{
+		IMonsterCombatInterface::Execute_ExecuteAttackTrace(Owner, AttackBoneName);
+	}
+}
 
 FString UAnimNotify_MonsterAttackTrace::GetNotifyName_Implementation() const
   {

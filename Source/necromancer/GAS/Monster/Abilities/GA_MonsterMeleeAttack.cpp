@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "Interface/MonsterCombatInterface.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "EngineUtils.h"
 
 
 UGA_MonsterMeleeAttack::UGA_MonsterMeleeAttack()
@@ -19,7 +20,9 @@ UGA_MonsterMeleeAttack::UGA_MonsterMeleeAttack()
 	// === GAS 태그 설정 (공식 권장 패턴) ===
 
 	// 1. Ability Tags - 이 능력의 식별자 (TryActivateAbilitiesByTag에서 사용)
-	AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Monster.Ability.Attack.Melee")));
+	FGameplayTagContainer Tags;
+	Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Monster.Ability.Attack.Melee")));
+	SetAssetTags(Tags);
 
 	// 2. Activation Owned Tags - 활성화 중 ASC에 자동으로 추가되는 태그
 	//    EndAbility 호출 시 자동으로 제거됨 → StateTree에서 이 태그로 상태 확인 가능!
@@ -97,6 +100,15 @@ void UGA_MonsterMeleeAttack::EndAbility(const FGameplayAbilitySpecHandle Handle,
         TArray<AActor*> ActorsToIgnore;
         ActorsToIgnore.Add(AvatarActor);
 
+        // 다른 몬스터들도 Trace에서 제외 (몬스터끼리 충돌 방지)
+        for (TActorIterator<AActor> It(GetWorld()); It; ++It)
+        {
+                if (*It != AvatarActor && (*It)->Implements<UMonsterCombatInterface>())
+                {
+                        ActorsToIgnore.Add(*It);
+                }
+        }
+
         bool bHit = UKismetSystemLibrary::SphereTraceMulti(GetWorld(),Start,End,AttackTraceRadius,UEngineTypes::ConvertToTraceType(ECC_Pawn),false,ActorsToIgnore,EDrawDebugTrace::ForDuration,HitResults,true,FLinearColor::Red,FLinearColor::Green,2.0f
         );
 
@@ -122,25 +134,32 @@ void UGA_MonsterMeleeAttack::ApplyDamageToTarget(AActor* Target)
 		return;
 	}
 
-	UAbilitySystemComponent* TargetASC = nullptr;
-
-	
-	if (IAbilitySystemInterface* ASCInterface = Cast<IAbilitySystemInterface>(Target))
+	// 같은 몬스터끼리는 데미지를 입히지 않음
+	if (Target->Implements<UMonsterCombatInterface>())
 	{
-		TargetASC = ASCInterface->GetAbilitySystemComponent();
+		return;
 	}
 
-	if (TargetASC)
+	// ASC 가져오기
+	IAbilitySystemInterface* ASCInterface = Cast<IAbilitySystemInterface>(Target);
+	if (!ASCInterface)
 	{
-		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(DamageEffectClass, GetAbilityLevel());
-		if (SpecHandle.IsValid())
+		return;
+	}
+
+	UAbilitySystemComponent* TargetASC = ASCInterface->GetAbilitySystemComponent();
+	if (!TargetASC)
+	{
+		return;
+	}
+
+	FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(DamageEffectClass, GetAbilityLevel());
+	if (SpecHandle.IsValid())
+	{
+		UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
+		if (SourceASC)
 		{
-			
-			UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
-			if (SourceASC)
-			{
-				SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
-			}
+			SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
 		}
 	}
 }

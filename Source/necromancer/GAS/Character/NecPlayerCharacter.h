@@ -21,9 +21,12 @@ class NECROMANCER_API ANecPlayerCharacter : public ABaseCharacter
 	
 public:
 	ANecPlayerCharacter();
-		
+
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
+
+	// PlayerState의 ASC를 반환하도록 오버라이드
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UPROPERTY(BlueprintAssignable, Category = "Combat|UI")
 	FOnAttributeChangedDelegate OnHealthChanged;

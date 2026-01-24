@@ -41,6 +41,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
 	TSubclassOf<UGameplayAbility> MeleeAttackAbilityClass;
 
+	// 전투 지속 버프 어빌리티 클래스
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TSubclassOf<UGameplayAbility> CombatPersistenceBuffAbilityClass;
+
+	// 사망 처리 어빌리티 클래스
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TSubclassOf<UGameplayAbility> DeathAbilityClass;
+
 	// 공격 상태
 	UPROPERTY(BlueprintReadOnly, Category = "Combat")
 	bool bIsAttacking = false;
