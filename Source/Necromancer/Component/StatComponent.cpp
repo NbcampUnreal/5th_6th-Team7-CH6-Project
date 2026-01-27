@@ -1,0 +1,104 @@
+#include "Component/StatComponent.h"
+#include "GameFramework/Actor.h"
+#include "Net/UnrealNetwork.h"
+#include "Kismet/GameplayStatics.h"
+
+UStatComponent::UStatComponent()
+	: CurrentHealth(0.0f)
+{
+	SetIsReplicatedByDefault(true);
+}
+
+void UStatComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+    if (GetOwner()->HasAuthority())
+    {
+        GetOwner()->OnTakeAnyDamage.AddDynamic(this, &UStatComponent::HandleTakeDamage);
+
+        CurrentHealth = MaxHealth;
+
+        OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
+    }
+}
+
+void UStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(UStatComponent, CurrentHealth);
+    DOREPLIFETIME(UStatComponent, MaxHealth);
+    DOREPLIFETIME(UStatComponent, Armor);
+}
+
+void UStatComponent::OnRep_Health()
+{
+    OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
+}
+
+void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+{
+    if (Damage <= 0.0f || CurrentHealth <= 0.0f)
+    {
+        return;
+    }
+
+    float ActualDamage = FMath::Max(Damage - Armor, 0.0f);
+    float NewHealth = FMath::Clamp(CurrentHealth - ActualDamage, 0.0f, MaxHealth);
+
+    SetCurrentHealth(NewHealth);
+    OnDamageReceived.Broadcast(ActualDamage, GetOwner()->GetActorLocation());
+
+    if (NewHealth <= 0.0f)
+    {
+        OnDeath.Broadcast();
+    }
+}
+
+void UStatComponent::SetCurrentHealth(float NewHealth)
+{
+    if (!GetOwner()->HasAuthority())
+    {
+        return;
+    }
+
+    CurrentHealth = NewHealth;
+
+    OnRep_Health();
+}
+
+void UStatComponent::AddMaxHealth(float Amount)
+{
+    if (!GetOwner()->HasAuthority() || Amount == 0.0f)
+    {
+        return;
+    }
+
+    MaxHealth += Amount;
+    CurrentHealth += Amount;
+
+    OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
+}
+
+void UStatComponent::AddArmor(float Amount)
+{
+    if (!GetOwner()->HasAuthority() || Amount == 0.0f)
+    {
+        return;
+    }
+
+    Armor += Amount;
+}
+
+void UStatComponent::Heal(float HealAmount)
+{
+    if (!GetOwner()->HasAuthority() || HealAmount <= 0.0f || CurrentHealth <= 0.0f)
+    {
+        return;
+    }
+
+    float NewHealth = FMath::Clamp(CurrentHealth + HealAmount, 0.0f, MaxHealth);
+
+    SetCurrentHealth(NewHealth);
+}
