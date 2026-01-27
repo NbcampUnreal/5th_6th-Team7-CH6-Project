@@ -9,7 +9,7 @@
 
 class UMonsterStatComponent;
 class UBehaviorTree;
-class UHealthComponent;
+class UStatComponent;
 UCLASS()
 class NECROMANCER_API AMonsterBase : public ACharacter ,public IGenericTeamAgentInterface
 {
@@ -25,7 +25,7 @@ protected:
 	virtual void BeginPlay() override;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-	TObjectPtr<UHealthComponent> HealthComponent;
+	TObjectPtr<UStatComponent> StatComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	TObjectPtr<UMonsterStatComponent> MonsterStatComponent;

@@ -6,7 +6,7 @@
 #include "AIController.h"
 #include "BrainComponent.h"
 #include "MonsterStatComponent.h"
-#include "Component/HealthComponent.h" 
+#include "Component/StatComponent.h" 
 #include "Necromancer.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
