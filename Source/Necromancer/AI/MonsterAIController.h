@@ -24,6 +24,13 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "AI")
 	AActor* GetTargetActor() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "AI")
+	void SetlastLocation(FVector LastLocation);
+	
+	
+	UFUNCTION(BlueprintCallable, Category = "AI")
+	FVector GetlastLocation() const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -36,6 +43,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	TObjectPtr<UBehaviorTree> BehaviorTree;
 
+	
+	
 	// 감지 콜백
 	UFUNCTION()
 	void OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);

@@ -50,7 +50,22 @@ AActor* AMonsterAIController::GetTargetActor() const
 	return nullptr;
 }
 
+void AMonsterAIController::SetlastLocation(FVector LastLocation)
+{
+	if (UBlackboardComponent* BB = GetBlackboardComponent())
+	{
+		BB -> SetValueAsVector(NAME_LastLocation,LastLocation);
+	}
+}
 
+FVector AMonsterAIController::GetlastLocation() const
+{
+	if (const UBlackboardComponent* BB = GetBlackboardComponent())
+	{
+		return BB->GetValueAsVector(NAME_LastLocation);
+	}
+	return FVector::ZeroVector;
+}
 
 
 void AMonsterAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
@@ -61,10 +76,8 @@ void AMonsterAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 	}
 	else
 	{
-		GetWorldTimerManager().SetTimer(LoseTargetTimerHandle, [this]()
-		{
-			SetTargetActor(nullptr);
-		}, 3.0f, false);
+		SetlastLocation(Actor->GetActorLocation());
+		SetTargetActor(nullptr);
 	
 	}
 }
