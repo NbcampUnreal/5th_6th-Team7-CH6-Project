@@ -24,9 +24,7 @@ protected:
     void OnRep_Health();
 
     UFUNCTION()
-    void HandleTakeDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);        
-
-    void SetCurrentHealth(float NewHealth);
+    void HandleTakeDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);            
 
 public:
     UFUNCTION(BlueprintPure)
@@ -46,6 +44,8 @@ public:
 
     UFUNCTION(BlueprintCallable)
     void Heal(float HealAmount);
+
+    void SetCurrentHealth(float NewHealth);
 
     UPROPERTY(BlueprintAssignable)
     FOnHealthChangedSignature OnHealthChanged;

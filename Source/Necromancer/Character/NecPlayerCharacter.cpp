@@ -3,7 +3,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Controller/NecPlayerController.h"
+#include "Game/NecPlayerState.h"
 #include "EnhancedInputComponent.h"
+#include "Component/StatComponent.h"
+#include "Component/StaminaComponent.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
@@ -17,14 +20,14 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 	GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
 
-	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-	SpringArmComp->SetupAttachment(RootComponent);
-	SpringArmComp->TargetArmLength = 300.0f;
-	SpringArmComp->bUsePawnControlRotation = true;
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+	SpringArmComponent->SetupAttachment(RootComponent);
+	SpringArmComponent->TargetArmLength = 300.0f;
+	SpringArmComponent->bUsePawnControlRotation = true;
 
-	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
-	CameraComp->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName);
-	CameraComp->bUsePawnControlRotation = false;	
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
+	CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
+	CameraComponent->bUsePawnControlRotation = false;
 }
 
 void ANecPlayerCharacter::BeginPlay()
@@ -98,17 +101,31 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 				);
 			}
 
-			if (PlayerController->LockonAction)
+			if (PlayerController->LockOnAction)
 			{
 				EnhancedInputComp->BindAction(
-					PlayerController->LockonAction,
+					PlayerController->LockOnAction,
 					ETriggerEvent::Triggered,
 					this,
-					&ANecPlayerCharacter::Lockon
+					&ANecPlayerCharacter::LockOn
 				);
 			}
 		}
 	}	
+}
+
+void ANecPlayerCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	LinkPlayerStateComponents();
+}
+
+void ANecPlayerCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	LinkPlayerStateComponents();
 }
 
 void ANecPlayerCharacter::Move(const FInputActionValue& Value)
@@ -167,9 +184,24 @@ void ANecPlayerCharacter::Guard(const FInputActionValue& Value)
 
 }
 
-void ANecPlayerCharacter::Lockon(const FInputActionValue& Value)
+void ANecPlayerCharacter::LockOn(const FInputActionValue& Value)
 {
 
+}
+
+void ANecPlayerCharacter::LinkPlayerStateComponents()
+{
+	ANecPlayerState* PS = GetPlayerState<ANecPlayerState>();
+	if (PS)
+	{
+		StatComponent = PS->GetStatComponent();
+		StaminaComponent = PS->GetStaminaComponent();
+
+		if (StatComponent && StaminaComponent)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Successfully linked PlayerState\'s Components: %s"), *GetName());
+		}
+	}
 }
 
 void ANecPlayerCharacter::Server_SetMaxWalkSpeed_Implementation(float NewSpeed)

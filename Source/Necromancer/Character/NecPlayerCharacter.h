@@ -6,6 +6,8 @@
 
 class USpringArmComponent;
 class UCameraComponent;
+class UStatComponent;
+class UStaminaComponent;
 struct FInputActionValue;
 
 UCLASS()
@@ -17,8 +19,10 @@ public:
 	ANecPlayerCharacter();
 
 protected:	
-	virtual void BeginPlay() override;		
+	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
 
 	UFUNCTION()
 	void Move(const FInputActionValue& Value);
@@ -39,17 +43,25 @@ protected:
 	void Guard(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void Lockon(const FInputActionValue& Value);
+	void LockOn(const FInputActionValue& Value);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetMaxWalkSpeed(float NewSpeed);
 
-protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	USpringArmComponent* SpringArmComp;
+	void LinkPlayerStateComponents();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	UCameraComponent* CameraComp;
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
+	TObjectPtr<USpringArmComponent> SpringArmComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
+	TObjectPtr<UCameraComponent> CameraComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Stat")
+	TObjectPtr<UStatComponent> StatComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Stat")
+	TObjectPtr<UStaminaComponent> StaminaComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float NormalSpeed = 400.0f;

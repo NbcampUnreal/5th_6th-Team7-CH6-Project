@@ -38,5 +38,5 @@ public:
 	UInputAction* GuardAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* LockonAction;
+	UInputAction* LockOnAction;
 };

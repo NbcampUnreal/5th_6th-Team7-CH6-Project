@@ -8,7 +8,7 @@ ANecPlayerController::ANecPlayerController() :
 	SprintAction(nullptr),
 	AttackAction(nullptr),
 	GuardAction(nullptr),
-	LockonAction(nullptr)
+	LockOnAction(nullptr)
 {
 }
 
