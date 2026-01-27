@@ -1,21 +1,21 @@
-#include "Component/HealthComponent.h"
+#include "Component/StatComponent.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 
-UHealthComponent::UHealthComponent()
+UStatComponent::UStatComponent()
 	: CurrentHealth(0.0f)
 {
 	SetIsReplicatedByDefault(true);
 }
 
-void UHealthComponent::BeginPlay()
+void UStatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
     if (GetOwner()->HasAuthority())
     {
-        GetOwner()->OnTakeAnyDamage.AddDynamic(this, &UHealthComponent::HandleTakeDamage);
+        GetOwner()->OnTakeAnyDamage.AddDynamic(this, &UStatComponent::HandleTakeDamage);
 
         CurrentHealth = MaxHealth;
 
@@ -23,21 +23,21 @@ void UHealthComponent::BeginPlay()
     }
 }
 
-void UHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void UStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(UHealthComponent, CurrentHealth);
-    DOREPLIFETIME(UHealthComponent, MaxHealth);
-    DOREPLIFETIME(UHealthComponent, Armor);
+    DOREPLIFETIME(UStatComponent, CurrentHealth);
+    DOREPLIFETIME(UStatComponent, MaxHealth);
+    DOREPLIFETIME(UStatComponent, Armor);
 }
 
-void UHealthComponent::OnRep_Health()
+void UStatComponent::OnRep_Health()
 {
     OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 }
 
-void UHealthComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
     if (Damage <= 0.0f || CurrentHealth <= 0.0f)
     {
@@ -56,7 +56,7 @@ void UHealthComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, cons
     }
 }
 
-void UHealthComponent::SetCurrentHealth(float NewHealth)
+void UStatComponent::SetCurrentHealth(float NewHealth)
 {
     if (!GetOwner()->HasAuthority())
     {
@@ -68,7 +68,7 @@ void UHealthComponent::SetCurrentHealth(float NewHealth)
     OnRep_Health();
 }
 
-void UHealthComponent::AddMaxHealth(float Amount)
+void UStatComponent::AddMaxHealth(float Amount)
 {
     if (!GetOwner()->HasAuthority() || Amount == 0.0f)
     {
@@ -81,7 +81,7 @@ void UHealthComponent::AddMaxHealth(float Amount)
     OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 }
 
-void UHealthComponent::AddArmor(float Amount)
+void UStatComponent::AddArmor(float Amount)
 {
     if (!GetOwner()->HasAuthority() || Amount == 0.0f)
     {
@@ -91,7 +91,7 @@ void UHealthComponent::AddArmor(float Amount)
     Armor += Amount;
 }
 
-void UHealthComponent::Heal(float HealAmount)
+void UStatComponent::Heal(float HealAmount)
 {
     if (!GetOwner()->HasAuthority() || HealAmount <= 0.0f || CurrentHealth <= 0.0f)
     {
