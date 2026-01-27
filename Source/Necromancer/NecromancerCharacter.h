@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GenericTeamAgentInterface.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "NecromancerCharacter.generated.h"
@@ -16,7 +17,7 @@ struct FInputActionValue;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config=Game)
-class ANecromancerCharacter : public ACharacter
+class ANecromancerCharacter : public ACharacter ,public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
@@ -46,7 +47,7 @@ class ANecromancerCharacter : public ACharacter
 
 public:
 	ANecromancerCharacter();
-	
+	virtual FGenericTeamId GetGenericTeamId() const override;
 
 protected:
 

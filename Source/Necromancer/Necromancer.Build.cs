@@ -18,7 +18,9 @@ public class Necromancer : ModuleRules
             "NavigationSystem",
             "GameplayTasks",
             "UMG",
-            "Niagara"
+            "Niagara",
+            "GameplayTags",
+            "AnimationModifierLibrary"
         });
 
         PublicIncludePaths.AddRange(new string[]
