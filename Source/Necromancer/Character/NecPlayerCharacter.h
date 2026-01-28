@@ -8,6 +8,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UStatComponent;
 class UStaminaComponent;
+class UPlayerMovementComponent;
 struct FInputActionValue;
 
 UCLASS()
@@ -63,12 +64,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Stat")
 	TObjectPtr<UStaminaComponent> StaminaComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float NormalSpeed = 400.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float SprintSpeedMultiplier = 1.7f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
-	float SprintSpeed;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Movement")
+	TObjectPtr<UPlayerMovementComponent> PlayerMovementComponent;
 };

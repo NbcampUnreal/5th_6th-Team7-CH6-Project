@@ -1,4 +1,5 @@
 #include "UI/InGameHUDWidget.h"
+#include "Game/NecPlayerState.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Component/StatComponent.h"
@@ -8,34 +9,36 @@ void UInGameHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	APawn* OwningPawn = GetOwningPlayerPawn();
-	if (!OwningPawn)
+	ANecPlayerState* PS = GetOwningPlayerState<ANecPlayerState>();
+	if (!PS)
 	{
 		return;
-	}
-		
-	PlayerStatComponent = OwningPawn->FindComponentByClass<UStatComponent>();
-	if (!PlayerStatComponent)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("InGameHUD: Could not found StatComponent."));
-		return;		
-	}
-	else
-	{
-		PlayerStatComponent->OnHealthChanged.AddDynamic(this, &UInGameHUDWidget::UpdateHealth);
-		UpdateHealth(PlayerStatComponent->GetCurrentHealth(), PlayerStatComponent->GetMaxHealth());
 	}
 	
-	PlayerStaminaComponent = OwningPawn->FindComponentByClass<UStaminaComponent>();
-	if (!PlayerStaminaComponent)
+
+
+	PlayerStatComponent = PS->GetStatComponent();
+	if (IsValid(PlayerStatComponent))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("InGameHUD: Could not found StaminaComponent."));
-		return;
-	}	
+		PlayerStatComponent->OnHealthChanged.AddDynamic(this, &UInGameHUDWidget::UpdateHealth);
+		UpdateHealth(PlayerStatComponent->GetCurrentHealth(), PlayerStatComponent->GetMaxHealth());		
+	}
 	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("InGameHUD: Could not found StatComponent."));
+		return;
+	}
+	
+	PlayerStaminaComponent = PS->GetStaminaComponent();
+	if (IsValid(PlayerStaminaComponent))
 	{
 		PlayerStaminaComponent->OnStaminaChanged.AddDynamic(this, &UInGameHUDWidget::UpdateStamina);
 		UpdateStamina(PlayerStaminaComponent->GetCurrentStamina(), PlayerStaminaComponent->GetMaxStamina());
+	}	
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("InGameHUD: Could not found StaminaComponent."));
+		return;		
 	}
 }
 
