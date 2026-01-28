@@ -22,4 +22,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere,Category="Attack")
 	TObjectPtr<UAnimMontage> AttackMontage;
+	
+private:
+	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp);
 };
