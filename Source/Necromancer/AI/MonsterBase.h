@@ -19,6 +19,8 @@ public:
 	
 	AMonsterBase();
 	virtual FGenericTeamId GetGenericTeamId() const override;
+	
+	
 
 protected:
 	

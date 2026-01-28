@@ -3,6 +3,8 @@
 
 #include "MonsterStatComponent.h"
 
+#include "EnvironmentQuery/EnvQueryTypes.h"
+
 UMonsterStatComponent::UMonsterStatComponent()
 {
 	
@@ -35,4 +37,19 @@ void UMonsterStatComponent::ApplyPoise(float Amount)
 		OnStun.Broadcast();
 		CurrentPoise = 0.0f;
 	}
+}
+
+float UMonsterStatComponent::GetAttackPower() const
+{
+	return AttackPower;
+}
+
+float UMonsterStatComponent::GetAttackRange() const
+{
+	return AttackRange;
+}
+
+float UMonsterStatComponent::GetDetectRange() const
+{
+	return DetectRange;
 }

@@ -4,14 +4,20 @@
 #include "BTTask_MonsterAttack.h"
 #include "AIController.h"
 #include "GameFramework/Character.h"
+#include "BehaviorTree/BlackboardComponent.h"
 
 UBTTask_MonsterAttack::UBTTask_MonsterAttack()
 {
 	NodeName = "Monster Attack";
+	bCreateNodeInstance = true;
+	bNotifyTick = false;
 }
 
 EBTNodeResult::Type UBTTask_MonsterAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
+	
+	
+	
 	AAIController* AIC = OwnerComp.GetAIOwner();
 	if (!AIC)
 	{
@@ -24,12 +30,47 @@ EBTNodeResult::Type UBTTask_MonsterAttack::ExecuteTask(UBehaviorTreeComponent& O
 		return EBTNodeResult::Failed;
 	}
 	
-	if (AttackMontage)
+	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+	if (!BB)
 	{
-		Character->PlayAnimMontage(AttackMontage);
-		return EBTNodeResult::Succeeded;
+		return EBTNodeResult::Failed;
 	}
-	return EBTNodeResult::Failed;
+	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+	if (!AnimInstance)
+	{
+		return EBTNodeResult::Failed;
+	}
 	
+	float Duration = Character->PlayAnimMontage(AttackMontage);
+	if (Duration <= 0.0f)
+	{
+		BB->SetValueAsBool(FName("IsAttacking"), false);
+		return EBTNodeResult::Failed;
+	}
+	BB->SetValueAsBool(FName("IsAttacking"), true);
+	
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindUObject(this,&UBTTask_MonsterAttack::OnMontageEnded,&OwnerComp);
+	AnimInstance->Montage_SetEndDelegate(EndDelegate,AttackMontage);
+	
+	return EBTNodeResult::InProgress;
+	
+	
+}
+
+void UBTTask_MonsterAttack::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp)
+{
+	if (!OwnerComp)
+	{
+		return;
+	}
+	
+	UBlackboardComponent* BB = OwnerComp->GetBlackboardComponent();
+	if (BB)
+	{
+		BB->SetValueAsBool(FName("IsAttacking"), false);
+	}
+	
+	FinishLatentTask(*OwnerComp,bInterrupted ? EBTNodeResult::Failed : EBTNodeResult::Succeeded);
 	
 }
