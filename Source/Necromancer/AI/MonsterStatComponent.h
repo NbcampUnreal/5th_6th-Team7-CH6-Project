@@ -26,6 +26,15 @@ public:
 	// Delegate
 	FOnStagger OnStagger;
 	FOnStun OnStun;
+	
+	UFUNCTION(BlueprintCallable)
+	float GetAttackPower() const;
+	UFUNCTION(BlueprintCallable)
+	float GetAttackRange() const;
+	UFUNCTION(BlueprintCallable)
+	float GetDetectRange() const;
+	
+	
 
 protected:
 	virtual void BeginPlay() override;
