@@ -1,5 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+//Itme_Spawn_ROW.cpp
 
 #include "Item_Spawn/Itme_Spawn_ROW.h"
 

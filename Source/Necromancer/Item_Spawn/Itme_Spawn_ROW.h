@@ -1,12 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//Itme_Spawn_ROW.h
 
 #pragma once
 
 #include "CoreMinimal.h"
 
-/**
- * 
- */
 class NECROMANCER_API Itme_Spawn_ROW
 {
 public:
