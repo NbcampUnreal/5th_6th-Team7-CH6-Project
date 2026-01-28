@@ -149,7 +149,7 @@ void ANecPlayerCharacter::StartSprint(const FInputActionValue& Value)
 	if (IsValid(PlayerMovementComponent))
 	{
 		PlayerMovementComponent->SetSprint(true);
-		Server_SetMaxWalkSpeed(PlayerMovementComponent->GetSprintSpeed());
+		Server_SetSprint(true);
 	}
 }
 
@@ -158,7 +158,7 @@ void ANecPlayerCharacter::StopSprint(const FInputActionValue& Value)
 	if (IsValid(PlayerMovementComponent))
 	{
 		PlayerMovementComponent->SetSprint(false);
-		Server_SetMaxWalkSpeed(PlayerMovementComponent->GetNormalSpeed());
+		Server_SetSprint(false);
 	}
 }
 
@@ -192,7 +192,28 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 	}
 }
 
-void ANecPlayerCharacter::Server_SetMaxWalkSpeed_Implementation(float NewSpeed)
+void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)
 {
-	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+	if (!IsValid(PlayerMovementComponent) || !IsValid(StaminaComponent))
+	{
+		return;
+	}
+
+	if (bIsSprinting)
+	{		
+		if (StaminaComponent->GetCurrentStamina() > 0.0f)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = PlayerMovementComponent->GetSprintSpeed();
+			StaminaComponent->StartStaminaDrain(10.0f);
+		}
+		else
+		{
+			Server_SetSprint(false);
+		}
+	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = PlayerMovementComponent->GetNormalSpeed();
+		StaminaComponent->StopStaminaDrain();
+	}
 }

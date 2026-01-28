@@ -4,6 +4,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Character/NecPlayerCharacter.h"
 #include "Controller/NecPlayerController.h"
+#include "Game/NecPlayerState.h"
 
 UStaminaComponent::UStaminaComponent()
 	: CurrentStamina(0.0f)
@@ -46,9 +47,12 @@ void UStaminaComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	bool bIsDraining = CurrentDrainRate > 0.0f;
 	bool bIsMoving = false;
 
-	if (ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(GetOwner()))
+	if (APlayerState* PS = Cast<APlayerState>(GetOwner()))
 	{
-		bIsMoving = PlayerCharacter->GetVelocity().Size() > 5.0f;
+		if (APawn* OwningPawn = PS->GetPawn())
+		{
+			bIsMoving = OwningPawn->GetVelocity().Size() > 5.0f;
+		}
 	}
 
 	float NewStamina = CurrentStamina;
@@ -62,13 +66,16 @@ void UStaminaComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		NewStamina += StaminaRecoveryRate * DeltaTime;
 	}
 
-	SetStamina(FMath::Clamp(NewStamina, 0.0f, MaxStamina));
+	SetStamina(FMath::Clamp(NewStamina, 0.0f, MaxStamina));	
 
 	if (CurrentStamina <= 0.0f && bIsDraining)
 	{
-		if (ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(GetOwner()))
+		if (APlayerState* PS = Cast<APlayerState>(GetOwner()))
 		{
-			//PlayerCharacter->StopSprint();
+			if (ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(PS->GetPawn()))
+			{
+				PlayerCharacter->Server_SetSprint(false);
+			}
 		}
 	}
 }

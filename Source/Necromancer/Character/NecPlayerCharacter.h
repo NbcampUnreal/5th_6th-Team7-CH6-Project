@@ -46,10 +46,11 @@ protected:
 	UFUNCTION()
 	void LockOn(const FInputActionValue& Value);
 
-	UFUNCTION(Server, Reliable)
-	void Server_SetMaxWalkSpeed(float NewSpeed);
-
 	void LinkPlayerStateComponents();
+
+public:
+	UFUNCTION(Server, Reliable)
+	void Server_SetSprint(bool bIsSprinting);
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
