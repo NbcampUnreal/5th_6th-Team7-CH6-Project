@@ -1,15 +1,27 @@
 #include "Controller/NecPlayerController.h"
 #include "EnhancedInputSubsystems.h"
+#include "UI/InGameHUDWidget.h"
 
-ANecPlayerController::ANecPlayerController() :
-	InputMappingContext(nullptr),
-	MoveAction(nullptr),
-	LookAction(nullptr),
-	SprintAction(nullptr),
-	AttackAction(nullptr),
-	GuardAction(nullptr),
-	LockOnAction(nullptr)
+void ANecPlayerController::BeginPlay()
 {
+	Super::BeginPlay();
+
+	if (!IsLocalController())
+	{
+		return;
+	}
+
+	FInputModeGameOnly GameOnly;
+	SetInputMode(GameOnly);
+
+	if (IsValid(InGameHUDWidgetClass))
+	{
+		InGameHUDWidgetInstance = CreateWidget<UInGameHUDWidget>(this, InGameHUDWidgetClass);
+		if (IsValid(InGameHUDWidgetInstance))
+		{
+			InGameHUDWidgetInstance->AddToViewport(1);
+		}
+	}
 }
 
 void ANecPlayerController::SetupInputComponent()
