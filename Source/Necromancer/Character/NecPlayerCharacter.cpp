@@ -201,19 +201,22 @@ void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)
 
 	if (bIsSprinting)
 	{		
-		if (StaminaComponent->GetCurrentStamina() > 0.0f)
+		if (!StaminaComponent->IsExhausted() && StaminaComponent->GetCurrentStamina() > 0.0f)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = PlayerMovementComponent->GetSprintSpeed();
 			StaminaComponent->StartStaminaDrain(10.0f);
 		}
 		else
 		{
-			Server_SetSprint(false);
+			GetCharacterMovement()->MaxWalkSpeed = PlayerMovementComponent->GetNormalSpeed();
+			StaminaComponent->StopStaminaDrain(false);
 		}
 	}
 	else
 	{
 		GetCharacterMovement()->MaxWalkSpeed = PlayerMovementComponent->GetNormalSpeed();
-		StaminaComponent->StopStaminaDrain();
+
+		bool bResetExhaustion = StaminaComponent->GetCurrentStamina() > 0.0f;
+		StaminaComponent->StopStaminaDrain(bResetExhaustion);
 	}
 }

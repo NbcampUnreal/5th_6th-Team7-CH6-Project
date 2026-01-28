@@ -68,8 +68,18 @@ void UStaminaComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 	SetStamina(FMath::Clamp(NewStamina, 0.0f, MaxStamina));	
 
+	if (bIsExhausted)
+	{
+		if (CurrentStamina >= RecoveryThreshold)
+		{
+			bIsExhausted = false;
+		}
+	}
+
 	if (CurrentStamina <= 0.0f && bIsDraining)
 	{
+		bIsExhausted = true;
+
 		if (APlayerState* PS = Cast<APlayerState>(GetOwner()))
 		{
 			if (ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(PS->GetPawn()))
@@ -112,7 +122,7 @@ void UStaminaComponent::StartStaminaDrain(float DrainRate)
 	CurrentDrainRate = FMath::Max(0.0f, DrainRate);
 }
 
-void UStaminaComponent::StopStaminaDrain()
+void UStaminaComponent::StopStaminaDrain(bool bResetExhaustion)
 {
 	if (!GetOwner()->HasAuthority())
 	{
@@ -120,6 +130,11 @@ void UStaminaComponent::StopStaminaDrain()
 	}
 
 	CurrentDrainRate = 0.0f;
+
+	if (bResetExhaustion)
+	{
+		bIsExhausted = false;
+	}
 }
 
 void UStaminaComponent::SetStamina(float NewStamina)
