@@ -19,12 +19,7 @@ public:
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 	
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
-	FName NextSectionName = FName("Attack_02");
-
-	// 연속공격 확률 (0.0 ~ 1.0)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack", meta = (ClampMin = "0.0", ClampMax = "1.0"))
-	float ComboChance = 0.5f;
+	
 
 	// 연속공격 가능 최대 거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")

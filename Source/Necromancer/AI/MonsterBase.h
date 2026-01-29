@@ -9,7 +9,9 @@
 
 class UMonsterStatComponent;
 class UBehaviorTree;
-class UStatComponent;
+
+DECLARE_DELEGATE(FOnNextComboRequested);
+
 UCLASS()
 class NECROMANCER_API AMonsterBase : public ACharacter ,public IGenericTeamAgentInterface
 {
@@ -20,15 +22,13 @@ public:
 	AMonsterBase();
 	virtual FGenericTeamId GetGenericTeamId() const override;
 	
-	
+	// AN_MonsterNextAttack이 Execute, BTTask가 Bind
+	FOnNextComboRequested OnNextComboRequested;
 
 protected:
 	
 	virtual void BeginPlay() override;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-	TObjectPtr<UStatComponent> StatComponent;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	TObjectPtr<UMonsterStatComponent> MonsterStatComponent;
 	

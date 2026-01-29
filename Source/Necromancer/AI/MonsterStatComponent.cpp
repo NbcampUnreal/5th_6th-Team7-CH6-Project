@@ -3,11 +3,9 @@
 
 #include "MonsterStatComponent.h"
 
-#include "EnvironmentQuery/EnvQueryTypes.h"
-
 UMonsterStatComponent::UMonsterStatComponent()
 {
-	
+	SetIsReplicatedByDefault(true);
 }
 
 void UMonsterStatComponent::BeginPlay()

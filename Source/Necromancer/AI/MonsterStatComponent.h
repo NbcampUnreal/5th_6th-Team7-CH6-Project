@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Component/StatComponent.h"
 #include "GameplayTagContainer.h"
 #include "MonsterStatComponent.generated.h"
 
@@ -13,7 +13,7 @@ DECLARE_MULTICAST_DELEGATE(FOnStagger);
 DECLARE_MULTICAST_DELEGATE(FOnStun);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class NECROMANCER_API UMonsterStatComponent : public UActorComponent
+class NECROMANCER_API UMonsterStatComponent : public UStatComponent
 {
 	GENERATED_BODY()
 
