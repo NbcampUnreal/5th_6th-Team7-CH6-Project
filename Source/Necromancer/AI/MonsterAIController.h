@@ -26,6 +26,10 @@ public:
 	AActor* GetTargetActor() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "AI")
+	void ClearTargetActor();
+	
+	
+	UFUNCTION(BlueprintCallable, Category = "AI")
 	void SetlastLocation(FVector LastLocation);
 	
 	
@@ -37,6 +41,9 @@ protected:
 	
 	FTimerHandle LoseTargetTimerHandle;
 
+	UPROPERTY(EditDefaultsOnly)
+	float ClearTime = 3.0f;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	TObjectPtr<UAIPerceptionComponent> AIPerceptionComp;
 

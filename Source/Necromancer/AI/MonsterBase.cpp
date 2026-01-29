@@ -7,6 +7,7 @@
 #include "BrainComponent.h"
 #include "MonsterStatComponent.h"
 #include "Necromancer.h"
+#include "Net/UnrealNetwork.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -14,7 +15,12 @@
 AMonsterBase::AMonsterBase()
 {
 	MonsterStatComponent = CreateDefaultSubobject<UMonsterStatComponent>(TEXT("MonsterStatComponent"));
-	SetRVOAvoidanceEnabled(false);
+	SetRVOAvoidanceEnabled(true);
+	
+	bReplicates = true;
+	SetReplicatingMovement(true);  // 이동 자동 복제
+	NetUpdateFrequency = 10.0f;   // 초당 10회 업데이트 (몬스터는 플레이어보다 낮아도 됨)
+	MinNetUpdateFrequency = 2.0f;
 	
 }
 
@@ -51,23 +57,21 @@ void AMonsterBase::OnStun()
 
 void AMonsterBase::OnDeath()
 {
+	// ★ 서버에서만 실행 ★
+	if (!HasAuthority()) return;
+
+	bIsDead = true;  // Replicated → 클라이언트에 OnRep_IsDead 호출됨
+
 	AAIController* AIController = GetController<AAIController>();
 	if (AIController && AIController->GetBrainComponent())
 	{
 		AIController->GetBrainComponent()->StopLogic("Dead");
 	}
-	
+
 	GetCharacterMovement()->DisableMovement();
-	
-	float Duration = 0.0f;
-	if (DeathMontage)
-	{
-		Duration = PlayAnimMontage(DeathMontage);
-	}
-	
-	FTimerHandle DeathTimerHandle;
-	GetWorldTimerManager().SetTimer(DeathTimerHandle,this,&AMonsterBase::StartRagdoll,Duration,false);
-	
+
+	// 모든 클라이언트에 죽음 몽타주 전파
+	Multicast_PlayDeathMontage();
 }
 
 void AMonsterBase::StartRagdoll()
@@ -83,3 +87,40 @@ FGenericTeamId AMonsterBase::GetGenericTeamId() const
 	return FGenericTeamId(TEAM_ID_MONSTER);
 }
 
+void AMonsterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AMonsterBase, bIsDead);
+}
+
+void AMonsterBase::OnRep_IsDead()
+{
+	if (bIsDead)
+	{
+		// 클라이언트에서도 이동 비활성화
+		GetCharacterMovement()->DisableMovement();
+	}
+}
+
+void AMonsterBase::Multicast_PlayDeathMontage_Implementation()
+{
+	if (DeathMontage)
+	{
+		float Duration = PlayAnimMontage(DeathMontage);
+
+		FTimerHandle DeathTimerHandle;
+		GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &AMonsterBase::StartRagdoll, Duration, false);
+	}
+	else
+	{
+		StartRagdoll();
+	}
+}
+
+void AMonsterBase::Multicast_PlayMontage_Implementation(UAnimMontage* Montage)
+{
+	if (Montage)
+	{
+		PlayAnimMontage(Montage);
+	}
+}
