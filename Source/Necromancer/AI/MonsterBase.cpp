@@ -14,9 +14,21 @@
 AMonsterBase::AMonsterBase()
 {
 	MonsterStatComponent = CreateDefaultSubobject<UMonsterStatComponent>(TEXT("MonsterStatComponent"));
+	SetRVOAvoidanceEnabled(true);
+	
 }
 
 
+void AMonsterBase::SetRVOAvoidanceEnabled(bool bEnable)
+{
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	if (MovementComponent)
+	{
+		MovementComponent ->bUseRVOAvoidance = bEnable;
+		MovementComponent -> AvoidanceConsiderationRadius = AvoidanceRadius;
+		MovementComponent -> AvoidanceWeight = AvoidanceWeight;
+	}
+}
 
 void AMonsterBase::BeginPlay()
 {

@@ -24,6 +24,9 @@ public:
 	
 	// AN_MonsterNextAttack이 Execute, BTTask가 Bind
 	FOnNextComboRequested OnNextComboRequested;
+	
+	UFUNCTION(BlueprintCallable,Category="RVO")
+	void SetRVOAvoidanceEnabled(bool bEnable);
 
 protected:
 	
@@ -45,6 +48,13 @@ protected:
 	TObjectPtr<UAnimMontage> DeathMontage;
 	
 	void StartRagdoll();
+	
+	// RVO 회피 설정
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RVO")
+	float AvoidanceRadius = 200.0f;
+	// RVO 계급 설정
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RVO")
+	float AvoidanceWeight = 0.5f;
 
 
 	
