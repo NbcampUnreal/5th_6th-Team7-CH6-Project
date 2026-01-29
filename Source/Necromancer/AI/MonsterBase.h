@@ -20,6 +20,7 @@ class NECROMANCER_API AMonsterBase : public ACharacter ,public IGenericTeamAgent
 public:
 	
 	AMonsterBase();
+	
 	virtual FGenericTeamId GetGenericTeamId() const override;
 	
 	// AN_MonsterNextAttack이 Execute, BTTask가 Bind
@@ -51,7 +52,7 @@ protected:
 	
 	// RVO 회피 설정
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RVO")
-	float AvoidanceRadius = 200.0f;
+	float AvoidanceRadius = 100.0f;
 	// RVO 계급 설정
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RVO")
 	float AvoidanceWeight = 0.5f;

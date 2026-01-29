@@ -14,7 +14,7 @@
 AMonsterBase::AMonsterBase()
 {
 	MonsterStatComponent = CreateDefaultSubobject<UMonsterStatComponent>(TEXT("MonsterStatComponent"));
-	SetRVOAvoidanceEnabled(true);
+	SetRVOAvoidanceEnabled(false);
 	
 }
 

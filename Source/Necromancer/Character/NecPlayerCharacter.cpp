@@ -5,6 +5,7 @@
 #include "Controller/NecPlayerController.h"
 #include "Game/NecPlayerState.h"
 #include "EnhancedInputComponent.h"
+#include "Necromancer.h"
 #include "Component/StatComponent.h"
 #include "Component/StaminaComponent.h"
 #include "Component/PlayerMovementComponent.h"
@@ -190,6 +191,11 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 			UE_LOG(LogTemp, Warning, TEXT("Successfully linked PlayerState\'s Components: %s"), *GetName());
 		}
 	}
+}
+
+FGenericTeamId ANecPlayerCharacter::GetGenericTeamId() const
+{
+	return FGenericTeamId(TEAM_ID_PLAYER);
 }
 
 void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)

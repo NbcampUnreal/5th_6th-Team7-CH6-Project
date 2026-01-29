@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+//팀 구분용 인클루드
+#include "GenericTeamAgentInterface.h"
 #include "NecPlayerCharacter.generated.h"
 
 class USpringArmComponent;
@@ -51,6 +53,9 @@ protected:
 public:
 	UFUNCTION(Server, Reliable)
 	void Server_SetSprint(bool bIsSprinting);
+	
+	//팀 이름 반환
+	virtual FGenericTeamId GetGenericTeamId() const;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
