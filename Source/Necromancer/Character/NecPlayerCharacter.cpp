@@ -5,20 +5,19 @@
 #include "Controller/NecPlayerController.h"
 #include "Game/NecPlayerState.h"
 #include "EnhancedInputComponent.h"
+#include "Necromancer.h"
 #include "Component/StatComponent.h"
 #include "Component/StaminaComponent.h"
+#include "Component/PlayerMovementComponent.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
-	bUseControllerRotationRoll = false;
-
-	SprintSpeed = NormalSpeed * SprintSpeedMultiplier;
+	bUseControllerRotationRoll = false;	
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
-	GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);	
 
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArmComponent->SetupAttachment(RootComponent);
@@ -28,6 +27,8 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
 	CameraComponent->bUsePawnControlRotation = false;
+
+	PlayerMovementComponent = CreateDefaultSubobject<UPlayerMovementComponent>(TEXT("PlayerMovementComponent"));	
 }
 
 void ANecPlayerCharacter::BeginPlay()
@@ -130,47 +131,35 @@ void ANecPlayerCharacter::OnRep_PlayerState()
 
 void ANecPlayerCharacter::Move(const FInputActionValue& Value)
 {
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{		
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-				
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);		
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-				
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
+	if (IsValid(PlayerMovementComponent))
+	{
+		PlayerMovementComponent->ProcessMove(Value.Get<FVector2D>());
 	}
 }
 
 void ANecPlayerCharacter::Look(const FInputActionValue& Value)
 {
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{		
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
+	if (IsValid(PlayerMovementComponent))
+	{
+		PlayerMovementComponent->ProcessLook(Value.Get<FVector2D>());
 	}
 }
 
 void ANecPlayerCharacter::StartSprint(const FInputActionValue& Value)
 {
-	if (GetCharacterMovement())
+	if (IsValid(PlayerMovementComponent))
 	{
-		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-		Server_SetMaxWalkSpeed(SprintSpeed);
-	}	
+		PlayerMovementComponent->SetSprint(true);
+		Server_SetSprint(true);
+	}
 }
 
 void ANecPlayerCharacter::StopSprint(const FInputActionValue& Value)
 {
-	if (GetCharacterMovement())
+	if (IsValid(PlayerMovementComponent))
 	{
-		GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
-		Server_SetMaxWalkSpeed(NormalSpeed);
+		PlayerMovementComponent->SetSprint(false);
+		Server_SetSprint(false);
 	}
 }
 
@@ -204,7 +193,36 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 	}
 }
 
-void ANecPlayerCharacter::Server_SetMaxWalkSpeed_Implementation(float NewSpeed)
+FGenericTeamId ANecPlayerCharacter::GetGenericTeamId() const
 {
-	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+	return FGenericTeamId(TEAM_ID_PLAYER);
+}
+
+void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)
+{
+	if (!IsValid(PlayerMovementComponent) || !IsValid(StaminaComponent))
+	{
+		return;
+	}
+
+	if (bIsSprinting)
+	{		
+		if (!StaminaComponent->IsExhausted() && StaminaComponent->GetCurrentStamina() > 0.0f)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = PlayerMovementComponent->GetSprintSpeed();
+			StaminaComponent->StartStaminaDrain(10.0f);
+		}
+		else
+		{
+			GetCharacterMovement()->MaxWalkSpeed = PlayerMovementComponent->GetNormalSpeed();
+			StaminaComponent->StopStaminaDrain(false);
+		}
+	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = PlayerMovementComponent->GetNormalSpeed();
+
+		bool bResetExhaustion = StaminaComponent->GetCurrentStamina() > 0.0f;
+		StaminaComponent->StopStaminaDrain(bResetExhaustion);
+	}
 }

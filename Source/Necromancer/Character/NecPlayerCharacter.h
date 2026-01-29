@@ -2,16 +2,19 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+//팀 구분용 인클루드
+#include "GenericTeamAgentInterface.h"
 #include "NecPlayerCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
 class UStatComponent;
 class UStaminaComponent;
+class UPlayerMovementComponent;
 struct FInputActionValue;
 
 UCLASS()
-class NECROMANCER_API ANecPlayerCharacter : public ACharacter
+class NECROMANCER_API ANecPlayerCharacter : public ACharacter , public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
@@ -45,10 +48,14 @@ protected:
 	UFUNCTION()
 	void LockOn(const FInputActionValue& Value);
 
-	UFUNCTION(Server, Reliable)
-	void Server_SetMaxWalkSpeed(float NewSpeed);
-
 	void LinkPlayerStateComponents();
+
+public:
+	UFUNCTION(Server, Reliable)
+	void Server_SetSprint(bool bIsSprinting);
+	
+	//팀 이름 반환
+	virtual FGenericTeamId GetGenericTeamId() const override;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
@@ -63,12 +70,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Stat")
 	TObjectPtr<UStaminaComponent> StaminaComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float NormalSpeed = 400.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float SprintSpeedMultiplier = 1.7f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
-	float SprintSpeed;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Movement")
+	TObjectPtr<UPlayerMovementComponent> PlayerMovementComponent;
 };

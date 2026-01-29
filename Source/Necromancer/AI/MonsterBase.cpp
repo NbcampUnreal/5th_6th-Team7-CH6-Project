@@ -6,7 +6,6 @@
 #include "AIController.h"
 #include "BrainComponent.h"
 #include "MonsterStatComponent.h"
-#include "Component/StatComponent.h" 
 #include "Necromancer.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -15,18 +14,27 @@
 AMonsterBase::AMonsterBase()
 {
 	MonsterStatComponent = CreateDefaultSubobject<UMonsterStatComponent>(TEXT("MonsterStatComponent"));
+	SetRVOAvoidanceEnabled(false);
+	
 }
 
 
+void AMonsterBase::SetRVOAvoidanceEnabled(bool bEnable)
+{
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	if (MovementComponent)
+	{
+		MovementComponent ->bUseRVOAvoidance = bEnable;
+		MovementComponent -> AvoidanceConsiderationRadius = AvoidanceRadius;
+		MovementComponent -> AvoidanceWeight = AvoidanceWeight;
+	}
+}
 
 void AMonsterBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	//TO DO : 홍표님 추가
-	//HealthComponent->OnDeath.AddDynamic(this, &AMonsterBase::OnDeath);
-
-	
+	MonsterStatComponent->OnDeath.AddDynamic(this, &AMonsterBase::OnDeath);
 	MonsterStatComponent->OnStagger.AddUObject(this, &AMonsterBase::OnStagger);
 	MonsterStatComponent->OnStun.AddUObject(this, &AMonsterBase::OnStun);
 }

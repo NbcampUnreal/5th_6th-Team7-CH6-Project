@@ -6,37 +6,44 @@
 
 class UInputMappingContext;
 class UInputAction;
+class UInGameHUDWidget;
 
 UCLASS()
 class NECROMANCER_API ANecPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
-public:
-	ANecPlayerController();
 
 protected:
+	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+	virtual void OnRep_PlayerState() override;
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputMappingContext* InputMappingContext;
+	TObjectPtr<UInputMappingContext> InputMappingContext;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* MoveAction;
+	TObjectPtr<UInputAction> MoveAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* LookAction;
+	TObjectPtr<UInputAction> LookAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* SprintAction;
+	TObjectPtr<UInputAction> SprintAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* AttackAction;
+	TObjectPtr<UInputAction> AttackAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* GuardAction;
+	TObjectPtr<UInputAction> GuardAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* LockOnAction;
+	TObjectPtr<UInputAction> LockOnAction;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UInGameHUDWidget> InGameHUDWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<UInGameHUDWidget> InGameHUDWidgetInstance;
 };

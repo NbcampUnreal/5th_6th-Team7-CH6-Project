@@ -5,6 +5,7 @@
 
 #include "Necromancer.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "GenericTeamAgentInterface.h"
 #include "Perception/AIPerceptionComponent.h"
 
 
@@ -72,7 +73,12 @@ void AMonsterAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 {
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		SetTargetActor(Actor);
+		IGenericTeamAgentInterface* GenericTeamAgentInterface = Cast<IGenericTeamAgentInterface>(Actor);
+		if (GenericTeamAgentInterface->GetGenericTeamId() == FGenericTeamId(TEAM_ID_PLAYER))
+		{
+			SetTargetActor(Actor);
+		}
+		
 	}
 	else
 	{

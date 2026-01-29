@@ -4,90 +4,143 @@
 #include "BTTask_MonsterComboAttack.h"
 #include "ComboAttackData.h"
 #include "AIController.h"
+#include "MonsterBase.h"
 #include "GameFramework/Character.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 UBTTask_MonsterComboAttack::UBTTask_MonsterComboAttack()
 {
     NodeName = "Monster Combo Attack";
-    bCreateNodeInstance = true;  // 인스턴스별 상태 유지
+    bCreateNodeInstance = true;
 }
 
 EBTNodeResult::Type UBTTask_MonsterComboAttack::ExecuteTask(
     UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-    // 유효성 검사
     if (!ComboData || ComboData->ComboSequence.Num() == 0)
     {
         return EBTNodeResult::Failed;
     }
 
     AAIController* AIC = OwnerComp.GetAIOwner();
-    if (!AIC) return EBTNodeResult::Failed;
+    if (!AIC)
+    {
+        return EBTNodeResult::Failed;
+    }
 
     ACharacter* Character = Cast<ACharacter>(AIC->GetPawn());
-    if (!Character) return EBTNodeResult::Failed;
-
-    UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
-    if (!AnimInstance) return EBTNodeResult::Failed;
-
-    // 콤보 리셋 체크 (시간 초과 시 1타로)
-    float CurrentTime = GetWorld()->GetTimeSeconds();
-    if (CurrentTime - LastAttackTime > ComboData->ComboResetTime)
-    {
-        CurrentComboIndex = 0;
-    }
-
-    // 현재 콤보 데이터 가져오기
-    const FComboAttackData* CurrentAttack = ComboData->GetComboData(CurrentComboIndex);
-    if (!CurrentAttack || !CurrentAttack->AttackMontage)
+    if (!Character)
     {
         return EBTNodeResult::Failed;
     }
 
-    // 몽타주 재생
-    float Duration = Character->PlayAnimMontage(CurrentAttack->AttackMontage);
-    if (Duration <= 0.0f)
-    {
-        return EBTNodeResult::Failed;
-    }
-
-    // 상태 업데이트
-    LastAttackTime = CurrentTime;
+    CurrentComboIndex = 0;
+    bComboTransitioning = false;
     CachedOwnerComp = &OwnerComp;
+    CachedCharacter = Character;
 
-    // Blackboard 업데이트 (옵션)
     if (UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent())
     {
         BB->SetValueAsBool(FName("IsAttacking"), true);
-        BB->SetValueAsInt(FName("CurrentComboIndex"), CurrentComboIndex);
     }
 
-    // 몽타주 종료 델리게이트
-    FOnMontageEnded EndDelegate;
-    EndDelegate.BindUObject(this, &UBTTask_MonsterComboAttack::OnMontageEnded);
-    AnimInstance->Montage_SetEndDelegate(EndDelegate, CurrentAttack->AttackMontage);
+    // 델리게이트 바인딩 — 노티파이가 호출하면 HandleNextCombo 즉시 실행
+    if (AMonsterBase* Monster = Cast<AMonsterBase>(Character))
+    {
+        Monster->OnNextComboRequested.BindUObject(this, &UBTTask_MonsterComboAttack::HandleNextCombo);
+    }
 
-    // 다음 콤보 인덱스 준비
-    CurrentComboIndex = (CurrentComboIndex + 1) % ComboData->GetMaxComboCount();
+    PlayNextCombo();
 
     return EBTNodeResult::InProgress;
 }
 
+void UBTTask_MonsterComboAttack::HandleNextCombo()
+{
+    if (!CachedCharacter || !ComboData)
+    {
+        return;
+    }
+
+    CurrentComboIndex++;
+    if (CurrentComboIndex >= ComboData->GetMaxComboCount())
+    {
+        return;
+    }
+
+    // 콤보 전환 중 표시 — OnMontageEnded에서 해제
+    bComboTransitioning = true;
+
+    PlayNextCombo();
+}
+
 void UBTTask_MonsterComboAttack::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-    if (!CachedOwnerComp) return;
+    if (!CachedOwnerComp)
+    {
+        return;
+    }
+
+    // 콤보 전환으로 인한 interrupt → 무시 (HandleNextCombo가 이미 다음 몽타주를 재생함)
+    if (bInterrupted && bComboTransitioning)
+    {
+        bComboTransitioning = false;
+        return;
+    }
+
+    // 외부 중단 (Stagger, Stun 등)
+    if (bInterrupted)
+    {
+        FinishCombo(EBTNodeResult::Failed);
+        return;
+    }
+
+    // 자연 종료 — 콤보 끝
+    FinishCombo(EBTNodeResult::Succeeded);
+}
+
+void UBTTask_MonsterComboAttack::FinishCombo(EBTNodeResult::Type Result)
+{
+    // 델리게이트 언바인드
+    if (AMonsterBase* Monster = Cast<AMonsterBase>(CachedCharacter))
+    {
+        Monster->OnNextComboRequested.Unbind();
+    }
 
     if (UBlackboardComponent* BB = CachedOwnerComp->GetBlackboardComponent())
     {
         BB->SetValueAsBool(FName("IsAttacking"), false);
     }
 
-    FinishLatentTask(*CachedOwnerComp, 
-        bInterrupted ? EBTNodeResult::Failed : EBTNodeResult::Succeeded);
+    FinishLatentTask(*CachedOwnerComp, Result);
 }
 
-void UBTTask_MonsterComboAttack::ResetCombo()
+void UBTTask_MonsterComboAttack::PlayNextCombo()
 {
-    CurrentComboIndex = 0;
+    if (!CachedCharacter || !ComboData)
+    {
+        return;
+    }
+
+    const FComboAttackData* AttackData = ComboData->GetComboData(CurrentComboIndex);
+    if (!AttackData || !AttackData->AttackMontage)
+    {
+        return;
+    }
+
+    UAnimInstance* AnimInstance = CachedCharacter->GetMesh()->GetAnimInstance();
+    if (!AnimInstance)
+    {
+        return;
+    }
+
+    float Duration = CachedCharacter->PlayAnimMontage(AttackData->AttackMontage);
+    if (Duration <= 0.0f)
+    {
+        return;
+    }
+
+    FOnMontageEnded EndDelegate;
+    EndDelegate.BindUObject(this, &UBTTask_MonsterComboAttack::OnMontageEnded);
+    AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackData->AttackMontage);
 }
