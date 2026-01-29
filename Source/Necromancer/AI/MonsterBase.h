@@ -9,7 +9,9 @@
 
 class UMonsterStatComponent;
 class UBehaviorTree;
-class UStatComponent;
+
+DECLARE_DELEGATE(FOnNextComboRequested);
+
 UCLASS()
 class NECROMANCER_API AMonsterBase : public ACharacter ,public IGenericTeamAgentInterface
 {
@@ -18,15 +20,19 @@ class NECROMANCER_API AMonsterBase : public ACharacter ,public IGenericTeamAgent
 public:
 	
 	AMonsterBase();
+	
 	virtual FGenericTeamId GetGenericTeamId() const override;
+	
+	// AN_MonsterNextAttack이 Execute, BTTask가 Bind
+	FOnNextComboRequested OnNextComboRequested;
+	
+	UFUNCTION(BlueprintCallable,Category="RVO")
+	void SetRVOAvoidanceEnabled(bool bEnable);
 
 protected:
 	
 	virtual void BeginPlay() override;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-	TObjectPtr<UStatComponent> StatComponent;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	TObjectPtr<UMonsterStatComponent> MonsterStatComponent;
 	
@@ -43,6 +49,13 @@ protected:
 	TObjectPtr<UAnimMontage> DeathMontage;
 	
 	void StartRagdoll();
+	
+	// RVO 회피 설정
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RVO")
+	float AvoidanceRadius = 100.0f;
+	// RVO 계급 설정
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RVO")
+	float AvoidanceWeight = 0.5f;
 
 
 	

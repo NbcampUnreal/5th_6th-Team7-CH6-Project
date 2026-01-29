@@ -5,7 +5,7 @@
 
 UMonsterStatComponent::UMonsterStatComponent()
 {
-	
+	SetIsReplicatedByDefault(true);
 }
 
 void UMonsterStatComponent::BeginPlay()
@@ -35,4 +35,19 @@ void UMonsterStatComponent::ApplyPoise(float Amount)
 		OnStun.Broadcast();
 		CurrentPoise = 0.0f;
 	}
+}
+
+float UMonsterStatComponent::GetAttackPower() const
+{
+	return AttackPower;
+}
+
+float UMonsterStatComponent::GetAttackRange() const
+{
+	return AttackRange;
+}
+
+float UMonsterStatComponent::GetDetectRange() const
+{
+	return DetectRange;
 }

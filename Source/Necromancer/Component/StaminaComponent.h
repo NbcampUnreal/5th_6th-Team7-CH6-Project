@@ -32,13 +32,16 @@ public:
 	void StartStaminaDrain(float DrainRate);
 
 	UFUNCTION(BlueprintCallable, Category = "Stamina")
-	void StopStaminaDrain();
+	void StopStaminaDrain(bool bResetExhaustion = true);
 
 	UFUNCTION(BlueprintPure, Category = "Stamina")
 	float GetCurrentStamina() const { return CurrentStamina; }
 
 	UFUNCTION(BlueprintPure, Category = "Stamina")
 	float GetMaxStamina() const { return MaxStamina; }
+
+	bool IsExhausted() const { return bIsExhausted; }
+	void SetExhausted(bool bValue) { bIsExhausted = bValue; }
 
 	UPROPERTY(BlueprintAssignable)
 	FOnStaminaChangedSignature OnStaminaChanged;
@@ -54,4 +57,9 @@ protected:
 	float StaminaRecoveryRate;
 
 	float CurrentDrainRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
+	float RecoveryThreshold = 20.0f;
+
+	bool bIsExhausted = false;
 };

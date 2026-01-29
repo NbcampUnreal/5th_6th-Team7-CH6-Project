@@ -2,14 +2,19 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+//팀 구분용 인클루드
+#include "GenericTeamAgentInterface.h"
 #include "NecPlayerCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
+class UStatComponent;
+class UStaminaComponent;
+class UPlayerMovementComponent;
 struct FInputActionValue;
 
 UCLASS()
-class NECROMANCER_API ANecPlayerCharacter : public ACharacter
+class NECROMANCER_API ANecPlayerCharacter : public ACharacter , public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
@@ -17,8 +22,10 @@ public:
 	ANecPlayerCharacter();
 
 protected:	
-	virtual void BeginPlay() override;		
+	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
 
 	UFUNCTION()
 	void Move(const FInputActionValue& Value);
@@ -39,24 +46,30 @@ protected:
 	void Guard(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void Lockon(const FInputActionValue& Value);
+	void LockOn(const FInputActionValue& Value);
 
+	void LinkPlayerStateComponents();
+
+public:
 	UFUNCTION(Server, Reliable)
-	void Server_SetMaxWalkSpeed(float NewSpeed);
+	void Server_SetSprint(bool bIsSprinting);
+	
+	//팀 이름 반환
+	virtual FGenericTeamId GetGenericTeamId() const override;
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	USpringArmComponent* SpringArmComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
+	TObjectPtr<USpringArmComponent> SpringArmComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	UCameraComponent* CameraComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
+	TObjectPtr<UCameraComponent> CameraComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float NormalSpeed = 400.0f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Stat")
+	TObjectPtr<UStatComponent> StatComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float SprintSpeedMultiplier = 1.7f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Stat")
+	TObjectPtr<UStaminaComponent> StaminaComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
-	float SprintSpeed;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Movement")
+	TObjectPtr<UPlayerMovementComponent> PlayerMovementComponent;
 };
