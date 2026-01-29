@@ -5,7 +5,9 @@
 #include "MonsterStatComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "GenericTeamAgentInterface.h"
 #include "DrawDebugHelpers.h"
+#include "Necromancer.h"
 
 void UAN_MonsterAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,const FAnimNotifyEventReference& EventReference)
 {
@@ -28,41 +30,42 @@ void UAN_MonsterAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBa
 	Params.AddIgnoredActor(OwnerActor);
     
 	bool bHit = OwnerActor->GetWorld()->SweepMultiByChannel(HitResults,AttackStart,AttackEnd,FQuat::Identity,ECC_Pawn,FCollisionShape::MakeSphere(AttackRadius),Params);
-    #if ENABLE_DRAW_DEBUG
+   
+#if ENABLE_DRAW_DEBUG
     UWorld* World = OwnerActor->GetWorld();
     if (World)
     {
         float DebugDuration = 2.0f;  // 2초간 표시
         
-        // 시작점 구체 (파란색)
+        
         DrawDebugSphere(World, AttackStart, AttackRadius, 12, FColor::Blue, false, DebugDuration);
         
-        // 끝점 구체 (히트 여부에 따라 색상 변경)
+        
         FColor EndColor = bHit ? FColor::Red : FColor::Green;
         DrawDebugSphere(World, AttackEnd, AttackRadius, 12, EndColor, false, DebugDuration);
         
-        // 시작점에서 끝점까지 라인
+        
         DrawDebugLine(World, AttackStart, AttackEnd, FColor::Yellow, false, DebugDuration, 0, 2.0f);
         
-        // 캡슐 형태로 전체 스윕 영역 표시 (선택사항)
+        
         DrawDebugCapsule(
             World,
-            (AttackStart + AttackEnd) / 2,           // 중심점
-            AttackDistance / 2,                       // 절반 높이
-            AttackRadius,                             // 반지름
+            (AttackStart + AttackEnd) / 2,           
+            AttackDistance / 2,                       
+            AttackRadius,                             
             FRotationMatrix::MakeFromZ(OwnerActor->GetActorForwardVector()).ToQuat(),
             FColor::Orange,
             false,
             DebugDuration
         );
         
-        // 히트된 액터들 표시
+        
         for (const FHitResult& Hit : HitResults)
         {
-            // 히트 지점에 빨간 점
+            
             DrawDebugPoint(World, Hit.ImpactPoint, 15.0f, FColor::Red, false, DebugDuration);
             
-            // 히트된 액터 위치에 박스
+          
             if (Hit.GetActor())
             {
                 DrawDebugBox(
@@ -74,7 +77,7 @@ void UAN_MonsterAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBa
                     DebugDuration
                 );
                 
-                // 히트된 액터 이름 표시
+                
                 DrawDebugString(
                     World,
                     Hit.GetActor()->GetActorLocation() + FVector(0, 0, 100),
@@ -88,11 +91,18 @@ void UAN_MonsterAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBa
     }
 #endif
     // ========== 디버그 드로잉 끝 ==========
+	
 	for (const FHitResult& Hit : HitResults)
 	{
 		AActor* HitActor = Hit.GetActor();
+		
 		if (HitActor)
 		{
+			IGenericTeamAgentInterface* GenericTeamAgentInterface = Cast<IGenericTeamAgentInterface>(HitActor);
+			if (GenericTeamAgentInterface && GenericTeamAgentInterface -> GetGenericTeamId() == FGenericTeamId(TEAM_ID_MONSTER))
+			{
+				continue;
+			}
 			UGameplayStatics::ApplyDamage(HitActor,MonsterStatComponent->GetAttackPower(),OwnerActor->GetInstigatorController(),OwnerActor,nullptr);
 		}
 	}

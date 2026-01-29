@@ -25,19 +25,19 @@ protected:
 	UMonsterComboDataAsset* ComboData;
 
 private:
-	// 현재 콤보 인덱스
 	int32 CurrentComboIndex = 0;
 
-	// 마지막 공격 시간
-	float LastAttackTime = 0.0f;
-
-	// 콤보 리셋 타이머
-	FTimerHandle ComboResetTimerHandle;
-
-	// 캐시된 참조
 	UPROPERTY()
 	UBehaviorTreeComponent* CachedOwnerComp;
 
+	UPROPERTY()
+	ACharacter* CachedCharacter;
+
+	// 콤보 전환 중인지 (interrupt를 콤보 vs 외부로 구분)
+	bool bComboTransitioning = false;
+
 	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
-	void ResetCombo();
+	void PlayNextCombo();
+	void HandleNextCombo();
+	void FinishCombo(EBTNodeResult::Type Result);
 };
