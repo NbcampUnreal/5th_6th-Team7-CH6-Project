@@ -208,6 +208,8 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 
 		if (StatComponent && StaminaComponent)
 		{
+			StatComponent->BindToOwnerPawn(this);
+
 			UE_LOG(LogTemp, Warning, TEXT("Successfully linked PlayerState\'s Components: %s"), *GetName());
 		}
 	}

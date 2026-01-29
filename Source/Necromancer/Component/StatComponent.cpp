@@ -15,8 +15,6 @@ void UStatComponent::BeginPlay()
 
     if (GetOwner()->HasAuthority())
     {
-        GetOwner()->OnTakeAnyDamage.AddDynamic(this, &UStatComponent::HandleTakeDamage);
-
         CurrentHealth = MaxHealth;
 
         OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
@@ -66,6 +64,15 @@ void UStatComponent::SetCurrentHealth(float NewHealth)
     CurrentHealth = NewHealth;
 
     OnRep_Health();
+}
+
+void UStatComponent::BindToOwnerPawn(APawn* NewPawn)
+{
+    if (NewPawn && GetOwner()->HasAuthority())
+    {
+        NewPawn->OnTakeAnyDamage.RemoveDynamic(this, &UStatComponent::HandleTakeDamage);
+        NewPawn->OnTakeAnyDamage.AddDynamic(this, &UStatComponent::HandleTakeDamage);
+    }
 }
 
 void UStatComponent::AddMaxHealth(float Amount)
