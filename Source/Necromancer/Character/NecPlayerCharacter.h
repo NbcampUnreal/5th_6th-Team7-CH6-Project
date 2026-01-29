@@ -14,7 +14,7 @@ class UPlayerMovementComponent;
 struct FInputActionValue;
 
 UCLASS()
-class NECROMANCER_API ANecPlayerCharacter : public ACharacter
+class NECROMANCER_API ANecPlayerCharacter : public ACharacter , public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
@@ -55,7 +55,7 @@ public:
 	void Server_SetSprint(bool bIsSprinting);
 	
 	//팀 이름 반환
-	virtual FGenericTeamId GetGenericTeamId() const;
+	virtual FGenericTeamId GetGenericTeamId() const override;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
