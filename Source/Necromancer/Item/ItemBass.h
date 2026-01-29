@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Engine/DataTable.h"
+#include "GridInventory/ItemData/ItemData.h"
 #include "ItemBass.generated.h"
 
 USTRUCT(BlueprintType)
@@ -30,11 +32,19 @@ public:
 
 	bool AddCount(int32 Amount);
 	bool RemoveCount(int32 Amount);
+
 	bool IsEmpty() const { return ItemData.Count <= 0; }
+
+	virtual bool IsStackable() const;
 
 	virtual void OnDropped(const FVector& WorldLocation);
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
 	FItemInstanceData ItemData;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
+	UDataTable* ItemDataTable;
+
+	const FItemData* GetItemDataFromTable() const;
 };
