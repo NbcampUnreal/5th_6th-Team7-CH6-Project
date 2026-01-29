@@ -38,5 +38,5 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
 	float SprintSpeed;
 
-	bool bIsSprinting = false;
+	bool bIsSprinting;
 };

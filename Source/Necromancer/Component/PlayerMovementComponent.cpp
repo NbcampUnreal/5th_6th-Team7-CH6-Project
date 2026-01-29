@@ -9,6 +9,7 @@ UPlayerMovementComponent::UPlayerMovementComponent()
 	SetIsReplicatedByDefault(true);
 
 	SprintSpeed = NormalSpeed * SprintSpeedMultiplier;
+	bIsSprinting = false;
 }
 
 void UPlayerMovementComponent::BeginPlay()
@@ -16,6 +17,10 @@ void UPlayerMovementComponent::BeginPlay()
 	Super::BeginPlay();
 
 	OwnerCharacter = Cast<ACharacter>(GetOwner());
+	if (OwnerCharacter && OwnerCharacter->GetCharacterMovement())
+	{
+		OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
+	}
 
 	SprintSpeed = NormalSpeed * SprintSpeedMultiplier;
 }
