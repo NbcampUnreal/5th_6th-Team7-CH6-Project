@@ -39,3 +39,13 @@ void ANecPlayerController::SetupInputComponent()
 		}
 	}
 }
+
+void ANecPlayerController::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	if (IsValid(InGameHUDWidgetInstance))
+	{
+		InGameHUDWidgetInstance->InitHUD();
+	}
+}
