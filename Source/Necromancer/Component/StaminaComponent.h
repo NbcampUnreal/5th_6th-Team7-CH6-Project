@@ -22,6 +22,9 @@ protected:
 	UFUNCTION()
 	void OnRep_CurrentStamina();
 
+	UFUNCTION()
+	void OnRep_IsExhausted();
+
 	void SetStamina(float NewStamina);
 
 public:
@@ -61,5 +64,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
 	float RecoveryThreshold = 20.0f;
 
+	UPROPERTY(ReplicatedUsing = OnRep_IsExhausted, VisibleAnywhere, Category = "Stamina")
 	bool bIsExhausted = false;
 };

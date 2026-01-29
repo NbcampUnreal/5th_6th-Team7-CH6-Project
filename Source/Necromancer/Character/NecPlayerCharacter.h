@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-//팀 구분용 인클루드
 #include "GenericTeamAgentInterface.h"
 #include "NecPlayerCharacter.generated.h"
 

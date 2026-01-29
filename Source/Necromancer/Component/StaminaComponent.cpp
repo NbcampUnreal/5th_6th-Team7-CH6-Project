@@ -33,66 +33,85 @@ void UStaminaComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UStaminaComponent, CurrentStamina);
+	DOREPLIFETIME(UStaminaComponent, bIsExhausted);
 }
 
 void UStaminaComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!GetOwner()->HasAuthority())
-	{
-		return;
-	}
+    bool bIsDraining = CurrentDrainRate > 0.0f;
+    bool bIsMoving = false;
 
-	bool bIsDraining = CurrentDrainRate > 0.0f;
-	bool bIsMoving = false;
+    if (APlayerState* PS = Cast<APlayerState>(GetOwner()))
+    {
+        if (APawn* OwningPawn = PS->GetPawn())
+        {
+            bIsMoving = OwningPawn->GetVelocity().Size() > 5.0f;
+        }
+    }
 
-	if (APlayerState* PS = Cast<APlayerState>(GetOwner()))
-	{
-		if (APawn* OwningPawn = PS->GetPawn())
-		{
-			bIsMoving = OwningPawn->GetVelocity().Size() > 5.0f;
-		}
-	}
+    float NewStamina = CurrentStamina;
 
-	float NewStamina = CurrentStamina;
+    if (bIsDraining && bIsMoving)
+    {
+        NewStamina -= CurrentDrainRate * DeltaTime;
+    }
+    else
+    {
+        NewStamina += StaminaRecoveryRate * DeltaTime;
+    }
 
-	if (bIsDraining && bIsMoving)
-	{
-		NewStamina -= CurrentDrainRate * DeltaTime;
-	}
-	else
-	{
-		NewStamina += StaminaRecoveryRate * DeltaTime;
-	}
+    NewStamina = FMath::Clamp(NewStamina, 0.0f, MaxStamina);
 
-	SetStamina(FMath::Clamp(NewStamina, 0.0f, MaxStamina));	
+    if (bIsExhausted)
+    {
+        if (NewStamina >= RecoveryThreshold)
+        {
+            bIsExhausted = false;
+        }
+    }
+    else
+    {
+        if (NewStamina <= 0.0f && bIsDraining)
+        {
+            bIsExhausted = true;
+        }
+    }
 
-	if (bIsExhausted)
-	{
-		if (CurrentStamina >= RecoveryThreshold)
-		{
-			bIsExhausted = false;
-		}
-	}
+    if (GetOwner()->HasAuthority())
+    {
+        SetStamina(NewStamina);
 
-	if (CurrentStamina <= 0.0f && bIsDraining)
-	{
-		bIsExhausted = true;
-
-		if (APlayerState* PS = Cast<APlayerState>(GetOwner()))
-		{
-			if (ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(PS->GetPawn()))
-			{
-				PlayerCharacter->Server_SetSprint(false);
-			}
-		}
-	}
+        if (bIsExhausted && bIsDraining)
+        {
+            if (APlayerState* PS = Cast<APlayerState>(GetOwner()))
+            {
+                if (ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(PS->GetPawn()))
+                {
+                    PlayerCharacter->Server_SetSprint(false);
+                }
+            }
+        }
+    }
+    else
+    {
+        CurrentStamina = NewStamina;
+        OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+    }
 }
 
 void UStaminaComponent::OnRep_CurrentStamina()
 {
 	OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+}
+
+void UStaminaComponent::OnRep_IsExhausted()
+{
+    if (bIsExhausted)
+    {
+        StopStaminaDrain(false);
+    }
 }
 
 bool UStaminaComponent::ConsumeStamina(float Amount)
@@ -114,24 +133,14 @@ bool UStaminaComponent::ConsumeStamina(float Amount)
 
 void UStaminaComponent::StartStaminaDrain(float DrainRate)
 {
-	if (!GetOwner()->HasAuthority())
-	{
-		return;
-	}
-
-	CurrentDrainRate = FMath::Max(0.0f, DrainRate);
+    CurrentDrainRate = FMath::Max(0.0f, DrainRate);
 }
 
 void UStaminaComponent::StopStaminaDrain(bool bResetExhaustion)
 {
-	if (!GetOwner()->HasAuthority())
-	{
-		return;
-	}
-
-	CurrentDrainRate = 0.0f;
-
-	if (bResetExhaustion)
+    CurrentDrainRate = 0.0f;
+    
+    if (GetOwner()->HasAuthority() && bResetExhaustion)
 	{
 		bIsExhausted = false;
 	}

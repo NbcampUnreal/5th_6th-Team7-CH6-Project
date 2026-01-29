@@ -50,5 +50,7 @@ void UPlayerMovementComponent::SetSprint(bool bShouldSprint)
 	{
 		float NewSpeed = bShouldSprint ? SprintSpeed : NormalSpeed;
 		OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+
+		bIsSprinting = bShouldSprint ? true : false;
 	}
 }
