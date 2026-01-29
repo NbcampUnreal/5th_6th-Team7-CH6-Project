@@ -16,6 +16,7 @@ class NECROMANCER_API ANecPlayerController : public APlayerController
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+	virtual void OnRep_PlayerState() override;
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")

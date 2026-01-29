@@ -25,6 +25,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void UpdateStamina(float CurrentStamina, float MaxStamina);
 
+	void InitHUD();
 
 protected:
 	UPROPERTY(meta = (BindWidget))
