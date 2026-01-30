@@ -58,6 +58,11 @@ public:
 
     UPROPERTY(Replicated, BlueprintReadOnly)
     EItemType ItemType;
+
+    void InitializeIdentity(
+        const FName& InItemID
+    );
+
 #pragma endregion
 
 #pragma region State
@@ -66,11 +71,21 @@ public:
 
     UPROPERTY(Replicated, BlueprintReadWrite)
     bool bRotated;
+
+    void SetDurability(float NewDurability);
+    void AddDurability(float Delta);
+
+    void ToggleRotation()
+    {
+        bRotated = !bRotated;
+    }
 #pragma endregion
 
 #pragma region Container
     UPROPERTY(Replicated, BlueprintReadOnly)
     TArray<FInventorySection> Sections;
+
+    void SetSections(const TArray<FInventorySection>& InSections);
 #pragma endregion
 
 #pragma region InventoryPlacement
@@ -85,6 +100,15 @@ public:
 
     UPROPERTY(Replicated, BlueprintReadOnly)
     int32 PosY;
+
+    void SetInventoryPlacement(
+        const FGuid& InOwnerItemGuid,
+        int32 InSectionIndex,
+        int32 InPosX,
+        int32 InPosY
+    );
+
+    void ClearInventoryPlacement();
 #pragma endregion
 
 #pragma region Helpers
