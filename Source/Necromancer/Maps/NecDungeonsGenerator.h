@@ -37,6 +37,10 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Wall")
 	void CloseHoles();
 
+	// 시드 생성 함수
+	UFUNCTION(BlueprintCallable, Category = "Seed")
+	void SetSeed();
+
 	// 던전 타이머 함수
 	UFUNCTION(BlueprintCallable, Category = "Timer")
 	void StartDungeonTimer();
@@ -64,6 +68,9 @@ protected:
 	UPROPERTY(BlueprintReadWrite);
 	bool bIsDungeonComplete = false;
 
+	// 시드 설정 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Seed");
+	int32 Seed = -1;
 	UPROPERTY(BlueprintReadWrite, Category = "Seed");
 	FRandomStream Stream;
 

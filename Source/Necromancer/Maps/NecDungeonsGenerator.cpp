@@ -12,8 +12,7 @@ ANecDungeonsGenerator::ANecDungeonsGenerator()
 {
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = Root;
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 }
 
@@ -144,7 +143,7 @@ void ANecDungeonsGenerator::CheckForOverlap()
 	AddOverlappingRoomToList();
 
 	// 오버랩 리스트가 비어있지 않다면 방금 생성한 방이 다른 방과 겹침 
-	if (OverlappedList.Num() > 0)
+	if (!OverlappedList.IsEmpty())
 	{
 		// 오버랩 리스트 지워주고, 방 지워주고 다시 생성
 		OverlappedList.Empty();
@@ -190,15 +189,15 @@ void ANecDungeonsGenerator::CheckForOverlap()
 	// 아직 방 설치 가능하면 방설치
 	if (RoomAmount > 0)
 	{
-		// 20개 마다 특수 방 설치
-		if (RoomAmount % 30 == 0)
-		{
-			RoomList = SpecialRoomList;
-		}
-		else
-		{
-			RoomList = RoomListBase;
-		}
+		// 30개 마다 특수 방 설치
+		//if (RoomAmount % 30 == 0)
+		//{
+		//	RoomList = SpecialRoomList;
+		//}
+		//else
+		//{
+		//	RoomList = RoomListBase;
+		//}
 		SpawnNextRoom();
 	}
 	else
@@ -229,6 +228,18 @@ void ANecDungeonsGenerator::CloseHoles()
 			FTransform Transform = comp->GetComponentTransform();
 			GetWorld()->SpawnActor<AActor>(BlockHoles, Transform, SpawnParams);
 		}
+	}
+}
+
+void ANecDungeonsGenerator::SetSeed()
+{
+	if (Seed == -1)
+	{
+		Stream.Initialize(static_cast<int32>(FPlatformTime::Cycles()));
+	}
+	else
+	{
+		Stream.Initialize(Seed);
 	}
 }
 
