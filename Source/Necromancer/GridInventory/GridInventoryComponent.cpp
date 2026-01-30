@@ -92,6 +92,7 @@ inline void UGridInventoryComponent::OnRep_Items()
     if (bInventoryActive)
     {
         RebuildItemOwnerMap();
+        OnInventoryUpdated.Broadcast();
     }
 }
 
@@ -297,6 +298,7 @@ void UGridInventoryComponent::Server_AddItemToPos_Implementation(UItemInstance* 
     ItemsInContainer.Add(NewItem);
 
     RebuildItemOwnerMap();
+    OnInventoryUpdated.Broadcast();
 }
 
 
@@ -350,4 +352,5 @@ void UGridInventoryComponent::Server_RemoveItem_Implementation(UItemInstance* It
     Item->PosY = 0;
 
     RebuildItemOwnerMap();
+    OnInventoryUpdated.Broadcast();
 }
