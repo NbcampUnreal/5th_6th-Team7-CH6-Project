@@ -48,7 +48,8 @@ protected:
 	UFUNCTION()
 	void OnRep_IsDead();
 	
-	
+	UPROPERTY()
+	FTimerHandle DeathTimerHandle;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	TObjectPtr<UMonsterStatComponent> MonsterStatComponent;
