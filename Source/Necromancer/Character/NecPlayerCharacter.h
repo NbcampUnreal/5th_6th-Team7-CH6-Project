@@ -43,7 +43,10 @@ protected:
 	void Attack(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void Guard(const FInputActionValue& Value);
+	void StartGuard(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void StopGuard(const FInputActionValue& Value);
 
 	UFUNCTION()
 	void LockOn(const FInputActionValue& Value);
