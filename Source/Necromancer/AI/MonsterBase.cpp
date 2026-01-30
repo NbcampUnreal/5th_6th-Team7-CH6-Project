@@ -7,6 +7,7 @@
 #include "BrainComponent.h"
 #include "MonsterStatComponent.h"
 #include "Necromancer.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -66,12 +67,15 @@ void AMonsterBase::OnDeath()
 	if (AIController && AIController->GetBrainComponent())
 	{
 		AIController->GetBrainComponent()->StopLogic("Dead");
+		AIController->UnPossess();
 	}
-
-	GetCharacterMovement()->DisableMovement();
-
 	
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->DisableMovement();
+	
+
 	Multicast_PlayDeathMontage();
+	
 }
 
 void AMonsterBase::StartRagdoll()
@@ -97,7 +101,6 @@ void AMonsterBase::OnRep_IsDead()
 {
 	if (bIsDead)
 	{
-		
 		GetCharacterMovement()->DisableMovement();
 	}
 }
@@ -107,9 +110,7 @@ void AMonsterBase::Multicast_PlayDeathMontage_Implementation()
 	if (DeathMontage)
 	{
 		float Duration = PlayAnimMontage(DeathMontage);
-
-		FTimerHandle DeathTimerHandle;
-		GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &AMonsterBase::StartRagdoll, Duration, false);
+		GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &AMonsterBase::StartRagdoll, Duration-0.5, false);
 	}
 	else
 	{
