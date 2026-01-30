@@ -43,6 +43,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Stamina")
 	float GetMaxStamina() const { return MaxStamina; }
 
+	void ConsumeStamina_Predictive(float Amount);
+
 	bool IsExhausted() const { return bIsExhausted; }
 	void SetExhausted(bool bValue) { bIsExhausted = bValue; }
 

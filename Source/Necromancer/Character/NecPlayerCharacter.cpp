@@ -9,6 +9,7 @@
 #include "Component/StatComponent.h"
 #include "Component/StaminaComponent.h"
 #include "Component/PlayerMovementComponent.h"
+#include "Component/CombatComponent.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
@@ -28,7 +29,10 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
 	CameraComponent->bUsePawnControlRotation = false;
 
-	PlayerMovementComponent = CreateDefaultSubobject<UPlayerMovementComponent>(TEXT("PlayerMovementComponent"));	
+	PlayerMovementComponent = CreateDefaultSubobject<UPlayerMovementComponent>(TEXT("PlayerMovementComponent"));
+
+	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	CombatComponent->SetIsReplicated(true);
 }
 
 void ANecPlayerCharacter::BeginPlay()
@@ -86,7 +90,7 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 			{
 				EnhancedInputComp->BindAction(
 					PlayerController->AttackAction,
-					ETriggerEvent::Triggered,
+					ETriggerEvent::Started,
 					this,
 					&ANecPlayerCharacter::Attack
 				);
@@ -185,7 +189,10 @@ void ANecPlayerCharacter::StopSprint(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::Attack(const FInputActionValue& Value)
 {
-
+	if (IsValid(CombatComponent))
+	{
+		CombatComponent->Attack();
+	}
 }
 
 void ANecPlayerCharacter::Guard(const FInputActionValue& Value)
@@ -208,9 +215,12 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 
 		if (StatComponent && StaminaComponent)
 		{
-			StatComponent->BindToOwnerPawn(this);
+			if (HasAuthority())
+			{ 
+				StatComponent->BindToOwnerPawn(this);
 
-			UE_LOG(LogTemp, Warning, TEXT("Successfully linked PlayerState\'s Components: %s"), *GetName());
+				UE_LOG(LogTemp, Warning, TEXT("[Server] Successfully linked Component: %s"), *GetName());
+			}
 		}
 	}
 }

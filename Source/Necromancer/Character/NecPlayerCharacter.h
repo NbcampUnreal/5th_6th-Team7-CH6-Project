@@ -10,6 +10,7 @@ class UCameraComponent;
 class UStatComponent;
 class UStaminaComponent;
 class UPlayerMovementComponent;
+class UCombatComponent;
 struct FInputActionValue;
 
 UCLASS()
@@ -56,6 +57,9 @@ public:
 	//팀 이름 반환
 	virtual FGenericTeamId GetGenericTeamId() const override;
 
+	UStatComponent* GetStatComponent() const { return StatComponent; }
+	UStaminaComponent* GetStaminaComponent() const { return StaminaComponent; }
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
 	TObjectPtr<USpringArmComponent> SpringArmComponent;
@@ -71,4 +75,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Movement")
 	TObjectPtr<UPlayerMovementComponent> PlayerMovementComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Combat")
+	TObjectPtr<UCombatComponent> CombatComponent;
 };

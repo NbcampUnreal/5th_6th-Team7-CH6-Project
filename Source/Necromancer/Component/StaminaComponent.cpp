@@ -8,7 +8,7 @@
 
 UStaminaComponent::UStaminaComponent()
 	: CurrentStamina(0.0f)
-	, StaminaRecoveryRate(10.0f)
+	, StaminaRecoveryRate(20.0f)
 	, CurrentDrainRate(0.0f)
 {
 	SetIsReplicatedByDefault(true);
@@ -144,6 +144,21 @@ void UStaminaComponent::StopStaminaDrain(bool bResetExhaustion)
 	{
 		bIsExhausted = false;
 	}
+}
+
+void UStaminaComponent::ConsumeStamina_Predictive(float Amount)
+{
+    if (GetOwner()->HasAuthority())
+    {
+        return;
+    }
+
+    if (CurrentStamina >= Amount)
+    {
+        CurrentStamina -= Amount;
+
+        OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+    }
 }
 
 void UStaminaComponent::SetStamina(float NewStamina)
