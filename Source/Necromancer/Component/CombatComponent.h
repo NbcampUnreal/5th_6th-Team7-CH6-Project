@@ -17,6 +17,7 @@ public:
 
 protected:	
 	virtual void BeginPlay() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:		
 	void Attack();
@@ -24,19 +25,32 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void PerformAttackTrace();
 
-protected:
+	void SetGuard(bool bInGuarding);
+
+	UFUNCTION(BlueprintPure, Category = "Combat")
+	bool IsGuarding() const { return bIsGuarding; }
+
+protected:	
+	UFUNCTION()
+	void OnRep_bIsGuarding();
+		
+	void UpdateGuardVisuals();
+
 	UFUNCTION(Server, Reliable)
 	void Server_Attack();
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetGuard(bool bInGuarding);
 
 	UPROPERTY()
 	TObjectPtr<ANecPlayerCharacter> OwnerCharacter;
 
-	UPROPERTY()
-	TObjectPtr<UStaminaComponent> OwnerStaminaComponent;
-
 protected:
 	UPROPERTY(EditAnywhere, Category = "Combat")
-	UAnimMontage* AttackMontage;
+	TObjectPtr<UAnimMontage> AttackMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	TObjectPtr<UAnimMontage> GuardMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float AttackDamage = 20.0f;
@@ -48,4 +62,7 @@ protected:
 	float AttackRange = 150.0f;
 
 	bool bHasAppliedDamageInCurrentAttack = false;
+
+	UPROPERTY(ReplicatedUsing = OnRep_bIsGuarding, BlueprintReadOnly, Category = "Combat")
+	bool bIsGuarding = false;
 };

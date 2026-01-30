@@ -100,9 +100,16 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 			{
 				EnhancedInputComp->BindAction(
 					PlayerController->GuardAction,
-					ETriggerEvent::Triggered,
+					ETriggerEvent::Started,
 					this,
-					&ANecPlayerCharacter::Guard
+					&ANecPlayerCharacter::StartGuard
+				);
+
+				EnhancedInputComp->BindAction(
+					PlayerController->GuardAction,
+					ETriggerEvent::Completed,
+					this,
+					&ANecPlayerCharacter::StopGuard
 				);
 			}
 
@@ -195,9 +202,20 @@ void ANecPlayerCharacter::Attack(const FInputActionValue& Value)
 	}
 }
 
-void ANecPlayerCharacter::Guard(const FInputActionValue& Value)
+void ANecPlayerCharacter::StartGuard(const FInputActionValue& Value)
 {
+	if (CombatComponent)
+	{		
+		CombatComponent->SetGuard(true);
+	}
+}
 
+void ANecPlayerCharacter::StopGuard(const FInputActionValue& Value)
+{
+	if (CombatComponent)
+	{
+		CombatComponent->SetGuard(false);
+	}
 }
 
 void ANecPlayerCharacter::LockOn(const FInputActionValue& Value)

@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 UCombatComponent::UCombatComponent() :
     AttackMontage(nullptr)
@@ -18,6 +19,13 @@ void UCombatComponent::BeginPlay()
 	Super::BeginPlay();
 
 	OwnerCharacter = Cast<ANecPlayerCharacter>(GetOwner());
+}
+
+void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(UCombatComponent, bIsGuarding);
 }
 
 void UCombatComponent::Attack()
@@ -109,6 +117,60 @@ void UCombatComponent::PerformAttackTrace()
         );
 
         UE_LOG(LogTemp, Log, TEXT("Hit Actor: %s"), *HitResult.GetActor()->GetName());
+    }
+}
+
+void UCombatComponent::SetGuard(bool bInGuarding)
+{
+    if (bIsGuarding == bInGuarding)
+    {
+        return;
+    }
+
+    bIsGuarding = bInGuarding;
+    UpdateGuardVisuals();
+
+    Server_SetGuard(bInGuarding);
+}
+
+void UCombatComponent::OnRep_bIsGuarding()
+{
+    UpdateGuardVisuals();
+}
+
+void UCombatComponent::UpdateGuardVisuals()
+{
+    if (!OwnerCharacter || !GuardMontage)
+    {
+        return;
+    }
+
+    UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+    if (!AnimInstance)
+    {
+        return;
+    }
+
+    if (bIsGuarding)
+    {
+        OwnerCharacter->PlayAnimMontage(GuardMontage, 1.0f, TEXT("StartGuard"));
+    }
+    else
+    {
+        if (AnimInstance->Montage_IsPlaying(GuardMontage))
+        {
+            AnimInstance->Montage_JumpToSection(TEXT("EndGuard"), GuardMontage);
+        }
+    }
+}
+
+void UCombatComponent::Server_SetGuard_Implementation(bool bInGuarding)
+{    
+    bIsGuarding = bInGuarding;
+
+    if (GetOwnerRole() == ROLE_Authority)
+    {
+        UpdateGuardVisuals();
     }
 }
 
