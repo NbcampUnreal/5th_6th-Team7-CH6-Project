@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-//팀 구분용 인클루드
 #include "GenericTeamAgentInterface.h"
 #include "NecPlayerCharacter.generated.h"
 
@@ -11,6 +10,7 @@ class UCameraComponent;
 class UStatComponent;
 class UStaminaComponent;
 class UPlayerMovementComponent;
+class UCombatComponent;
 struct FInputActionValue;
 
 UCLASS()
@@ -43,7 +43,10 @@ protected:
 	void Attack(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void Guard(const FInputActionValue& Value);
+	void StartGuard(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void StopGuard(const FInputActionValue& Value);
 
 	UFUNCTION()
 	void LockOn(const FInputActionValue& Value);
@@ -56,6 +59,9 @@ public:
 	
 	//팀 이름 반환
 	virtual FGenericTeamId GetGenericTeamId() const override;
+
+	UStatComponent* GetStatComponent() const { return StatComponent; }
+	UStaminaComponent* GetStaminaComponent() const { return StaminaComponent; }
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
@@ -72,4 +78,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Movement")
 	TObjectPtr<UPlayerMovementComponent> PlayerMovementComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Combat")
+	TObjectPtr<UCombatComponent> CombatComponent;
 };

@@ -21,6 +21,11 @@ void AMonsterAIController::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (!HasAuthority())
+	{
+		return;
+	}
+	
 	if (AIPerceptionComp)
 	{
 		AIPerceptionComp->OnTargetPerceptionUpdated.AddDynamic(this, &AMonsterAIController::OnTargetPerceptionUpdated);
@@ -51,6 +56,11 @@ AActor* AMonsterAIController::GetTargetActor() const
 	return nullptr;
 }
 
+void AMonsterAIController::ClearTargetActor()
+{
+	SetTargetActor(nullptr);
+}
+
 void AMonsterAIController::SetlastLocation(FVector LastLocation)
 {
 	if (UBlackboardComponent* BB = GetBlackboardComponent())
@@ -73,6 +83,7 @@ void AMonsterAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 {
 	if (Stimulus.WasSuccessfullySensed())
 	{
+		GetWorldTimerManager().ClearTimer(LoseTargetTimerHandle);
 		IGenericTeamAgentInterface* GenericTeamAgentInterface = Cast<IGenericTeamAgentInterface>(Actor);
 		if (GenericTeamAgentInterface->GetGenericTeamId() == FGenericTeamId(TEAM_ID_PLAYER))
 		{
@@ -83,7 +94,9 @@ void AMonsterAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 	else
 	{
 		SetlastLocation(Actor->GetActorLocation());
-		SetTargetActor(nullptr);
+		
+		GetWorldTimerManager().SetTimer(LoseTargetTimerHandle, this,&AMonsterAIController::ClearTargetActor,ClearTime,false);
+		
 	
 	}
 }

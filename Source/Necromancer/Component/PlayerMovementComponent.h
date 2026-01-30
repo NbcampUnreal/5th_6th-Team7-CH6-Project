@@ -23,6 +23,7 @@ public:
 
 	float GetNormalSpeed() const { return NormalSpeed; }
 	float GetSprintSpeed() const { return SprintSpeed; }
+	bool GetIsSprinting() const { return bIsSprinting; }
 
 protected:
 	UPROPERTY()
@@ -36,4 +37,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
 	float SprintSpeed;
+
+	bool bIsSprinting;
 };
