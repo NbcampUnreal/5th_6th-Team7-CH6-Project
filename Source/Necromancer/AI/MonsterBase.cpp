@@ -7,6 +7,8 @@
 #include "BrainComponent.h"
 #include "MonsterStatComponent.h"
 #include "Necromancer.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -14,7 +16,12 @@
 AMonsterBase::AMonsterBase()
 {
 	MonsterStatComponent = CreateDefaultSubobject<UMonsterStatComponent>(TEXT("MonsterStatComponent"));
-	SetRVOAvoidanceEnabled(false);
+	SetRVOAvoidanceEnabled(true);
+	
+	bReplicates = true;
+	SetReplicatingMovement(true);  
+	NetUpdateFrequency = 10.0f;   
+	MinNetUpdateFrequency = 2.0f;
 	
 }
 
@@ -51,22 +58,23 @@ void AMonsterBase::OnStun()
 
 void AMonsterBase::OnDeath()
 {
+	
+	if (!HasAuthority()) return;
+
+	bIsDead = true;  
+
 	AAIController* AIController = GetController<AAIController>();
 	if (AIController && AIController->GetBrainComponent())
 	{
 		AIController->GetBrainComponent()->StopLogic("Dead");
+		AIController->UnPossess();
 	}
 	
+	GetCharacterMovement()->StopMovementImmediately();
 	GetCharacterMovement()->DisableMovement();
 	
-	float Duration = 0.0f;
-	if (DeathMontage)
-	{
-		Duration = PlayAnimMontage(DeathMontage);
-	}
-	
-	FTimerHandle DeathTimerHandle;
-	GetWorldTimerManager().SetTimer(DeathTimerHandle,this,&AMonsterBase::StartRagdoll,Duration,false);
+
+	Multicast_PlayDeathMontage();
 	
 }
 
@@ -83,3 +91,37 @@ FGenericTeamId AMonsterBase::GetGenericTeamId() const
 	return FGenericTeamId(TEAM_ID_MONSTER);
 }
 
+void AMonsterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AMonsterBase, bIsDead);
+}
+
+void AMonsterBase::OnRep_IsDead()
+{
+	if (bIsDead)
+	{
+		GetCharacterMovement()->DisableMovement();
+	}
+}
+
+void AMonsterBase::Multicast_PlayDeathMontage_Implementation()
+{
+	if (DeathMontage)
+	{
+		float Duration = PlayAnimMontage(DeathMontage);
+		GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &AMonsterBase::StartRagdoll, Duration-0.5, false);
+	}
+	else
+	{
+		StartRagdoll();
+	}
+}
+
+void AMonsterBase::Multicast_PlayMontage_Implementation(UAnimMontage* Montage)
+{
+	if (Montage)
+	{
+		PlayAnimMontage(Montage);
+	}
+}

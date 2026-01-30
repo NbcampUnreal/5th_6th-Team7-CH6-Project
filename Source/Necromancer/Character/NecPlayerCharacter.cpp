@@ -9,6 +9,7 @@
 #include "Component/StatComponent.h"
 #include "Component/StaminaComponent.h"
 #include "Component/PlayerMovementComponent.h"
+#include "Component/CombatComponent.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
@@ -28,7 +29,10 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
 	CameraComponent->bUsePawnControlRotation = false;
 
-	PlayerMovementComponent = CreateDefaultSubobject<UPlayerMovementComponent>(TEXT("PlayerMovementComponent"));	
+	PlayerMovementComponent = CreateDefaultSubobject<UPlayerMovementComponent>(TEXT("PlayerMovementComponent"));
+
+	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	CombatComponent->SetIsReplicated(true);
 }
 
 void ANecPlayerCharacter::BeginPlay()
@@ -86,7 +90,7 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 			{
 				EnhancedInputComp->BindAction(
 					PlayerController->AttackAction,
-					ETriggerEvent::Triggered,
+					ETriggerEvent::Started,
 					this,
 					&ANecPlayerCharacter::Attack
 				);
@@ -147,25 +151,48 @@ void ANecPlayerCharacter::Look(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::StartSprint(const FInputActionValue& Value)
 {
-	if (IsValid(PlayerMovementComponent))
+	if (!IsValid(StaminaComponent) || !IsValid(PlayerMovementComponent))
 	{
-		PlayerMovementComponent->SetSprint(true);
-		Server_SetSprint(true);
+		return;
 	}
+
+	if (StaminaComponent->IsExhausted())
+	{
+		if (PlayerMovementComponent->GetIsSprinting())
+		{
+			StopSprint(Value);
+		}
+		return;
+	}
+
+	PlayerMovementComponent->SetSprint(true);
+	GetCharacterMovement()->MaxWalkSpeed = PlayerMovementComponent->GetSprintSpeed();
+
+	StaminaComponent->StartStaminaDrain(10.0f);
+
+	Server_SetSprint(true);
 }
 
 void ANecPlayerCharacter::StopSprint(const FInputActionValue& Value)
 {
 	if (IsValid(PlayerMovementComponent))
-	{
+	{		
 		PlayerMovementComponent->SetSprint(false);
+		GetCharacterMovement()->MaxWalkSpeed = PlayerMovementComponent->GetNormalSpeed();
+
+		bool bResetExhaustion = StaminaComponent->GetCurrentStamina() > 0.0f;
+		StaminaComponent->StopStaminaDrain(bResetExhaustion);
+
 		Server_SetSprint(false);
 	}
 }
 
 void ANecPlayerCharacter::Attack(const FInputActionValue& Value)
 {
-
+	if (IsValid(CombatComponent))
+	{
+		CombatComponent->Attack();
+	}
 }
 
 void ANecPlayerCharacter::Guard(const FInputActionValue& Value)
@@ -188,7 +215,12 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 
 		if (StatComponent && StaminaComponent)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Successfully linked PlayerState\'s Components: %s"), *GetName());
+			if (HasAuthority())
+			{ 
+				StatComponent->BindToOwnerPawn(this);
+
+				UE_LOG(LogTemp, Warning, TEXT("[Server] Successfully linked Component: %s"), *GetName());
+			}
 		}
 	}
 }
@@ -206,7 +238,7 @@ void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)
 	}
 
 	if (bIsSprinting)
-	{		
+	{
 		if (!StaminaComponent->IsExhausted() && StaminaComponent->GetCurrentStamina() > 0.0f)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = PlayerMovementComponent->GetSprintSpeed();
@@ -221,7 +253,6 @@ void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)
 	else
 	{
 		GetCharacterMovement()->MaxWalkSpeed = PlayerMovementComponent->GetNormalSpeed();
-
 		bool bResetExhaustion = StaminaComponent->GetCurrentStamina() > 0.0f;
 		StaminaComponent->StopStaminaDrain(bResetExhaustion);
 	}

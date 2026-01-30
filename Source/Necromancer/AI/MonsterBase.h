@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GenericTeamAgentInterface.h"
 #include "GameFramework/Character.h"
+#include "Net/UnrealNetwork.h" 
 #include "MonsterBase.generated.h"
 
 class UMonsterStatComponent;
@@ -21,6 +22,8 @@ public:
 	
 	AMonsterBase();
 	
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
 	virtual FGenericTeamId GetGenericTeamId() const override;
 	
 	// AN_MonsterNextAttack이 Execute, BTTask가 Bind
@@ -28,10 +31,25 @@ public:
 	
 	UFUNCTION(BlueprintCallable,Category="RVO")
 	void SetRVOAvoidanceEnabled(bool bEnable);
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayMontage(UAnimMontage* Montage);
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayDeathMontage();
 
 protected:
 	
 	virtual void BeginPlay() override;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_IsDead)
+	bool bIsDead = false;
+	
+	UFUNCTION()
+	void OnRep_IsDead();
+	
+	UPROPERTY()
+	FTimerHandle DeathTimerHandle;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	TObjectPtr<UMonsterStatComponent> MonsterStatComponent;

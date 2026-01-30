@@ -3,6 +3,7 @@
 
 #include "BTTask_MonsterAttack.h"
 #include "AIController.h"
+#include "MonsterBase.h"
 #include "GameFramework/Character.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
@@ -41,7 +42,12 @@ EBTNodeResult::Type UBTTask_MonsterAttack::ExecuteTask(UBehaviorTreeComponent& O
 		return EBTNodeResult::Failed;
 	}
 	
-	float Duration = Character->PlayAnimMontage(AttackMontage);
+	AMonsterBase* Monster = Cast<AMonsterBase>(Character);
+	if (Monster)
+	{
+		Monster->Multicast_PlayMontage(AttackMontage);
+	}
+	float Duration = AttackMontage ? AttackMontage->GetPlayLength() : 0.0f;
 	if (Duration <= 0.0f)
 	{
 		BB->SetValueAsBool(FName("IsAttacking"), false);

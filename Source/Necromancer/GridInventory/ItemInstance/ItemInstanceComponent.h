@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -7,22 +7,38 @@
 #include "ItemInstanceComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+class UItemInstance;
+class UGridInventoryComponent;
+
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class NECROMANCER_API UItemInstanceComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
-	// Sets default values for this component's properties
+public:
 	UItemInstanceComponent();
 
+	/** 아이템 인스턴스 초기화 */
+	void Initialize(UItemInstance* InItemInstance);
+
+	/** 컨테이너인지 여부 */
+	bool HasInventory() const { return InventoryComponent != nullptr; }
+
+	UGridInventoryComponent* GetInventory() const { return InventoryComponent; }
+	UItemInstance* GetItemInstance() const { return ItemInstance; }
+	void GetAllItemInstances(TArray<UItemInstance*>& OutItems) const;
+
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+private:
+	/** 이 컴포넌트가 관리하는 아이템 인스턴스 */
+	UPROPERTY()
+	UItemInstance* ItemInstance = nullptr;
 
-		
+	/** 컨테이너일 경우에만 생성됨 */
+	UPROPERTY()
+	UGridInventoryComponent* InventoryComponent = nullptr;
+
+	void CreateInventoryIfNeeded();
 };

@@ -134,7 +134,13 @@ void UBTTask_MonsterComboAttack::PlayNextCombo()
         return;
     }
 
-    float Duration = CachedCharacter->PlayAnimMontage(AttackData->AttackMontage);
+    AMonsterBase* Monster = Cast<AMonsterBase>(CachedCharacter);
+    if (Monster)
+    {
+        Monster->Multicast_PlayMontage(AttackData->AttackMontage);
+    }
+    
+    float Duration = AttackData->AttackMontage->GetPlayLength();
     if (Duration <= 0.0f)
     {
         return;

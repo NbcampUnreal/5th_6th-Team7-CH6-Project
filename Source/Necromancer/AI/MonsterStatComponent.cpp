@@ -11,6 +11,8 @@ UMonsterStatComponent::UMonsterStatComponent()
 void UMonsterStatComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	BindToOwnerPawn(OwnerPawn);
 }
 
 void UMonsterStatComponent::ApplyPoise(float Amount)
