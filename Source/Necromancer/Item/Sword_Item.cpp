@@ -7,7 +7,23 @@
 
 ASword_Item::ASword_Item()
 {
+	Damage = 20.f;
 
+	////매쉬
+	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> SwordMeshAsset(	TEXT(""));
+
+	//if (SwordMeshAsset.Succeeded() && WeaponMesh)
+	//{
+	//	WeaponMesh->SetSkeletalMesh(SwordMeshAsset.Object);
+	//}
+
+	////사운드
+	//static ConstructorHelpers::FObjectFinder<USoundBase> SwordAttackSound(TEXT(""));
+
+	//if (SwordAttackSound.Succeeded())
+	//{
+	//	AttackSound = SwordAttackSound.Object;
+	//}
 }
 
 void ASword_Item::OnAttackHit(
@@ -20,6 +36,11 @@ void ASword_Item::OnAttackHit(
 )
 
 {
+	if (!HasAuthority())
+	{
+		return;
+	}
+
 	if (!OtherActor || OtherActor == this)
 	{
 		return;
@@ -30,8 +51,6 @@ void ASword_Item::OnAttackHit(
 	{
 		return;
 	}
-
-	const float Damage = 20.f;
 
 	UGameplayStatics::ApplyDamage(HitPawn,Damage,GetInstigatorController(),this,UDamageType::StaticClass());
 

@@ -32,6 +32,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Sound")
 	USoundBase* AttackSound;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	float Damage = 10.f;
+
 	UFUNCTION()
 	virtual void OnAttackHit(
 		UPrimitiveComponent* OverlappedComponent,

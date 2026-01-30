@@ -21,9 +21,7 @@ AWeapon_Item_Base::AWeapon_Item_Base()
 	AttackHitBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 	AttackHitBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
-	AttackHitBox->OnComponentBeginOverlap.AddDynamic(
-		this, &AWeapon_Item_Base::OnAttackHit
-	);
+	AttackHitBox->OnComponentBeginOverlap.AddDynamic(this, &AWeapon_Item_Base::OnAttackHit);
 }
 
 void AWeapon_Item_Base::StartAttack()
@@ -32,11 +30,7 @@ void AWeapon_Item_Base::StartAttack()
 
 	if (AttackSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this,
-			AttackSound,
-			GetActorLocation()
-		);
+		UGameplayStatics::PlaySoundAtLocation(this,AttackSound,GetActorLocation());
 	}
 }
 
@@ -57,6 +51,5 @@ void AWeapon_Item_Base::OnAttackHit(
 	if (!OtherActor || OtherActor == GetOwner())
 		return;
 
-	// 여기서 데미지 처리 (GAS 없이)
 	UE_LOG(LogTemp, Log, TEXT("Weapon Hit: %s"), *OtherActor->GetName());
 }
