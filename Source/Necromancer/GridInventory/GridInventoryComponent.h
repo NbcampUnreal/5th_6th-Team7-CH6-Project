@@ -8,6 +8,8 @@
 
 class UItemInstance;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class NECROMANCER_API UGridInventoryComponent : public UActorComponent
 {
@@ -15,6 +17,10 @@ class NECROMANCER_API UGridInventoryComponent : public UActorComponent
 public:
     // Sets default values for this component's properties
     UGridInventoryComponent();
+
+    UPROPERTY(BlueprintAssignable)
+    FOnInventoryUpdated OnInventoryUpdated;
+
 protected:
     // Called when the game starts
     virtual void BeginPlay() override;

@@ -1,18 +1,35 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "GridInventory/ItemInstance/ItemInstanceComponent.h"
+#include "GridInventory/ItemInstance/ItemInstance.h"
+#include "GridInventory/GridInventoryComponent.h"
 
 // Sets default values for this component's properties
 UItemInstanceComponent::UItemInstanceComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
+
+void UItemInstanceComponent::GetAllItemInstances(TArray<UItemInstance*>& OutItems) const
+{
+	OutItems.Reset();
+
+	// 1. 자기 자신 아이템
+	if (ItemInstance)
+	{
+		OutItems.Add(ItemInstance);
+	}
+
+	// 2. 컨테이너라면 내부 인벤토리 아이템들
+	if (InventoryComponent)
+	{
+		TArray<UItemInstance*> InventoryItems;
+		InventoryComponent->GetInventory(InventoryItems);
+		OutItems.Append(InventoryItems);
+	}
+}
 
 // Called when the game starts
 void UItemInstanceComponent::BeginPlay()
@@ -23,12 +40,42 @@ void UItemInstanceComponent::BeginPlay()
 	
 }
 
-
-// Called every frame
-void UItemInstanceComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UItemInstanceComponent::Initialize(UItemInstance* InItemInstance)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if (!IsValid(InItemInstance))
+	{
+		return;
+	}
 
-	// ...
+	ItemInstance = InItemInstance;
+	CreateInventoryIfNeeded();
 }
 
+void UItemInstanceComponent::CreateInventoryIfNeeded()
+{
+	if (!ItemInstance || !ItemInstance->IsContainer())
+	{
+		return;
+	}
+
+	if (InventoryComponent)
+	{
+		return; // 이미 있음
+	}
+
+	AActor* Owner = GetOwner();
+	if (!Owner)
+	{
+		return;
+	}
+
+	InventoryComponent = NewObject<UGridInventoryComponent>(
+		Owner,
+		UGridInventoryComponent::StaticClass()
+	);
+
+	InventoryComponent->RegisterComponent();	
+
+	// 🔥 여기서 ItemInstance의 Sections 정보로 인벤토리 초기화
+	// InventoryComponent->InitializeFromItemInstance(ItemInstance);
+}
