@@ -9,6 +9,7 @@
 
 #include "NecLobbyPlayerController.generated.h"
 
+
 /**
  * 
  */
@@ -20,6 +21,7 @@ class NECROMANCER_API ANecLobbyPlayerController : public APlayerController
 public:
 	ANecLobbyPlayerController();
 	virtual void BeginPlay() override;
+
 
 private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ASUIPlayerController, Meta = (AllowPrivateAccess))
@@ -33,6 +35,14 @@ protected:
 
 	TSharedPtr<class IOnlineSession, ESPMode::ThreadSafe> OnlineSessionInterface;
 	TSharedPtr<class FOnlineSessionSearch> SessionSearch;
+
+
+public:
+	void Login();
+	void OnLoginComplete(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error);
+protected:
+	bool bIsLoggedIn;
+
 
 
 # pragma region CreateSession
@@ -64,6 +74,19 @@ private:
 
 	FOnJoinSessionCompleteDelegate JoinSessionCompleteDelegate;
 	void OnJoinSessionComplate(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
+
+#pragma endregion
+
+
+# pragma region Invite Friend
+
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void OnClickInviteFriend();
+
+private:
+	
 
 #pragma endregion
 	
