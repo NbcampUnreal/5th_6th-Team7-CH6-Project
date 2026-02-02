@@ -37,10 +37,6 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Wall")
 	void CloseHoles();
 
-	// 시드 생성 함수
-	UFUNCTION(BlueprintCallable, Category = "Seed")
-	void SetSeed();
-
 	// 던전 타이머 함수
 	UFUNCTION(BlueprintCallable, Category = "Timer")
 	void StartDungeonTimer();
@@ -58,21 +54,13 @@ public:
 	void OnDelayComplete();
 
 	// 블루프린트의 RandomArrayItemFromStream 구현
-	TSubclassOf<AActor> RandomArrayItemFromStreamRoom(const TArray<TSubclassOf<AActor>>& Array,
-		FRandomStream& Str);
+	TSubclassOf<AActor> RandomArrayItemFromStreamRoom(const TArray<TSubclassOf<AActor>>& Array);
 
-	USceneComponent* RandomArrayItemFromStreamArrow(const TArray<USceneComponent*>& Array,
-		FRandomStream& Str);
+	USceneComponent* RandomArrayItemFromStreamArrow(const TArray<USceneComponent*>& Array);
 
 protected:
 	UPROPERTY(BlueprintReadWrite);
 	bool bIsDungeonComplete = false;
-
-	// 시드 설정 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Seed");
-	int32 Seed = -1;
-	UPROPERTY(BlueprintReadWrite, Category = "Seed");
-	FRandomStream Stream;
 
 	// 설치된 방
 	UPROPERTY(BlueprintReadWrite, Category = "Rooms");

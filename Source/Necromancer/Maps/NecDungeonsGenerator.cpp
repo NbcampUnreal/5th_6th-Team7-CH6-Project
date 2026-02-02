@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/BoxComponent.h"
 
 // Sets default values
 ANecDungeonsGenerator::ANecDungeonsGenerator()
@@ -26,25 +27,25 @@ void ANecDungeonsGenerator::BeginPlay()
 	SpawnNextRoom();
 }
 
-TSubclassOf<AActor> ANecDungeonsGenerator::RandomArrayItemFromStreamRoom(const TArray<TSubclassOf<AActor>>& Array, FRandomStream& Str)
+TSubclassOf<AActor> ANecDungeonsGenerator::RandomArrayItemFromStreamRoom(const TArray<TSubclassOf<AActor>>& Array)
 {
 	if (Array.Num() == 0)
 	{
 		return nullptr; // 기본값 반환
 	}
 
-	int32 OutIndex = Str.RandRange(0, Array.Num() - 1);
+	int32 OutIndex = FMath::RandRange(0, Array.Num() - 1);
 	return Array[OutIndex];
 }
 
-USceneComponent* ANecDungeonsGenerator::RandomArrayItemFromStreamArrow(const TArray<USceneComponent*>& Array, FRandomStream& Str)
+USceneComponent* ANecDungeonsGenerator::RandomArrayItemFromStreamArrow(const TArray<USceneComponent*>& Array)
 {
 	if (Array.Num() == 0)
 	{
 		return nullptr; // 기본값 반환
 	}
 
-	int32 OutIndex = Str.RandRange(0, Array.Num() - 1);
+	int32 OutIndex = FMath::RandRange(0, Array.Num() - 1);
 	return Array[OutIndex];
 }
 
@@ -60,7 +61,6 @@ void ANecDungeonsGenerator::SpawnStartRoom()
 
 	if (LatestRoom)
 	{
-
 		// 생성한 방의 컴포넌트 담기
 		TArray<USceneComponent*> Components;
 		LatestRoom->GetComponents<USceneComponent>(Components);
@@ -92,9 +92,9 @@ void ANecDungeonsGenerator::SpawnNextRoom()
 	{
 		return;
 	}
-	SelectedExitPoint = RandomArrayItemFromStreamArrow(ExitsList, Stream);
+	SelectedExitPoint = RandomArrayItemFromStreamArrow(ExitsList);
 	// 랜덤방
-	TSubclassOf<AActor>NextRoom = RandomArrayItemFromStreamRoom(RoomList, Stream);
+	TSubclassOf<AActor>NextRoom = RandomArrayItemFromStreamRoom(RoomList);
 	// 스폰 위치 
 	FTransform SpawnTransform = SelectedExitPoint->GetComponentTransform();
 
@@ -115,20 +115,23 @@ void ANecDungeonsGenerator::AddOverlappingRoomToList()
 		TArray<USceneComponent*> Components;
 		LatestRoom->GetComponents<USceneComponent>(Components);
 
-		for (USceneComponent* comp : Components)
+		for (USceneComponent* Comp : Components)
 		{
-			if (comp && comp->ComponentHasTag(FName("Overlap Folder")))
+			if (Comp && Comp->ComponentHasTag(FName("Overlap Folder")))
 			{
-				const TArray<USceneComponent*> ChildCom = comp->GetAttachChildren();
+				const TArray<USceneComponent*> ChildCom = Comp->GetAttachChildren();
 				for (USceneComponent* Child : ChildCom)
 				{
 					// 자식들 중에 박스 콜리전이면
 					if (UPrimitiveComponent* PrimitiveChild = Cast<UPrimitiveComponent>(Child))
 					{
 						// 추가
-						TArray<UPrimitiveComponent*>OverlappingComponents;
+						TArray<UPrimitiveComponent*> OverlappingComponents;
 						PrimitiveChild->GetOverlappingComponents(OverlappingComponents);
-						OverlappedList.Append(OverlappingComponents);
+						if (!OverlappingComponents.IsEmpty())
+						{
+							OverlappedList.Append(OverlappingComponents);
+						}
 					}
 				}
 				break;
@@ -139,7 +142,6 @@ void ANecDungeonsGenerator::AddOverlappingRoomToList()
 
 void ANecDungeonsGenerator::CheckForOverlap()
 {
-	// 오버랩 리스트 채우기
 	AddOverlappingRoomToList();
 
 	// 오버랩 리스트가 비어있지 않다면 방금 생성한 방이 다른 방과 겹침 
@@ -155,11 +157,8 @@ void ANecDungeonsGenerator::CheckForOverlap()
 	// 방금 생성한 방 겹치지 않음
 	else
 	{
-		// 오버랩 리스트 지움
-		OverlappedList.Empty();
-		// 방 개수 감소			
+		OverlappedList.Empty();		
 		RoomAmount -= 1;
-		// 방금 방 설치 하는데 사용한 화살표 컴포넌트 제거
 		ExitsList.Remove(SelectedExitPoint);
 		//SelectedExitPoint = nullptr;
 		if (LatestRoom)
@@ -228,18 +227,6 @@ void ANecDungeonsGenerator::CloseHoles()
 			FTransform Transform = comp->GetComponentTransform();
 			GetWorld()->SpawnActor<AActor>(BlockHoles, Transform, SpawnParams);
 		}
-	}
-}
-
-void ANecDungeonsGenerator::SetSeed()
-{
-	if (Seed == -1)
-	{
-		Stream.Initialize(static_cast<int32>(FPlatformTime::Cycles()));
-	}
-	else
-	{
-		Stream.Initialize(Seed);
 	}
 }
 
