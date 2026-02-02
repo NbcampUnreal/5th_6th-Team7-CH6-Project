@@ -10,6 +10,11 @@
 #include "Component/StaminaComponent.h"
 #include "Component/PlayerMovementComponent.h"
 #include "Component/CombatComponent.h"
+#include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "DrawDebugHelpers.h"
+#include "Engine/StaticMeshActor.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
@@ -122,6 +127,26 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 					&ANecPlayerCharacter::LockOn
 				);
 			}
+
+			if (PlayerController->MenuAction)
+			{
+				EnhancedInputComp->BindAction(
+					PlayerController->MenuAction,
+					ETriggerEvent::Started,
+					this,
+					&ANecPlayerCharacter::ToggleMenu
+				);
+			}
+
+			if (PlayerController->InteractAction)
+			{
+				EnhancedInputComp->BindAction(
+					PlayerController->InteractAction,
+					ETriggerEvent::Started,
+					this,
+					&ANecPlayerCharacter::Interact
+				);
+			}
 		}
 	}	
 }
@@ -223,6 +248,118 @@ void ANecPlayerCharacter::LockOn(const FInputActionValue& Value)
 
 }
 
+void ANecPlayerCharacter::ToggleMenu(const FInputActionValue& Value)
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC || !InGameMenuClass)
+	{
+		return;
+	}
+
+	if (!InGameMenuInstance)
+	{
+		InGameMenuInstance = CreateWidget<UUserWidget>(PC, InGameMenuClass);
+	}
+
+	if (InGameMenuInstance->IsInViewport())
+	{
+		InGameMenuInstance->RemoveFromParent();
+
+		PC->SetInputMode(FInputModeGameOnly());
+		PC->SetShowMouseCursor(false);
+	}
+	else
+	{
+		InGameMenuInstance->AddToViewport();
+
+		FInputModeGameAndUI InputMode;
+		InputMode.SetWidgetToFocus(InGameMenuInstance->TakeWidget());
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+
+		PC->SetInputMode(InputMode);
+		PC->SetShowMouseCursor(true);
+	}
+}
+
+void ANecPlayerCharacter::Interact()
+{
+	// Temp Function
+	
+	if (!CameraComponent)
+	{
+		return;
+	}
+
+	FVector Start = CameraComponent->GetComponentLocation();
+	FVector ForwardVector = CameraComponent->GetForwardVector();
+	float InteractionDistance = 500.0f;
+	FVector End = Start + (ForwardVector * InteractionDistance);
+	
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		Start,
+		End,
+		ECC_Visibility,
+		Params
+	);
+
+	DrawDebugLine(GetWorld(), 
+		Start, 
+		End, 
+		bHit ? FColor::Green : FColor::Red, 
+		false, 
+		2.0f
+	);
+
+	if (bHit && HitResult.GetActor())
+	{
+		AActor* HitActor = HitResult.GetActor();
+		UPrimitiveComponent* HitComponent = HitResult.GetComponent();
+
+		bool bIsTarget = false;
+
+		if (HitActor->GetName().Contains(TEXT("SM_Torture_Devices_Cage_Open")))
+		{
+			bIsTarget = true;
+		}
+		else if (UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(HitComponent))
+		{
+			if (MeshComp->GetStaticMesh() && MeshComp->GetStaticMesh()->GetName() == TEXT("SM_Torture_Devices_Cage_Open"))
+			{
+				bIsTarget = true;
+			}
+		}
+
+		if (bIsTarget)
+		{
+			if (APlayerController* PC = Cast<APlayerController>(GetController()))
+			{
+				UKismetSystemLibrary::QuitGame(this, PC, EQuitPreference::Quit, false);
+			}
+		}
+	}
+}
+
+void ANecPlayerCharacter::HandleDeath()
+{
+	if (HasAuthority())
+	{		
+		AController* CurrentController = GetController();
+
+		if (CurrentController)
+		{
+			CurrentController->UnPossess();			
+		}
+
+		GetMesh()->SetSimulatePhysics(true);
+		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	}
+}
+
 void ANecPlayerCharacter::LinkPlayerStateComponents()
 {
 	ANecPlayerState* PS = GetPlayerState<ANecPlayerState>();
@@ -236,6 +373,9 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 			if (HasAuthority())
 			{ 
 				StatComponent->BindToOwnerPawn(this);
+
+				StatComponent->OnDeath.RemoveDynamic(this, &ANecPlayerCharacter::HandleDeath);
+				StatComponent->OnDeath.AddDynamic(this, &ANecPlayerCharacter::HandleDeath);
 
 				UE_LOG(LogTemp, Warning, TEXT("[Server] Successfully linked Component: %s"), *GetName());
 			}

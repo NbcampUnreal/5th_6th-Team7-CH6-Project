@@ -40,6 +40,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TObjectPtr<UInputAction> LockOnAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TObjectPtr<UInputAction> MenuAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TObjectPtr<UInputAction> InteractAction;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UInGameHUDWidget> InGameHUDWidgetClass;

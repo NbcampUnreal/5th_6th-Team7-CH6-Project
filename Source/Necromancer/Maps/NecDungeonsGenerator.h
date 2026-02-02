@@ -58,6 +58,8 @@ public:
 
 	USceneComponent* RandomArrayItemFromStreamArrow(const TArray<USceneComponent*>& Array);
 
+	bool GetbIsDungeonComplete() { return bIsDungeonComplete; }
+
 protected:
 	UPROPERTY(BlueprintReadWrite);
 	bool bIsDungeonComplete = false;
@@ -66,9 +68,12 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Rooms");
 	AActor* LatestRoom;
 
-	// 방 개수
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Seed");
 	int32 RoomAmount = 20;
+
+	// 방 개수
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Seed");
+	int32 RoomCount = 0;
 
 	// 시작 방 담을 변수
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")

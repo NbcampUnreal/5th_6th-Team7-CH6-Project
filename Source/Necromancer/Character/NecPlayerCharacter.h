@@ -11,6 +11,7 @@ class UStatComponent;
 class UStaminaComponent;
 class UPlayerMovementComponent;
 class UCombatComponent;
+class UUserWidget;
 struct FInputActionValue;
 
 UCLASS()
@@ -51,6 +52,15 @@ protected:
 	UFUNCTION()
 	void LockOn(const FInputActionValue& Value);
 
+	UFUNCTION()
+	void ToggleMenu(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void Interact();
+
+	UFUNCTION()
+	void HandleDeath();
+
 	void LinkPlayerStateComponents();
 
 public:
@@ -81,4 +91,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Combat")
 	TObjectPtr<UCombatComponent> CombatComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> InGameMenuClass;
+		
+	UPROPERTY()
+	TObjectPtr<UUserWidget> InGameMenuInstance;
 };
