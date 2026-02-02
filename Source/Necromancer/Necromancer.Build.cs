@@ -30,6 +30,7 @@ public class Necromancer : ModuleRules
         PublicIncludePaths.AddRange(new string[]
         {
             "Necromancer",
+            "Necromancer/AI"
         });
     }
 }
