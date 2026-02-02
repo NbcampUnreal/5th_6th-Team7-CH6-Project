@@ -23,6 +23,8 @@ public class Necromancer : ModuleRules
             "AnimationModifierLibrary",
 
             "OnlineSubsystem", "OnlineSubsystemSteam", "OnlineSubsystemUtils",
+            
+            "Niagara",
         });
 
         PublicIncludePaths.AddRange(new string[]
