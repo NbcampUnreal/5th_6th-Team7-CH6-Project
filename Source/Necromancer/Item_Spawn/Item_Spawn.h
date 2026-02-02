@@ -1,4 +1,4 @@
-//Item_Spawn,h
+﻿//Item_Spawn,h
 
 #pragma once
 
@@ -24,5 +24,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spawn Items")
 	FVector GetRandomPointInVolume() const;
 	UFUNCTION(BlueprintCallable, Category = "Spawn Items")
-	void SpawnItem(TSubclassOf<AActor> ItemClass);
+	void SpawnItem(FName ItemID);
+protected:
+	UFUNCTION(Server, Reliable)
+	void Server_SpawnItem(FName ItemID);
+private:
+	void Internal_SpawnItem(FName ItemID);
 };
