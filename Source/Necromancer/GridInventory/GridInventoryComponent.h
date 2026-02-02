@@ -58,12 +58,20 @@ public:
 
 #pragma region AddItem
 public:
+    void AddRootItem(UItemInstance* NewItem);
+
     bool AddItemToPos(
         UItemInstance* NewItem,
         const FGuid& ContainerGuid,
         int32 InSectionIndex,
         int32 InPosX, int32 InPosY
     );
+
+    bool AddItemToContainer(
+        UItemInstance* NewItem,
+        const FGuid& ContainerGuid
+    );
+
 private:
     bool CanAddItemToPos(UItemInstance* NewItem,
         const FGuid& ContainerGuid,
@@ -72,12 +80,21 @@ private:
     );
 
     UFUNCTION(Server, Reliable)
+    void Server_AddRootItem(UItemInstance* NewItem);
+    void Implement_AddRootItem(UItemInstance*& NewItem);
+
+    UFUNCTION(Server, Reliable)
     void Server_AddItemToPos(
         UItemInstance* NewItem,
         const FGuid& ContainerGuid,
         int32 InSectionIndex,
         int32 InPosX, int32 InPosY
-    );
+    );    
+    void Implement_AddItemToPos(
+        UItemInstance*& NewItem, 
+        const FGuid& ContainerGuid,
+        int32 InSectionIndex, 
+        int32 InPosX, int32 InPosY);
 #pragma endregion
 
 #pragma region RemoveItem
@@ -87,6 +104,7 @@ public:
 protected:
     UFUNCTION(Server, Reliable)
     void Server_RemoveItem(UItemInstance* Item);
+private:
+    void Implement_RemoveItem(UItemInstance*& Item);
 #pragma endregion
-		
 };
