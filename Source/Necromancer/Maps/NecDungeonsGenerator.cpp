@@ -22,6 +22,7 @@ void ANecDungeonsGenerator::BeginPlay()
 {
 	Super::BeginPlay();
 	RoomList = RoomListBase;
+	RoomCount = 0;
 	SpawnStartRoom();
 	StartDungeonTimer();
 	SpawnNextRoom();
@@ -158,7 +159,7 @@ void ANecDungeonsGenerator::CheckForOverlap()
 	else
 	{
 		OverlappedList.Empty();		
-		RoomAmount -= 1;
+		RoomCount += 1;
 		ExitsList.Remove(SelectedExitPoint);
 		//SelectedExitPoint = nullptr;
 		if (LatestRoom)
@@ -186,17 +187,17 @@ void ANecDungeonsGenerator::CheckForOverlap()
 	}
 
 	// 아직 방 설치 가능하면 방설치
-	if (RoomAmount > 0)
+	if (RoomCount < RoomAmount)
 	{
-		// 30개 마다 특수 방 설치
-		//if (RoomAmount % 30 == 0)
-		//{
-		//	RoomList = SpecialRoomList;
-		//}
-		//else
-		//{
-		//	RoomList = RoomListBase;
-		//}
+		// 방 20개마다 특수 방 설치
+		if (RoomCount % (RoomAmount - 1) == 0)
+		{
+			RoomList = SpecialRoomList;
+		}
+		else
+		{
+			RoomList = RoomListBase;
+		}
 		SpawnNextRoom();
 	}
 	else
@@ -261,7 +262,7 @@ void ANecDungeonsGenerator::CheckForDungeonComplete()
 void ANecDungeonsGenerator::StartDelay()
 {
 	GetWorld()->GetTimerManager().SetTimer(DelayTimerHandle, this, &ANecDungeonsGenerator::OnDelayComplete,
-		0.1f, false);
+		0.01f, false);
 }
 
 void ANecDungeonsGenerator::OnDelayComplete()
