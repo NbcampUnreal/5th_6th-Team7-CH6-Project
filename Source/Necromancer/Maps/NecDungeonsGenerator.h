@@ -58,6 +58,8 @@ public:
 
 	USceneComponent* RandomArrayItemFromStreamArrow(const TArray<USceneComponent*>& Array);
 
+	bool GetbIsDungeonComplete() { return bIsDungeonComplete; }
+
 protected:
 	UPROPERTY(BlueprintReadWrite);
 	bool bIsDungeonComplete = false;
