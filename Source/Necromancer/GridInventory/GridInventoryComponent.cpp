@@ -4,6 +4,7 @@
 #include "GridInventory/GridInventoryComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GridInventory/ItemInstance/ItemInstance.h"
+#include "GridInventory/ItemData/ItemDataSubsystem.h"
 #include "Engine/ActorChannel.h"
 
 // Sets default values for this component's properties
@@ -123,7 +124,28 @@ inline void UGridInventoryComponent::GetInventory(TArray<UItemInstance*>& OutIte
     OutItems = Items;
 }
 
-bool UGridInventoryComponent::AddItemToPos(UItemInstance* NewItem, 
+void UGridInventoryComponent::AddRootItem(UItemInstance* NewItem)
+{
+    if (!IsValid(NewItem))
+    {
+        return;
+    }
+    if (GetOwnerRole() < ROLE_Authority)
+    {
+        Server_AddRootItem(
+            NewItem
+        );
+    }
+    else
+    {
+        Implement_AddRootItem(
+            NewItem
+        );
+    }
+    UE_LOG(LogTemp, Warning, TEXT("AddNecInventory: ItemInstance is In"));
+}
+
+bool UGridInventoryComponent::AddItemToPos(UItemInstance* NewItem,
     const FGuid& ContainerGuid, 
     int32 InSectionIndex, 
     int32 InPosX, int32 InPosY)
@@ -140,6 +162,7 @@ bool UGridInventoryComponent::AddItemToPos(UItemInstance* NewItem,
         InPosX,
         InPosY))
     {
+        UE_LOG(LogTemp, Warning, TEXT("AddNecInventory: ItemInstance is InCorret Position"));
         return false;
     }
 
@@ -155,6 +178,90 @@ bool UGridInventoryComponent::AddItemToPos(UItemInstance* NewItem,
     }
     else
     {
+        Implement_AddItemToPos(
+            NewItem,
+            ContainerGuid,
+            InSectionIndex,
+            InPosX,
+            InPosY
+        );
+    }
+
+    UE_LOG(
+        LogTemp,
+        Warning,
+        TEXT("AddNecInventory: Item [%s] -> Container [%s] | Section=%d Pos=(%d, %d)"),
+        *NewItem->InstanceID.ToString(),
+        *ContainerGuid.ToString(),
+        InSectionIndex,
+        InPosX,
+        InPosY
+    );
+    return true;
+}
+
+bool UGridInventoryComponent::AddItemToContainer(
+    UItemInstance* NewItem, 
+    const FGuid& ContainerGuid)
+{
+    if (!IsValid(NewItem))
+    {
+        return false;
+    }
+    UItemInstance* ContainerItem = nullptr;
+    for (UItemInstance* Item : Items)
+    {
+        if (Item->InstanceID == ContainerGuid)
+        {
+            ContainerItem = Item;
+            break;
+        }
+    }
+    if (!ContainerItem) {
+        return false;
+    }
+
+    UItemDataSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UItemDataSubsystem>();
+    const FItemData* Data = Subsystem->GetItemData(NewItem->ItemID);
+    const FItemData* ContainerData = Subsystem->GetItemData(ContainerItem->ItemID);
+    if (!Data||!ContainerData) {
+        return false;
+    }
+    if (ContainerData->Sections.Num() < 1)
+    {
+        return false;
+    }
+    int32 InPosX=0; int32 InPosY=0;
+    int32 SectionIndex = ContainerData->Sections.Num();
+    int32 InSectionIndex = 0;
+
+    bool bFoundPos = false;
+
+    for (; InSectionIndex < SectionIndex; InSectionIndex++) {
+        for (InPosX = 0; InPosX < ContainerData->Sections[InSectionIndex].Width; InPosX++) {
+            for (InPosY = 0; InPosY < ContainerData->Sections[InSectionIndex].Height; InPosY++) {
+                if (CanAddItemToPos(
+                    NewItem,
+                    ContainerGuid,
+                    InSectionIndex,
+                    InPosX,
+                    InPosY))
+                {
+                    bFoundPos = true;
+                    break;
+                }
+            }
+            if (bFoundPos) break;
+        }       
+        if (bFoundPos) break;
+    }
+    if (!bFoundPos) {
+        return false;
+    }
+
+
+    if (GetOwnerRole() < ROLE_Authority)
+    {
         Server_AddItemToPos(
             NewItem,
             ContainerGuid,
@@ -163,6 +270,27 @@ bool UGridInventoryComponent::AddItemToPos(UItemInstance* NewItem,
             InPosY
         );
     }
+    else
+    {
+        Implement_AddItemToPos(
+            NewItem,
+            ContainerGuid,
+            InSectionIndex,
+            InPosX,
+            InPosY
+        );
+    }
+
+    UE_LOG(
+        LogTemp,
+        Warning,
+        TEXT("AddNecInventory: Item [%s] -> Container [%s] | Section=%d Pos=(%d, %d)"),
+        *NewItem->InstanceID.ToString(),
+        *ContainerGuid.ToString(),
+        InSectionIndex,
+        InPosX,
+        InPosY
+    );
     return true;
 }
 
@@ -180,7 +308,7 @@ bool UGridInventoryComponent::CanAddItemToPos(UItemInstance* NewItem,
     UItemInstance* ContainerItem = nullptr;
     for (UItemInstance* Item : Items)
     {
-        if (IsValid(Item) && Item->InstanceID == ContainerGuid)
+        if (Item->InstanceID == ContainerGuid)
         {
             ContainerItem = Item;
             break;
@@ -193,24 +321,29 @@ bool UGridInventoryComponent::CanAddItemToPos(UItemInstance* NewItem,
     }
 
     /* 2. 컨테이너 여부 */
-    if (!ContainerItem->IsContainer())
+    UItemDataSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UItemDataSubsystem>();
+    const FItemData* ItemData = Subsystem->GetItemData(NewItem->ItemID);
+    const FItemData* ContainerData = Subsystem->GetItemData(ContainerItem->ItemID);
+    if (!ItemData||!ContainerData) {
+        return false;
+    }
+    if (ContainerData->Sections.Num() < 1)
     {
         return false;
     }
 
     /* 3. 섹션 인덱스 체크 */
-    if (!ContainerItem->Sections.IsValidIndex(InSectionIndex))
+    if (!ContainerData->Sections.IsValidIndex(InSectionIndex))
     {
         return false;
     }
 
     const FInventorySection& Section =
-        ContainerItem->Sections[InSectionIndex];
+        ContainerData->Sections[InSectionIndex];
 
     /* 4. 아이템 크기 계산 (회전 고려) */
-    int32 ItemWidth = NewItem->bRotated ? /*Height*/ 1 : /*Width*/ 1;
-    int32 ItemHeight = NewItem->bRotated ? /*Width*/ 1 : /*Height*/ 1;
-    // ↑ 여기 반드시 ItemData 기반으로 교체해줘야 함
+    int32 ItemWidth = NewItem->bRotated ? /*Height*/ ItemData->Height : /*Width*/ ItemData->Width;
+    int32 ItemHeight = NewItem->bRotated ? /*Width*/ ItemData->Width : /*Height*/ ItemData->Height;
 
     /* 5. 섹션 범위 체크 */
     if (InPosX < 0 || InPosY < 0)
@@ -241,9 +374,9 @@ bool UGridInventoryComponent::CanAddItemToPos(UItemInstance* NewItem,
 
         if (ExistingItem->SectionIndex != InSectionIndex)
             continue;
-
-        int32 ExWidth = ExistingItem->bRotated ? /*Height*/ 1 : /*Width*/ 1;
-        int32 ExHeight = ExistingItem->bRotated ? /*Width*/ 1 : /*Height*/ 1;
+        const FItemData* ExistingItemData = Subsystem->GetItemData(NewItem->ItemID);
+        int32 ExWidth = ExistingItem->bRotated ? /*Height*/ ExistingItemData->Height : /*Width*/ ExistingItemData->Width;
+        int32 ExHeight = ExistingItem->bRotated ? /*Width*/ ExistingItemData->Width : /*Height*/ ExistingItemData->Height;
 
         const bool bOverlap =
             InPosX < ExistingItem->PosX + ExWidth &&
@@ -260,7 +393,30 @@ bool UGridInventoryComponent::CanAddItemToPos(UItemInstance* NewItem,
     return true;
 }
 
+void UGridInventoryComponent::Server_AddRootItem_Implementation(UItemInstance* NewItem)
+{
+    Implement_AddRootItem(NewItem);
+}
+
+void UGridInventoryComponent::Implement_AddRootItem(UItemInstance*& NewItem)
+{
+    Items.Add(NewItem);
+    NewItem->OwnerItemGuid = FGuid();
+
+    RebuildItemOwnerMap();
+    OnInventoryUpdated.Broadcast();
+}
+
 void UGridInventoryComponent::Server_AddItemToPos_Implementation(UItemInstance* NewItem, 
+    const FGuid& ContainerGuid, 
+    int32 InSectionIndex, 
+    int32 InPosX, int32 InPosY)
+{
+    Implement_AddItemToPos(NewItem, ContainerGuid, InSectionIndex, InPosX, InPosY);
+}
+
+void UGridInventoryComponent::Implement_AddItemToPos(
+    UItemInstance*& NewItem, 
     const FGuid& ContainerGuid, 
     int32 InSectionIndex, 
     int32 InPosX, int32 InPosY)
@@ -292,11 +448,6 @@ void UGridInventoryComponent::Server_AddItemToPos_Implementation(UItemInstance* 
     NewItem->PosX = InPosX;
     NewItem->PosY = InPosY;
 
-    TArray<UItemInstance*>& ItemsInContainer =
-        ItemsByOwnerGuid.FindOrAdd(ContainerGuid);
-
-    ItemsInContainer.Add(NewItem);
-
     RebuildItemOwnerMap();
     OnInventoryUpdated.Broadcast();
 }
@@ -315,13 +466,18 @@ bool UGridInventoryComponent::RemoveItem(UItemInstance* Item)
     }
     else
     {
-        Server_RemoveItem(Item);
+        Implement_RemoveItem(Item);
     }
 
     return true;
 }
 
 void UGridInventoryComponent::Server_RemoveItem_Implementation(UItemInstance* Item)
+{
+    Implement_RemoveItem(Item);
+}
+
+void UGridInventoryComponent::Implement_RemoveItem(UItemInstance*& Item)
 {
     if (!IsValid(Item))
     {
@@ -345,7 +501,7 @@ void UGridInventoryComponent::Server_RemoveItem_Implementation(UItemInstance* It
     }
 
     Items.Remove(Item);
-    
+
     Item->OwnerItemGuid.Invalidate();
     Item->SectionIndex = INDEX_NONE;
     Item->PosX = 0;

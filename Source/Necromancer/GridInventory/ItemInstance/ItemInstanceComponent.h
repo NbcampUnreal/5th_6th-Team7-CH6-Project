@@ -19,6 +19,7 @@ public:
 	UItemInstanceComponent();
 
 	/** 아이템 인스턴스 초기화 */
+	UFUNCTION(BlueprintCallable, Category = "Item")
 	void Initialize(UItemInstance* InItemInstance);
 
 	/** 컨테이너인지 여부 */
@@ -26,6 +27,7 @@ public:
 
 	UGridInventoryComponent* GetInventory() const { return InventoryComponent; }
 	UItemInstance* GetItemInstance() const { return ItemInstance; }
+	
 	void GetAllItemInstances(TArray<UItemInstance*>& OutItems) const;
 
 protected:

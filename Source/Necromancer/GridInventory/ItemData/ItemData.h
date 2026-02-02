@@ -22,6 +22,31 @@ enum class EItemType : uint8
 };
 
 USTRUCT(BlueprintType)
+struct FInventorySection
+{
+    GENERATED_BODY()
+
+public:
+    FInventorySection()
+        : Width(0)
+        , Height(0)
+    {
+    }
+
+    FInventorySection(int32 InWidth, int32 InHeight)
+        : Width(InWidth)
+        , Height(InHeight)
+    {
+    }
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 Width;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 Height;
+};
+
+USTRUCT(BlueprintType)
 struct NECROMANCER_API FItemData : public FTableRowBase
 {
 	GENERATED_BODY()
@@ -46,6 +71,9 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
     TSubclassOf<UObject> UseActionClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
+    TArray<FInventorySection> Sections;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
     int32 MaxStack; //인벤토리 한칸의 크기
