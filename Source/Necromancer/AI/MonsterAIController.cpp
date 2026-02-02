@@ -85,7 +85,7 @@ void AMonsterAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 	{
 		GetWorldTimerManager().ClearTimer(LoseTargetTimerHandle);
 		IGenericTeamAgentInterface* GenericTeamAgentInterface = Cast<IGenericTeamAgentInterface>(Actor);
-		if (GenericTeamAgentInterface->GetGenericTeamId() == FGenericTeamId(TEAM_ID_PLAYER))
+		if (GenericTeamAgentInterface && GenericTeamAgentInterface->GetGenericTeamId() == FGenericTeamId(TEAM_ID_PLAYER))
 		{
 			SetTargetActor(Actor);
 		}
