@@ -4,6 +4,7 @@
 #include "GridInventory/ItemInstance/ItemInstanceComponent.h"
 #include "GridInventory/ItemInstance/ItemInstance.h"
 #include "GridInventory/GridInventoryComponent.h"
+#include "GridInventory/ItemData/ItemDataSubsystem.h"
 
 // Sets default values for this component's properties
 UItemInstanceComponent::UItemInstanceComponent()
@@ -53,8 +54,16 @@ void UItemInstanceComponent::Initialize(UItemInstance* InItemInstance)
 
 void UItemInstanceComponent::CreateInventoryIfNeeded()
 {
-	if (!ItemInstance || !ItemInstance->IsContainer())
+	if (!ItemInstance)
 	{
+		return;
+	}
+	UItemDataSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UItemDataSubsystem>();
+	const FItemData* Data = Subsystem->GetItemData(ItemInstance->ItemID);
+	if (!Data) {
+		return;
+	}
+	if (Data->Sections.Num() < 1) {
 		return;
 	}
 

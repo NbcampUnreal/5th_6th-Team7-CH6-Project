@@ -10,30 +10,6 @@
 /**
  * 
  */
-USTRUCT(BlueprintType)
-struct FInventorySection
-{
-    GENERATED_BODY()
-
-public:
-    FInventorySection()
-        : Width(0)
-        , Height(0)
-    {
-    }
-
-    FInventorySection(int32 InWidth, int32 InHeight)
-        : Width(InWidth)
-        , Height(InHeight)
-    {
-    }
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    int32 Width;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    int32 Height;
-};
 
 UCLASS()
 class NECROMANCER_API UItemInstance : public UObject
@@ -56,9 +32,6 @@ public:
     UPROPERTY(Replicated, BlueprintReadOnly)
     FName ItemID;
 
-    UPROPERTY(Replicated, BlueprintReadOnly)
-    EItemType ItemType;
-
     void InitializeIdentity(
         const FName& InItemID
     );
@@ -79,13 +52,6 @@ public:
     {
         bRotated = !bRotated;
     }
-#pragma endregion
-
-#pragma region Container
-    UPROPERTY(Replicated, BlueprintReadOnly)
-    TArray<FInventorySection> Sections;
-
-    void SetSections(const TArray<FInventorySection>& InSections);
 #pragma endregion
 
 #pragma region InventoryPlacement
@@ -112,10 +78,6 @@ public:
 #pragma endregion
 
 #pragma region Helpers
-    UFUNCTION(BlueprintCallable)
-    bool IsContainer() const
-    {
-        return Sections.Num() > 0;
-    }
+
 #pragma endregion
 };

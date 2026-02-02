@@ -4,10 +4,10 @@
 #include "GridInventory/ItemInstance/ItemInstance.h"
 #include "Net/UnrealNetwork.h"
 
+
 UItemInstance::UItemInstance()
 {
     InstanceID = FGuid::NewGuid();
-    ItemType = EItemType::None;
     CurrentDurability = 0.f;
 
     SectionIndex = INDEX_NONE;
@@ -23,9 +23,7 @@ void UItemInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
     DOREPLIFETIME(UItemInstance, InstanceID);
     DOREPLIFETIME(UItemInstance, ItemID);
-    DOREPLIFETIME(UItemInstance, ItemType);
     DOREPLIFETIME(UItemInstance, CurrentDurability);
-    DOREPLIFETIME(UItemInstance, Sections);
     DOREPLIFETIME(UItemInstance, OwnerItemGuid);
     DOREPLIFETIME(UItemInstance, SectionIndex);
     DOREPLIFETIME(UItemInstance, PosX);
@@ -34,11 +32,7 @@ void UItemInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 void UItemInstance::InitializeIdentity(const FName& InItemID)
 {
-    //stanceID = InInstanceID;
     ItemID = InItemID;
-    //emType = InItemType;
-    //데이터 테이블 추가되면
-    //이것저것 추가한다 꼭
 }
 
 void UItemInstance::SetDurability(float NewDurability)
@@ -49,11 +43,6 @@ void UItemInstance::SetDurability(float NewDurability)
 void UItemInstance::AddDurability(float Delta)
 {
     SetDurability(CurrentDurability + Delta);
-}
-
-void UItemInstance::SetSections(const TArray<FInventorySection>& InSections)
-{
-    Sections = InSections;
 }
 
 void UItemInstance::SetInventoryPlacement(
