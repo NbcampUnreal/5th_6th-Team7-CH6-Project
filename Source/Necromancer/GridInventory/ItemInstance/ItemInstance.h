@@ -11,7 +11,7 @@
  * 
  */
 
-UCLASS()
+UCLASS(BlueprintType)
 class NECROMANCER_API UItemInstance : public UObject
 {
 	GENERATED_BODY()
