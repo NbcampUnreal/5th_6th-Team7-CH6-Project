@@ -48,6 +48,26 @@ void ANecLobbyPlayerController::BeginPlay()
 	//Login();
 }
 
+void ANecLobbyPlayerController::GetOnlineSubsystem()
+{
+	IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
+
+	if (OnlineSubsystem)
+	{
+		OnlineSessionInterface = OnlineSubsystem->GetSessionInterface();
+
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::Printf(TEXT("Subsystem Name : % s"), *OnlineSubsystem->GetSubsystemName().ToString()));
+		}
+
+		if (OnlineSessionInterface)
+		{
+			OnlineSessionInterface->OnSessionUserInviteAcceptedDelegates.AddUObject(this, &ANecLobbyPlayerController::OnInviteAccepted);
+		}
+	}
+}
+
 void ANecLobbyPlayerController::Login()
 {
 	IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
@@ -74,28 +94,12 @@ void ANecLobbyPlayerController::OnLoginComplete(int32 LocalUserNum, bool bWasSuc
 	}
 
 	IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
-	if (OnlineSubsystem) 
+	if (OnlineSubsystem)
 	{
 		if (IOnlineIdentityPtr Identity = OnlineSubsystem->GetIdentityInterface())
 		{
 			bIsLoggedIn = bWasSuccessful;
 			Identity->ClearOnLoginCompleteDelegates(0, this);
-		}
-	}
-}
-
-
-void ANecLobbyPlayerController::GetOnlineSubsystem()
-{
-	IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
-
-	if (OnlineSubsystem)
-	{
-		OnlineSessionInterface = OnlineSubsystem->GetSessionInterface();
-
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::Printf(TEXT("Subsystem Name : % s"), *OnlineSubsystem->GetSubsystemName().ToString()));
 		}
 	}
 }
@@ -135,7 +139,7 @@ void ANecLobbyPlayerController::OnClickCreateSession()
 	SessionSettings->bUsesPresence = true;
 	SessionSettings->bUseLobbiesIfAvailable = true;
 
-	//SessionSettings->Set(FName(TEXT("SessionName")), FName(NAME_GameSession), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	//SessionSettings->Set(FName(TEXT("SessionName")), FString(TEXT("Necromancer"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing));
 
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 	OnlineSessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *SessionSettings);
@@ -165,7 +169,7 @@ void ANecLobbyPlayerController::OnCreateSessionComplete(FName SessionName, bool 
 	FNamedOnlineSession* Session = OnlineSessionInterface->GetNamedSession(SessionName);
 	if (Session)
 	{
-		GetWorld()->ServerTravel(TEXT("/Game/ThirdPerson/Maps/ThirdPersonMap?listen"));
+		GetWorld()->ServerTravel(TEXT("/Game/Necromancer/Maps/TestThirdPersonMap?listen"));
 	}
 }
 
@@ -188,7 +192,7 @@ void ANecLobbyPlayerController::OnClickFindSession()
 
 	SessionSearch = MakeShareable(new FOnlineSessionSearch());
 	SessionSearch->MaxSearchResults = 10000;
-	SessionSearch->bIsLanQuery = true;
+	SessionSearch->bIsLanQuery = false;
 	SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 
 	if (GEngine)
@@ -220,7 +224,7 @@ void ANecLobbyPlayerController::OnFindSessionComplete(bool bWasSuccessful)
 		FString User = Result.Session.OwningUserName;
 
 		FString SessionName;
-		Result.Session.SessionSettings.Get(FName("SessionName"), SessionName);
+		//Result.Session.SessionSettings.Get(FName("SessionName"), SessionName);
 
 		if (GEngine)
 		{
@@ -241,10 +245,15 @@ void ANecLobbyPlayerController::OnFindSessionComplete(bool bWasSuccessful)
 
 void ANecLobbyPlayerController::OnJoinSessionComplate(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
 {
-
 	if (!OnlineSessionInterface.IsValid())
 	{
 		return;
+	}
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Cyan,
+			FString::Printf(TEXT("OnJoinSessionComplete: Name=%s, Result=%d"), *SessionName.ToString(), (int32)Result));
 	}
 
 	FString Address;
@@ -258,7 +267,7 @@ void ANecLobbyPlayerController::OnJoinSessionComplate(FName SessionName, EOnJoin
 		APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController();
 		if (PlayerController)
 		{
-			PlayerController->ClientTravel("192.168.45.230:7777", ETravelType::TRAVEL_Absolute);
+			PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
 		}
 	}
 }
@@ -273,5 +282,44 @@ void ANecLobbyPlayerController::OnClickInviteFriend()
 		{
 			ExternalUI->ShowInviteUI(0, NAME_GameSession);
 		}
+	}
+}
+
+void ANecLobbyPlayerController::OnInviteAccepted(bool bWasSuccessful, int32 LocalUserNum, TSharedPtr<const FUniqueNetId> UserId, const FOnlineSessionSearchResult& InviteResult)
+{
+	if (bWasSuccessful && InviteResult.IsValid())
+	{
+		if (GEngine) 
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, TEXT("Invite Accepted! Joining..."));
+		}
+
+		FString OwningUser = InviteResult.Session.OwningUserName;
+		FString SessionId = InviteResult.GetSessionIdStr();
+
+		if (GEngine)
+		{
+
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString::Printf(TEXT("Invite From: %s, Session ID: %s"), *OwningUser, *SessionId));
+		}
+
+		//OnlineSessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+		//const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+		//if (LocalPlayer)
+		//{
+		//	OnlineSessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(),  FName(TEXT("Necromancer")), InviteResult);
+		//}
+		FTimerHandle TimerHandle;
+		GetWorldTimerManager().SetTimer(TimerHandle, [this, LocalUserNum, InviteResult]()
+			{
+				if (OnlineSessionInterface.IsValid())
+				{
+					OnlineSessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+
+
+					const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+					OnlineSessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, InviteResult);
+				}
+			}, 0.5f, false);
 	}
 }
