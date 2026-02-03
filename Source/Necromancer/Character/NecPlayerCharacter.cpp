@@ -12,6 +12,9 @@
 #include "Component/CombatComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "DrawDebugHelpers.h"
+#include "Engine/StaticMeshActor.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
@@ -281,6 +284,64 @@ void ANecPlayerCharacter::ToggleMenu(const FInputActionValue& Value)
 void ANecPlayerCharacter::Interact()
 {
 	// Temp Function
+	
+	if (!CameraComponent)
+	{
+		return;
+	}
+
+	FVector Start = CameraComponent->GetComponentLocation();
+	FVector ForwardVector = CameraComponent->GetForwardVector();
+	float InteractionDistance = 500.0f;
+	FVector End = Start + (ForwardVector * InteractionDistance);
+	
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		Start,
+		End,
+		ECC_Visibility,
+		Params
+	);
+
+	DrawDebugLine(GetWorld(), 
+		Start, 
+		End, 
+		bHit ? FColor::Green : FColor::Red, 
+		false, 
+		2.0f
+	);
+
+	if (bHit && HitResult.GetActor())
+	{
+		AActor* HitActor = HitResult.GetActor();
+		UPrimitiveComponent* HitComponent = HitResult.GetComponent();
+
+		bool bIsTarget = false;
+
+		if (HitActor->GetName().Contains(TEXT("SM_Torture_Devices_Cage_Open")))
+		{
+			bIsTarget = true;
+		}
+		else if (UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(HitComponent))
+		{
+			if (MeshComp->GetStaticMesh() && MeshComp->GetStaticMesh()->GetName() == TEXT("SM_Torture_Devices_Cage_Open"))
+			{
+				bIsTarget = true;
+			}
+		}
+
+		if (bIsTarget)
+		{
+			if (APlayerController* PC = Cast<APlayerController>(GetController()))
+			{
+				UKismetSystemLibrary::QuitGame(this, PC, EQuitPreference::Quit, false);
+			}
+		}
+	}
 }
 
 void ANecPlayerCharacter::HandleDeath()

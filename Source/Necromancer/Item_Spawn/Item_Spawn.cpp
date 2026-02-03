@@ -1,14 +1,16 @@
-//Item_Spawn.cpp
+﻿//Item_Spawn.cpp
 
 #include "Item_Spawn/Item_Spawn.h"
 
 #include "Components/BoxComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
+#include "GridInventory/ItemData/ItemDataSubsystem.h"
 
 AItem_Spawn::AItem_Spawn()
 {
     PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
 
 	SceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("Scene Component"));
 	SetRootComponent(SceneComp);
@@ -29,13 +31,33 @@ FVector AItem_Spawn::GetRandomPointInVolume() const
 	);
 }
 
-void AItem_Spawn::SpawnItem(TSubclassOf<AActor> ItemClass)
+void AItem_Spawn::SpawnItem(FName ItemID)
 {
-	if (!ItemClass) return;
+	// 클라에서 불리면 서버로 요청
+	if (!HasAuthority())
+	{
+		Server_SpawnItem(ItemID);
+		return;
+	}
+
+	// 서버면 바로 스폰
+	Internal_SpawnItem(ItemID);
+}
+
+void AItem_Spawn::Internal_SpawnItem(FName ItemID)
+{
+	UItemDataSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UItemDataSubsystem>();
+	const FItemData* Data = Subsystem->GetItemData(ItemID);
 
 	GetWorld()->SpawnActor<AActor>(
-		ItemClass,
+		Data->DropItemActorClass,
 		GetRandomPointInVolume(),
 		FRotator::ZeroRotator
 	);
+}
+
+
+void AItem_Spawn::Server_SpawnItem_Implementation(FName ItemID)
+{
+	Internal_SpawnItem(ItemID);
 }

@@ -3,6 +3,9 @@
 
 #include "Controller/NecLobbyPlayerController.h"
 
+#include "Interfaces/OnlineExternalUIInterface.h"
+#include "Interfaces/OnlineIdentityInterface.h"
+
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
 
@@ -14,6 +17,7 @@ ANecLobbyPlayerController::ANecLobbyPlayerController()
 	, FindSessionCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &ANecLobbyPlayerController::OnFindSessionComplete))
 	, JoinSessionCompleteDelegate(FOnJoinSessionCompleteDelegate::CreateUObject(this, &ANecLobbyPlayerController::OnJoinSessionComplate))
 {
+	bIsLoggedIn = false;
 }
 
 void ANecLobbyPlayerController::BeginPlay()
@@ -41,7 +45,45 @@ void ANecLobbyPlayerController::BeginPlay()
 	}
 
 	GetOnlineSubsystem();
+	//Login();
 }
+
+void ANecLobbyPlayerController::Login()
+{
+	IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
+	if (OnlineSubsystem) {
+		if (IOnlineIdentityPtr Identity = OnlineSubsystem->GetIdentityInterface())
+		{
+			FOnlineAccountCredentials Credentials;
+			Credentials.Id = FString();
+			Credentials.Token = FString();
+			Credentials.Type = FString("accountportal");
+
+			Identity->OnLoginCompleteDelegates->AddUObject(this, &ANecLobbyPlayerController::OnLoginComplete);
+			Identity->Login(0, Credentials);
+		}
+	}
+}
+
+void ANecLobbyPlayerController::OnLoginComplete(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Logged In %d"), bWasSuccessful);
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::Printf(TEXT("Logged In % d"), bWasSuccessful));
+	}
+
+	IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
+	if (OnlineSubsystem) 
+	{
+		if (IOnlineIdentityPtr Identity = OnlineSubsystem->GetIdentityInterface())
+		{
+			bIsLoggedIn = bWasSuccessful;
+			Identity->ClearOnLoginCompleteDelegates(0, this);
+		}
+	}
+}
+
 
 void ANecLobbyPlayerController::GetOnlineSubsystem()
 {
@@ -68,10 +110,10 @@ void ANecLobbyPlayerController::OnClickCreateSession()
 		return;
 	}
 
-	auto ExistingSession = OnlineSessionInterface->GetNamedSession(TEXT("GameSession"));
+	auto ExistingSession = OnlineSessionInterface->GetNamedSession(NAME_GameSession);
 	if (ExistingSession != nullptr)
 	{
-		OnlineSessionInterface->DestroySession(TEXT("GameSession"));
+		OnlineSessionInterface->DestroySession(NAME_GameSession);
 
 		if (GEngine)
 			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Black, FString::Printf(TEXT("Destroy session")));
@@ -85,18 +127,18 @@ void ANecLobbyPlayerController::OnClickCreateSession()
 	OnlineSessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 	TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings());
 
-	SessionSettings->bIsLANMatch = true;
+	SessionSettings->bIsLANMatch = false;
 	SessionSettings->NumPublicConnections = 4;
 	SessionSettings->bAllowJoinInProgress = true;
 	SessionSettings->bAllowJoinViaPresence = true;
 	SessionSettings->bShouldAdvertise = true;
-	//SessionSettings->bUsesPresence = true;
-	SessionSettings->bUseLobbiesIfAvailable = false;
+	SessionSettings->bUsesPresence = true;
+	SessionSettings->bUseLobbiesIfAvailable = true;
 
-	SessionSettings->Set(FName(TEXT("SessionName")), FString(TEXT("GameSession")), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	//SessionSettings->Set(FName(TEXT("SessionName")), FName(NAME_GameSession), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-	OnlineSessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), FName(TEXT("GameSession")), *SessionSettings);
+	OnlineSessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *SessionSettings);
 }
 
 void ANecLobbyPlayerController::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
@@ -190,7 +232,7 @@ void ANecLobbyPlayerController::OnFindSessionComplete(bool bWasSuccessful)
 		const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 		if (IsValid(LocalPlayer))
 		{
-			OnlineSessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), FName(*SessionName), Result);
+			OnlineSessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, Result);
 			return;
 		}
 	}
@@ -217,6 +259,19 @@ void ANecLobbyPlayerController::OnJoinSessionComplate(FName SessionName, EOnJoin
 		if (PlayerController)
 		{
 			PlayerController->ClientTravel("192.168.45.230:7777", ETravelType::TRAVEL_Absolute);
+		}
+	}
+}
+
+void ANecLobbyPlayerController::OnClickInviteFriend()
+{
+	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
+	if (Subsystem)
+	{
+		IOnlineExternalUIPtr ExternalUI = Subsystem->GetExternalUIInterface();
+		if (ExternalUI.IsValid())
+		{
+			ExternalUI->ShowInviteUI(0, NAME_GameSession);
 		}
 	}
 }
