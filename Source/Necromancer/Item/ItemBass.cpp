@@ -1,74 +1,52 @@
-// ItemBass.cpp
+//ItemBass.cpp
 
-#include "Item/ItemBass.h"
-
-#include "GridInventory/ItemInstance/ItemInstance.h"
-#include "GridInventory/ItemInstance/ItemInstanceComponent.h"
+#include "ItemBass.h"
 #include "Net/UnrealNetwork.h"
+#include "GridInventory/ItemInstance/ItemInstance.h"
+#include "GridInventory/ItemData/ItemData.h"
 
 AItemBass::AItemBass()
 {
-	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
-
-	USceneComponent* RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	SetRootComponent(RootScene);
-
-	ItemInstanceComponent = CreateDefaultSubobject<UItemInstanceComponent>(TEXT("ItemInstanceComponent"));
 }
 
-void AItemBass::InitializeWithItemInstance(UItemInstance* InItemInstance)
+void AItemBass::CopyFromItemInstance(UItemInstance* ItemInstance)
 {
-	if (!InItemInstance || !ItemInstanceComponent)
+	if (!ItemInstance)
 	{
 		return;
 	}
 
-	if (HasAuthority())
-	{
-		ItemInstanceComponent->Initialize(InItemInstance);
-	}
+	InstanceID = ItemInstance->InstanceID;
+	ItemID = ItemInstance->ItemID;
+	CurrentDurability = ItemInstance->CurrentDurability;
+	bRotated = ItemInstance->bRotated;
+	OwnerItemGuid = ItemInstance->OwnerItemGuid;
+	SectionIndex = ItemInstance->SectionIndex;
+	PosX = ItemInstance->PosX;
+	PosY = ItemInstance->PosY;
 }
 
-FGuid AItemBass::GetInstanceID() const
+const FItemData* AItemBass::GetItemData() const
 {
-	if (!ItemInstanceComponent || !ItemInstanceComponent->GetItemInstance())
+	if (!ItemDataTable || ItemID.IsNone())
 	{
-		return FGuid();
+		return nullptr;
 	}
 
-	return ItemInstanceComponent->GetItemInstance()->InstanceID;
+	return ItemDataTable->FindRow<FItemData>(ItemID,TEXT("ItemBass::GetItemData"));
 }
 
-FName AItemBass::GetItemID() const
+void AItemBass::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	if (!ItemInstanceComponent || !ItemInstanceComponent->GetItemInstance())
-	{
-		return NAME_None;
-	}
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	return ItemInstanceComponent->GetItemInstance()->ItemID;
-}
-
-float AItemBass::GetDurability() const
-{
-	if (!ItemInstanceComponent || !ItemInstanceComponent->GetItemInstance())
-	{
-		return 0.f;
-	}
-
-	return ItemInstanceComponent->GetItemInstance()->CurrentDurability;
-}
-
-void AItemBass::SetDurability(float NewDurability)
-{
-	if (!ItemInstanceComponent || !ItemInstanceComponent->GetItemInstance())
-	{
-		return;
-	}
-
-	if (HasAuthority())
-	{
-		ItemInstanceComponent->GetItemInstance()->SetDurability(NewDurability);
-	}
+	DOREPLIFETIME(AItemBass, InstanceID);
+	DOREPLIFETIME(AItemBass, ItemID);
+	DOREPLIFETIME(AItemBass, CurrentDurability);
+	DOREPLIFETIME(AItemBass, bRotated);
+	DOREPLIFETIME(AItemBass, OwnerItemGuid);
+	DOREPLIFETIME(AItemBass, SectionIndex);
+	DOREPLIFETIME(AItemBass, PosX);
+	DOREPLIFETIME(AItemBass, PosY);
 }

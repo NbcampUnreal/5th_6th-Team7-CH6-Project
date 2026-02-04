@@ -19,5 +19,4 @@ void AArmor_Item_Bass::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AArmor_Item_Bass, Defense);
 }
