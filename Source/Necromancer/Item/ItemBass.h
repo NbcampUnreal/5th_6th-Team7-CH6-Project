@@ -4,21 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Engine/DataTable.h"
-#include "GridInventory/ItemData/ItemData.h"
 #include "ItemBass.generated.h"
 
-USTRUCT(BlueprintType)
-struct FItemInstanceData
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FName ItemID;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 Count = 1;
-};
+class UItemInstance;
+class UItemInstanceComponent;
 
 UCLASS(Abstract)
 class NECROMANCER_API AItemBass : public AActor
@@ -28,23 +17,21 @@ class NECROMANCER_API AItemBass : public AActor
 public:
 	AItemBass();
 
-	const FItemInstanceData& GetItemData() const { return ItemData; }
+	void InitializeWithItemInstance(UItemInstance* InItemInstance);
 
-	bool AddCount(int32 Amount);
-	bool RemoveCount(int32 Amount);
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	FGuid GetInstanceID() const;
 
-	bool IsEmpty() const { return ItemData.Count <= 0; }
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	FName GetItemID() const;
 
-	virtual bool IsStackable() const;
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	float GetDurability() const;
 
-	virtual void OnDropped(const FVector& WorldLocation);
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	void SetDurability(float NewDurability);
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
-	FItemInstanceData ItemData;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
-	UDataTable* ItemDataTable;
-
-	const FItemData* GetItemDataFromTable() const;
+	UItemInstanceComponent* ItemInstanceComponent;
 };

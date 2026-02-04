@@ -2,80 +2,73 @@
 
 #include "Item/ItemBass.h"
 
+#include "GridInventory/ItemInstance/ItemInstance.h"
+#include "GridInventory/ItemInstance/ItemInstanceComponent.h"
+#include "Net/UnrealNetwork.h"
+
 AItemBass::AItemBass()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
+
+	USceneComponent* RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	SetRootComponent(RootScene);
+
+	ItemInstanceComponent = CreateDefaultSubobject<UItemInstanceComponent>(TEXT("ItemInstanceComponent"));
 }
 
-const FItemData* AItemBass::GetItemDataFromTable() const
+void AItemBass::InitializeWithItemInstance(UItemInstance* InItemInstance)
 {
-	if (!ItemDataTable)
+	if (!InItemInstance || !ItemInstanceComponent)
 	{
-		return nullptr;
+		return;
 	}
 
-	if (ItemData.ItemID.IsNone())
+	if (HasAuthority())
 	{
-		return nullptr;
+		ItemInstanceComponent->Initialize(InItemInstance);
 	}
-
-	return ItemDataTable->FindRow<FItemData>(ItemData.ItemID,TEXT("ItemBass::GetItemDataFromTable"));
 }
 
-bool AItemBass::IsStackable() const
+FGuid AItemBass::GetInstanceID() const
 {
-	const FItemData* Data = GetItemDataFromTable();
-	if (!Data)
+	if (!ItemInstanceComponent || !ItemInstanceComponent->GetItemInstance())
 	{
-		return false;
+		return FGuid();
 	}
 
-	return Data->MaxStack > 1;
+	return ItemInstanceComponent->GetItemInstance()->InstanceID;
 }
 
-bool AItemBass::AddCount(int32 Amount)
+FName AItemBass::GetItemID() const
 {
-	if (Amount <= 0)
+	if (!ItemInstanceComponent || !ItemInstanceComponent->GetItemInstance())
 	{
-		return false;
+		return NAME_None;
 	}
 
-	const FItemData* Data = GetItemDataFromTable();
-	if (!Data)
-	{
-		return false;
-	}
-
-	if (!IsStackable())
-	{
-		return false;
-	}
-
-	const int32 NewCount = ItemData.Count + Amount;
-	ItemData.Count = FMath::Min(NewCount, Data->MaxStack);
-
-	return true;
+	return ItemInstanceComponent->GetItemInstance()->ItemID;
 }
 
-bool AItemBass::RemoveCount(int32 Amount)
+float AItemBass::GetDurability() const
 {
-	if (Amount <= 0)
+	if (!ItemInstanceComponent || !ItemInstanceComponent->GetItemInstance())
 	{
-		return false;
+		return 0.f;
 	}
 
-	if (ItemData.Count < Amount)
-	{
-		return false;
-	}
-
-	ItemData.Count -= Amount;
-	return true;
+	return ItemInstanceComponent->GetItemInstance()->CurrentDurability;
 }
 
-void AItemBass::OnDropped(const FVector& WorldLocation)
+void AItemBass::SetDurability(float NewDurability)
 {
-	SetActorLocation(WorldLocation);
-	SetActorHiddenInGame(false);
-	SetActorEnableCollision(true);
+	if (!ItemInstanceComponent || !ItemInstanceComponent->GetItemInstance())
+	{
+		return;
+	}
+
+	if (HasAuthority())
+	{
+		ItemInstanceComponent->GetItemInstance()->SetDurability(NewDurability);
+	}
 }
