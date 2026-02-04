@@ -45,7 +45,6 @@ private:
 
     TMap<FGuid, TArray<UItemInstance*>> ItemsByOwnerGuid;
 public:
-
 private:
     void RebuildItemOwnerMap();    
 public:
@@ -55,6 +54,9 @@ public:
     void SetInventory(const TArray<UItemInstance*>& InItems);
 
     void GetInventory(TArray<UItemInstance*>& OutItems) const;
+
+    UFUNCTION(BlueprintCallable)
+    bool FindInventoryContainer(FGuid ContainerId, TArray<UItemInstance*>& OutItems);
 
 #pragma region AddItem
 public:

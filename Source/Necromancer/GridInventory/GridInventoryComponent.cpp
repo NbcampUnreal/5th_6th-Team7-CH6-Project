@@ -124,6 +124,21 @@ inline void UGridInventoryComponent::GetInventory(TArray<UItemInstance*>& OutIte
     OutItems = Items;
 }
 
+bool UGridInventoryComponent::FindInventoryContainer(
+    FGuid ContainerId, 
+    TArray<UItemInstance*>& OutItems)
+{
+    OutItems.Reset();
+
+    if (TArray<UItemInstance*>* ItemsInContainer =
+        ItemsByOwnerGuid.Find(ContainerId))
+    {
+        OutItems = *ItemsInContainer;
+        return true;
+    }
+    return false;
+}
+
 void UGridInventoryComponent::AddRootItem(UItemInstance* NewItem)
 {
     if (!IsValid(NewItem))
