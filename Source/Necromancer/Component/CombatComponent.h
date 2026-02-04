@@ -30,6 +30,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat")
 	bool IsGuarding() const { return bIsGuarding; }
 
+	UFUNCTION(BlueprintPure, Category = "Combat")
+	bool IsAttacking() const;
+
 protected:	
 	UFUNCTION()
 	void OnRep_bIsGuarding();

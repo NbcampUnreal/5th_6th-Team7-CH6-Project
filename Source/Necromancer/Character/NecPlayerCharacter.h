@@ -12,6 +12,7 @@ class UStaminaComponent;
 class UPlayerMovementComponent;
 class UCombatComponent;
 class UUserWidget;
+class UTargetingComponent;
 struct FInputActionValue;
 
 UCLASS()
@@ -24,6 +25,7 @@ public:
 
 protected:	
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
@@ -73,6 +75,8 @@ public:
 	UStatComponent* GetStatComponent() const { return StatComponent; }
 	UStaminaComponent* GetStaminaComponent() const { return StaminaComponent; }
 
+	void SetLockOn(bool bEnable);
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
 	TObjectPtr<USpringArmComponent> SpringArmComponent;
@@ -91,6 +95,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Combat")
 	TObjectPtr<UCombatComponent> CombatComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Combat")
+	TObjectPtr<UTargetingComponent> TargetingComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> InGameMenuClass;
