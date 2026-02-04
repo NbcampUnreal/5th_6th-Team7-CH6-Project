@@ -4,11 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Engine/DataTable.h"
+#include "GridInventory/ItemInstance/ItemInstanceComponent.h"
 #include "ItemBass.generated.h"
 
-class UItemInstance;
-struct FItemData;
+USTRUCT(BlueprintType)
+struct FItemInstanceData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FName ItemID;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 Count = 1;
+};
 
 UCLASS()
 class NECROMANCER_API AItemBass : public AActor
@@ -18,38 +27,23 @@ class NECROMANCER_API AItemBass : public AActor
 public:
 	AItemBass();
 
-	void CopyFromItemInstance(class UItemInstance* ItemInstance);
+	const FItemInstanceData& GetItemData() const { return ItemData; }
+
+	bool AddCount(int32 Amount);
+	bool RemoveCount(int32 Amount);
+	bool IsEmpty() const { return ItemData.Count <= 0; }
+
+	virtual void OnDropped(const FVector& WorldLocation);
+
+	UItemInstanceComponent* GetItemInstanceComponent() const
+	{
+		return ItemInstanceComponent;
+	}
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item|Data")
-	UDataTable* ItemDataTable;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
+	FItemInstanceData ItemData;
 
-	const FItemData* GetItemData() const;
-
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-public:
-	UPROPERTY(Replicated, BlueprintReadOnly)
-	FGuid InstanceID;
-
-	UPROPERTY(Replicated, BlueprintReadOnly)
-	FName ItemID;
-
-	UPROPERTY(Replicated, BlueprintReadWrite)
-	float CurrentDurability;
-
-	UPROPERTY(Replicated, BlueprintReadWrite)
-	bool bRotated;
-
-	UPROPERTY(Replicated, BlueprintReadOnly)
-	FGuid OwnerItemGuid;
-
-	UPROPERTY(Replicated, BlueprintReadOnly)
-	int32 SectionIndex;
-
-	UPROPERTY(Replicated, BlueprintReadOnly)
-	int32 PosX;
-
-	UPROPERTY(Replicated, BlueprintReadOnly)
-	int32 PosY;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
+	UItemInstanceComponent* ItemInstanceComponent;
 };
