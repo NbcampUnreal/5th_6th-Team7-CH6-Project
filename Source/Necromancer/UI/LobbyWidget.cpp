@@ -13,6 +13,7 @@ void ULobbyWidget::NativeConstruct()
 
 	CreateSessionButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnCreateSessionButtonClicked);
 	FindSessionButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnFindSessionButtonClicked);
+	InviteFirendButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnInviteFriendButtonClicked);
 }
 
 void ULobbyWidget::OnCreateSessionButtonClicked()
@@ -31,5 +32,13 @@ void ULobbyWidget::OnFindSessionButtonClicked()
 	{
 		OwningPlayerController->OnClickFindSession();
 	}
-	
+}
+
+void ULobbyWidget::OnInviteFriendButtonClicked()
+{
+	ANecLobbyPlayerController* OwningPlayerController = GetOwningPlayer<ANecLobbyPlayerController>();
+	if (IsValid(OwningPlayerController))
+	{
+		OwningPlayerController->OnClickInviteFriend();
+	}
 }
