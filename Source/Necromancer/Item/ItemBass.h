@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "GridInventory/ItemInstance/ItemInstanceComponent.h"
 #include "ItemBass.generated.h"
 
 USTRUCT(BlueprintType)
@@ -18,7 +19,7 @@ struct FItemInstanceData
 	int32 Count = 1;
 };
 
-UCLASS(Abstract)
+UCLASS()
 class NECROMANCER_API AItemBass : public AActor
 {
 	GENERATED_BODY()
@@ -34,7 +35,15 @@ public:
 
 	virtual void OnDropped(const FVector& WorldLocation);
 
+	UItemInstanceComponent* GetItemInstanceComponent() const
+	{
+		return ItemInstanceComponent;
+	}
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
 	FItemInstanceData ItemData;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
+	UItemInstanceComponent* ItemInstanceComponent;
 };
