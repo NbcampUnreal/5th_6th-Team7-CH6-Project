@@ -23,9 +23,14 @@ public:
 	void ToggleLockOn();
 	AActor* GetCurrentTarget() const { return CurrentTarget; }
 
+	void HandleLockOnInput(FVector2D LookInput);
+
 protected:
 	UFUNCTION(Server, Reliable)
 	void Server_ToggleLockOn();
+
+	UFUNCTION(Server, Reliable)
+	void Server_SwitchTarget(bool bIsRight);
 
 	UFUNCTION()
 	void OnRep_CurrentTarget();
@@ -42,4 +47,15 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Targeting")
 	float SearchRadius = 1000.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Targeting")
+	float LockOnPitch = -25.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Targeting")
+	float SwitchCooldown = 0.25f;
+
+	UPROPERTY(EditAnywhere, Category = "Targeting")
+	float SwitchThreshold = 5.0f;
+
+	float LastSwitchTime = 0.0f;	
 };

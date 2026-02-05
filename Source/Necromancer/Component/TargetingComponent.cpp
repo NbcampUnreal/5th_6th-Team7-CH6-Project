@@ -68,9 +68,11 @@ void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
         FVector TargetLocation = CurrentTarget->GetActorLocation();
         FVector OwnerLocation = OwnerCharacter->GetActorLocation();
 
-        TargetLocation.Z = OwnerLocation.Z;
+        FVector TargetLocForYaw = TargetLocation;
+        TargetLocForYaw.Z = OwnerLocation.Z;        
 
-        FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(OwnerLocation, TargetLocation);
+        FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(OwnerLocation, TargetLocForYaw);
+        LookAtRot.Pitch = LockOnPitch;
 
         if (AController* PC = OwnerCharacter->GetController())
         {
@@ -87,6 +89,24 @@ void UTargetingComponent::ToggleLockOn()
     Server_ToggleLockOn();
 }
 
+void UTargetingComponent::HandleLockOnInput(FVector2D LookInput)
+{
+    float CurrentTime = GetWorld()->GetTimeSeconds();
+    if (CurrentTime - LastSwitchTime < SwitchCooldown)
+    {
+        return;
+    }
+
+    if (FMath::Abs(LookInput.X) > SwitchThreshold)
+    {
+        bool bIsRight = LookInput.X > 0;
+
+        Server_SwitchTarget(bIsRight);
+
+        LastSwitchTime = CurrentTime;
+    }
+}
+
 void UTargetingComponent::Server_ToggleLockOn_Implementation()
 {
     if (CurrentTarget)
@@ -98,6 +118,88 @@ void UTargetingComponent::Server_ToggleLockOn_Implementation()
         FindTarget();
 
         if (CurrentTarget && OwnerCharacter)
+        {
+            OwnerCharacter->SetLockOn(true);
+        }
+    }
+}
+
+void UTargetingComponent::Server_SwitchTarget_Implementation(bool bIsRight)
+{
+    if (!OwnerCharacter || !CurrentTarget)
+    {
+        return;
+    }
+
+    TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+    ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_Pawn));
+
+    TArray<AActor*> ActorsToIgnore;
+    ActorsToIgnore.Add(OwnerCharacter);
+    ActorsToIgnore.Add(CurrentTarget);
+
+    TArray<AActor*> OutActors;
+
+    UKismetSystemLibrary::SphereOverlapActors(
+        GetWorld(),
+        OwnerCharacter->GetActorLocation(),
+        SearchRadius,
+        ObjectTypes,
+        nullptr,
+        ActorsToIgnore,
+        OutActors
+    );
+
+    AActor* BestNewTarget = nullptr;
+    float ClosestAngle = 180.0f;
+
+    FVector CamLoc;
+    FRotator CamRot;
+
+    if (OwnerCharacter->GetController())
+    {
+        OwnerCharacter->GetController()->GetPlayerViewPoint(CamLoc, CamRot);
+    }
+    else
+    {
+        CamLoc = OwnerCharacter->GetActorLocation();
+        CamRot = OwnerCharacter->GetActorRotation();
+    }
+
+    FVector CamForward = CamRot.Vector();
+    FVector CamRight = CamRot.RotateVector(FVector::RightVector);
+
+    for (AActor* Candidate : OutActors)
+    {
+        if (!Candidate)
+        {
+            continue;
+        }
+
+        FVector DirToCandidate = (Candidate->GetActorLocation() - CamLoc).GetSafeNormal();
+        FVector DirToCurrent = (CurrentTarget->GetActorLocation() - CamLoc).GetSafeNormal();
+
+        FVector Cross = FVector::CrossProduct(DirToCurrent, DirToCandidate);
+
+        bool bIsCandidateOnRight = Cross.Z > 0;
+        if (bIsRight == bIsCandidateOnRight)
+        {
+            float Dot = FVector::DotProduct(CamForward, DirToCandidate);
+            float Angle = FMath::Acos(Dot) * (180.0f / PI);
+
+            if (Angle < ClosestAngle)
+            {
+                ClosestAngle = Angle;
+                BestNewTarget = Candidate;
+            }
+        }
+    }
+
+    if (BestNewTarget)
+    {
+        CurrentTarget = BestNewTarget;
+        
+        if (OwnerCharacter)
         {
             OwnerCharacter->SetLockOn(true);
         }

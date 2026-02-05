@@ -186,8 +186,9 @@ void ANecPlayerCharacter::Move(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::Look(const FInputActionValue& Value)
 {
-	if (TargetingComponent && TargetingComponent->GetCurrentTarget())
+	if (IsValid(TargetingComponent) && TargetingComponent->GetCurrentTarget())
 	{
+		TargetingComponent->HandleLockOnInput(Value.Get<FVector2D>());
 		return;
 	}
 
@@ -415,11 +416,10 @@ void ANecPlayerCharacter::SetLockOn(bool bEnable)
 		bUseControllerRotationYaw = true;
 	}
 	else
-	{		   
+	{
 		GetCharacterMovement()->bOrientRotationToMovement = true;
-		bUseControllerRotationYaw = false;
-
 		bUseControllerRotationPitch = false;
+		bUseControllerRotationYaw = false;
 		bUseControllerRotationRoll = false;
 	}
 
