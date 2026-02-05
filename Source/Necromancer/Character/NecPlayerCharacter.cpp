@@ -54,26 +54,7 @@ void ANecPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (TargetingComponent && TargetingComponent->GetCurrentTarget())
-	{
-		AActor* Target = TargetingComponent->GetCurrentTarget();
-
-		FVector Start = GetActorLocation();
-		FVector End = Target->GetActorLocation();
-
-		End.Z -= 20.0f;
-
-		FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(Start, End);
-
-		APlayerController* PC = Cast<APlayerController>(GetController());
-		if (PC)
-		{
-			FRotator CurrentRot = PC->GetControlRotation();
-			FRotator TargetRot = FMath::RInterpTo(CurrentRot, LookAtRot, DeltaTime, 10.0f);
-
-			PC->SetControlRotation(FRotator(TargetRot.Pitch, TargetRot.Yaw, 0.0f));
-		}
-	}
+	
 }
 
 void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

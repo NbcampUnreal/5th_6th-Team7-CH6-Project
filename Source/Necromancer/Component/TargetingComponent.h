@@ -24,6 +24,12 @@ public:
 	AActor* GetCurrentTarget() const { return CurrentTarget; }
 
 protected:
+	UFUNCTION(Server, Reliable)
+	void Server_ToggleLockOn();
+
+	UFUNCTION()
+	void OnRep_CurrentTarget();
+
 	void FindTarget();
 	void ClearLockOn();
 

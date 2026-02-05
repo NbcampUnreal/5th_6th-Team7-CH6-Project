@@ -2,7 +2,9 @@
 #include "Character/NecPlayerCharacter.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 UTargetingComponent::UTargetingComponent()
 {
@@ -29,26 +31,92 @@ void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (CurrentTarget && OwnerCharacter)
-	{
-		float Dist = OwnerCharacter->GetDistanceTo(CurrentTarget);
-		if (Dist > SearchRadius * 1.5f)
-		{
-			ClearLockOn();
-		}
-	}
+    if (!IsValid(OwnerCharacter))
+    {
+        return;
+    }
+
+    bool bHasTarget = IsValid(CurrentTarget);
+    bool bIsMovementOriented = OwnerCharacter->GetCharacterMovement()->bOrientRotationToMovement;
+
+    if (bHasTarget && bIsMovementOriented)
+    {
+        OwnerCharacter->SetLockOn(true);
+    }
+    else if (!bHasTarget && !bIsMovementOriented)
+    {
+        OwnerCharacter->SetLockOn(false);
+    }
+
+    if (bHasTarget)
+    {
+        float Dist = OwnerCharacter->GetDistanceTo(CurrentTarget);
+        if (Dist > SearchRadius * 1.5f)
+        {
+            if (OwnerCharacter->HasAuthority())
+            {
+                ClearLockOn();
+            }
+            else
+            {
+                Server_ToggleLockOn();
+            }
+
+            return;
+        }
+
+        FVector TargetLocation = CurrentTarget->GetActorLocation();
+        FVector OwnerLocation = OwnerCharacter->GetActorLocation();
+
+        TargetLocation.Z = OwnerLocation.Z;
+
+        FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(OwnerLocation, TargetLocation);
+
+        if (AController* PC = OwnerCharacter->GetController())
+        {
+            FRotator CurrentRot = OwnerCharacter->GetControlRotation();
+            FRotator TargetRot = FMath::RInterpTo(CurrentRot, LookAtRot, DeltaTime, 10.0f);
+
+            PC->SetControlRotation(TargetRot);
+        }
+    }    
 }
 
 void UTargetingComponent::ToggleLockOn()
 {
-	if (CurrentTarget)
-	{
-		ClearLockOn();
-	}
-	else
-	{
-		FindTarget();
-	}
+    Server_ToggleLockOn();
+}
+
+void UTargetingComponent::Server_ToggleLockOn_Implementation()
+{
+    if (CurrentTarget)
+    {
+        ClearLockOn();
+    }
+    else
+    {
+        FindTarget();
+
+        if (CurrentTarget && OwnerCharacter)
+        {
+            OwnerCharacter->SetLockOn(true);
+        }
+    }
+}
+
+void UTargetingComponent::OnRep_CurrentTarget()
+{
+    if (OwnerCharacter)
+    {
+        if (CurrentTarget)
+        {
+            OwnerCharacter->SetLockOn(true);
+        }
+        else
+        {
+            OwnerCharacter->SetLockOn(false);
+        }
+    }
 }
 
 void UTargetingComponent::FindTarget()
