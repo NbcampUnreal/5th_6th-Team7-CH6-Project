@@ -9,3 +9,4 @@
 
 #define NAME_TargetActor "TargetActor"
 #define NAME_LastLocation "LastLocation"
+#define NAME_IsStaggered "IsStaggered"

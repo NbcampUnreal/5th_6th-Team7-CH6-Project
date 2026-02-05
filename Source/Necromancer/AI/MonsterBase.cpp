@@ -41,6 +41,8 @@ void AMonsterBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	MonsterStatComponent->OnDamageReceived.AddDynamic(this, &AMonsterBase::OnDamageReceived);
+	
 	MonsterStatComponent->OnDeath.AddDynamic(this, &AMonsterBase::OnDeath);
 	MonsterStatComponent->OnStagger.AddUObject(this, &AMonsterBase::OnStagger);
 	MonsterStatComponent->OnStun.AddUObject(this, &AMonsterBase::OnStun);
@@ -49,11 +51,27 @@ void AMonsterBase::BeginPlay()
 void AMonsterBase::OnStagger()
 {
 	StopAnimMontage();
+
+	if (AAIController* AIC = GetController<AAIController>())
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(FName(NAME_IsStaggered), true);
+		}
+	}
 }
 
 void AMonsterBase::OnStun()
 {
 	StopAnimMontage();
+
+	if (AAIController* AIC = GetController<AAIController>())
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(FName(NAME_IsStaggered), true);
+		}
+	}
 }
 
 void AMonsterBase::OnDeath()
@@ -124,4 +142,9 @@ void AMonsterBase::Multicast_PlayMontage_Implementation(UAnimMontage* Montage)
 	{
 		PlayAnimMontage(Montage);
 	}
+}
+
+void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
+{
+	MonsterStatComponent->ApplyPoise(DamageAmount);
 }

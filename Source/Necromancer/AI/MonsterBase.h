@@ -66,6 +66,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> DeathMontage;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> HitReactMontage;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> StunMontage;
+	
 	void StartRagdoll();
 	
 	// RVO 회피 설정
@@ -74,6 +80,9 @@ protected:
 	// RVO 계급 설정
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RVO")
 	float AvoidanceWeight = 0.5f;
+	
+	UFUNCTION()
+	void OnDamageReceived(float DamageAmount, FVector HitLocation);
 
 
 	
