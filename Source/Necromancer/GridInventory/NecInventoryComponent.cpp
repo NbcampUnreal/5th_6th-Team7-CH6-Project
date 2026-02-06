@@ -73,3 +73,8 @@ void UNecInventoryComponent::AddNecInventory(AActor* NewItemActor)
 	}
 }
 
+UItemInstance* UNecInventoryComponent::GetDefaultContainer() const
+{
+	return DefaultContainer;
+}
+

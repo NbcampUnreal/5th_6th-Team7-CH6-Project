@@ -63,7 +63,7 @@ void UItemInstanceComponent::CreateInventoryIfNeeded()
 	if (!Data) {
 		return;
 	}
-	if (Data->Sections.Num() < 1) {
+	if (Data->Rows.Num() < 1) {
 		return;
 	}
 

@@ -10,6 +10,7 @@
  * 
  */
 class UItemInstance;
+
 UCLASS(ClassGroup = (Custom),meta = (BlueprintSpawnableComponent))
 class NECROMANCER_API UNecInventoryComponent : public UGridInventoryComponent
 {
@@ -32,4 +33,7 @@ private:
 public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void AddNecInventory(AActor* NewItemActor);
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	UItemInstance* GetDefaultContainer() const;
 };
