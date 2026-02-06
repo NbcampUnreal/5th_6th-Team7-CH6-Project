@@ -5,6 +5,7 @@
 #include "TargetingComponent.generated.h"
 
 class ANecPlayerCharacter;
+class UUserWidget;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class NECROMANCER_API UTargetingComponent : public UActorComponent
@@ -37,6 +38,8 @@ protected:
 
 	void FindTarget();
 	void ClearLockOn();
+	void InitLockOnWidget();
+	void UpdateLockOnUI();
 
 protected:
 	UPROPERTY(Replicated)
@@ -44,6 +47,15 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<ANecPlayerCharacter> OwnerCharacter;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> LockOnWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> LockOnWidgetInstance;
+
+	UPROPERTY(EditAnywhere, Category = "Targeting")
+	FName TargetSocketName = FName("spine_05");
 
 	UPROPERTY(EditAnywhere, Category = "Targeting")
 	float SearchRadius = 1000.0f;

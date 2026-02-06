@@ -3,6 +3,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Blueprint/UserWidget.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -30,6 +31,11 @@ void UTargetingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+    if (!LockOnWidgetInstance)
+    {
+        InitLockOnWidget();
+    }
 
     if (!IsValid(OwnerCharacter))
     {
@@ -81,7 +87,9 @@ void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
             PC->SetControlRotation(TargetRot);
         }
-    }    
+    }
+
+    UpdateLockOnUI();
 }
 
 void UTargetingComponent::ToggleLockOn()
@@ -121,6 +129,11 @@ void UTargetingComponent::Server_ToggleLockOn_Implementation()
         {
             OwnerCharacter->SetLockOn(true);
         }
+    }
+
+    if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
+    {
+        OnRep_CurrentTarget();
     }
 }
 
@@ -203,6 +216,11 @@ void UTargetingComponent::Server_SwitchTarget_Implementation(bool bIsRight)
         {
             OwnerCharacter->SetLockOn(true);
         }
+
+        if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
+        {
+            OnRep_CurrentTarget();
+        }
     }
 }
 
@@ -217,6 +235,18 @@ void UTargetingComponent::OnRep_CurrentTarget()
         else
         {
             OwnerCharacter->SetLockOn(false);
+        }
+
+        if (OwnerCharacter->IsLocallyControlled() && LockOnWidgetInstance)
+        {
+            if (CurrentTarget)
+            {
+                LockOnWidgetInstance->SetVisibility(ESlateVisibility::HitTestInvisible);
+            }
+            else
+            {
+                LockOnWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+            }
         }
     }
 }
@@ -302,5 +332,87 @@ void UTargetingComponent::ClearLockOn()
     if (OwnerCharacter)
     {
         OwnerCharacter->SetLockOn(false);
+
+        if (OwnerCharacter->IsLocallyControlled())
+        {
+            OnRep_CurrentTarget();
+        }
+    }
+}
+
+void UTargetingComponent::InitLockOnWidget()
+{
+    if (LockOnWidgetInstance || !OwnerCharacter || !LockOnWidgetClass)
+    {
+        return;
+    }
+
+    if (OwnerCharacter->IsLocallyControlled())
+    {
+        LockOnWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), LockOnWidgetClass);
+        if (LockOnWidgetInstance)
+        {
+            LockOnWidgetInstance->AddToViewport();
+            LockOnWidgetInstance->SetAlignmentInViewport(FVector2D(0.5f, 0.5f));
+            LockOnWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+        }
+    }
+}
+
+void UTargetingComponent::UpdateLockOnUI()
+{
+    if (!LockOnWidgetInstance)
+    {
+        return;
+    }
+
+    if (!CurrentTarget)
+    {
+        if (LockOnWidgetInstance->GetVisibility() != ESlateVisibility::Hidden)
+        {
+            LockOnWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+        }
+
+        return;
+    }
+
+    APlayerController* PC = Cast<APlayerController>(OwnerCharacter->GetController());
+    if (!PC)
+    {
+        return;
+    }
+
+    FVector TargetLoc = CurrentTarget->GetActorLocation();
+
+    if (ACharacter* TargetChar = Cast<ACharacter>(CurrentTarget))
+    {
+        if (TargetChar->GetMesh()->DoesSocketExist(TargetSocketName))
+        {
+            TargetLoc = TargetChar->GetMesh()->GetSocketLocation(TargetSocketName);
+        }
+        else
+        {
+            TargetLoc.Z += 50.0f;
+        }
+    }
+
+    FVector2D ScreenPos;
+    bool bOnScreen = UGameplayStatics::ProjectWorldToScreen(PC, TargetLoc, ScreenPos);
+
+    if (bOnScreen)
+    {
+        LockOnWidgetInstance->SetPositionInViewport(ScreenPos);
+
+        if (LockOnWidgetInstance->GetVisibility() != ESlateVisibility::HitTestInvisible)
+        {
+            LockOnWidgetInstance->SetVisibility(ESlateVisibility::HitTestInvisible);
+        }
+    }
+    else
+    {
+        if (LockOnWidgetInstance->GetVisibility() != ESlateVisibility::Hidden)
+        {
+            LockOnWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+        }
     }
 }
