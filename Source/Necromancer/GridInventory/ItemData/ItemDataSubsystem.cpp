@@ -26,6 +26,25 @@ void UItemDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     
 }
 
+bool UItemDataSubsystem::GetItemData(FName ItemID, FItemData& OutItemData) const
+{
+    if (!ItemTable)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ItemDataSubsystem: ItemTable is null"));
+        return false;
+    }
+
+    if (const FItemData* FoundData =
+        ItemTable->FindRow<FItemData>(ItemID, TEXT("GetItemData")))
+    {
+        OutItemData = *FoundData; // 복사
+        return true;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("ItemDataSubsystem: ItemTable is not found item"));
+    return false;
+}
+
 const FItemData* UItemDataSubsystem::GetItemData(FName ItemID) const
 {
     if (!ItemTable)
@@ -34,8 +53,12 @@ const FItemData* UItemDataSubsystem::GetItemData(FName ItemID) const
         return nullptr;
     }
 
-    return ItemTable->FindRow<FItemData>(
-        ItemID,
-        TEXT("GetItemData")
-    );
+    if (const FItemData* FoundData =
+        ItemTable->FindRow<FItemData>(ItemID, TEXT("GetItemData")))
+    {
+        return ItemTable->FindRow<FItemData>(ItemID, TEXT("GetItemData"));
+    }
+    UE_LOG(LogTemp, Warning, TEXT("ItemDataSubsystem: ItemTable is not found item"));
+    return nullptr;
+
 }

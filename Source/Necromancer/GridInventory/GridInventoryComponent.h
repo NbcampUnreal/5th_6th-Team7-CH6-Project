@@ -45,7 +45,6 @@ private:
 
     TMap<FGuid, TArray<UItemInstance*>> ItemsByOwnerGuid;
 public:
-
 private:
     void RebuildItemOwnerMap();    
 public:
@@ -56,6 +55,9 @@ public:
 
     void GetInventory(TArray<UItemInstance*>& OutItems) const;
 
+    UFUNCTION(BlueprintCallable)
+    bool FindInventoryContainer(FGuid ContainerId, TArray<UItemInstance*>& OutItems);
+
 #pragma region AddItem
 public:
     void AddRootItem(UItemInstance* NewItem);
@@ -63,6 +65,7 @@ public:
     bool AddItemToPos(
         UItemInstance* NewItem,
         const FGuid& ContainerGuid,
+        int32 InRowIndex,
         int32 InSectionIndex,
         int32 InPosX, int32 InPosY
     );
@@ -75,6 +78,7 @@ public:
 private:
     bool CanAddItemToPos(UItemInstance* NewItem,
         const FGuid& ContainerGuid,
+        int32 InRowIndex,
         int32 InSectionIndex,
         int32 InPosX, int32 InPosY
     );
@@ -87,12 +91,14 @@ private:
     void Server_AddItemToPos(
         UItemInstance* NewItem,
         const FGuid& ContainerGuid,
+        int32 InRowIndex,
         int32 InSectionIndex,
         int32 InPosX, int32 InPosY
     );    
     void Implement_AddItemToPos(
         UItemInstance*& NewItem, 
         const FGuid& ContainerGuid,
+        int32 InRowIndex,
         int32 InSectionIndex, 
         int32 InPosX, int32 InPosY);
 #pragma endregion

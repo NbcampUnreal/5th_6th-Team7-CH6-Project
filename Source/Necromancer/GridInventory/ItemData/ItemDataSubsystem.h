@@ -17,6 +17,10 @@ class NECROMANCER_API UItemDataSubsystem : public UGameInstanceSubsystem
 public:
     UItemDataSubsystem();
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+
+    UFUNCTION(BlueprintCallable)
+    bool GetItemData(FName ItemID, FItemData& OutItemData) const;
+
     const FItemData* GetItemData(FName ItemID) const;
 
 private:

@@ -25,6 +25,7 @@ void UItemInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     DOREPLIFETIME(UItemInstance, ItemID);
     DOREPLIFETIME(UItemInstance, CurrentDurability);
     DOREPLIFETIME(UItemInstance, OwnerItemGuid);
+    DOREPLIFETIME(UItemInstance, RowIndex);
     DOREPLIFETIME(UItemInstance, SectionIndex);
     DOREPLIFETIME(UItemInstance, PosX);
     DOREPLIFETIME(UItemInstance, PosY);
@@ -47,6 +48,7 @@ void UItemInstance::AddDurability(float Delta)
 
 void UItemInstance::SetInventoryPlacement(
     const FGuid& InOwnerItemGuid,
+    int32 InRowIndex,
     int32 InSectionIndex,
     int32 InPosX,
     int32 InPosY
@@ -54,6 +56,7 @@ void UItemInstance::SetInventoryPlacement(
 {
     OwnerItemGuid = InOwnerItemGuid;
     SectionIndex = InSectionIndex;
+    RowIndex = InRowIndex;
     PosX = InPosX;
     PosY = InPosY;
 }
