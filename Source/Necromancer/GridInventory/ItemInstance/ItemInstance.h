@@ -48,6 +48,7 @@ public:
     void SetDurability(float NewDurability);
     void AddDurability(float Delta);
 
+    UFUNCTION(BlueprintCallable)
     void ToggleRotation()
     {
         bRotated = !bRotated;
@@ -57,6 +58,9 @@ public:
 #pragma region InventoryPlacement
     UPROPERTY(Replicated, BlueprintReadOnly)
     FGuid OwnerItemGuid;
+
+    UPROPERTY(Replicated, BlueprintReadOnly)
+    int32 RowIndex;
 
     UPROPERTY(Replicated, BlueprintReadOnly)
     int32 SectionIndex;
@@ -69,6 +73,7 @@ public:
 
     void SetInventoryPlacement(
         const FGuid& InOwnerItemGuid,
+        int32 InRowIndex,
         int32 InSectionIndex,
         int32 InPosX,
         int32 InPosY

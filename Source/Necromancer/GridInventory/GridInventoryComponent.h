@@ -65,6 +65,7 @@ public:
     bool AddItemToPos(
         UItemInstance* NewItem,
         const FGuid& ContainerGuid,
+        int32 InRowIndex,
         int32 InSectionIndex,
         int32 InPosX, int32 InPosY
     );
@@ -77,6 +78,7 @@ public:
 private:
     bool CanAddItemToPos(UItemInstance* NewItem,
         const FGuid& ContainerGuid,
+        int32 InRowIndex,
         int32 InSectionIndex,
         int32 InPosX, int32 InPosY
     );
@@ -89,12 +91,14 @@ private:
     void Server_AddItemToPos(
         UItemInstance* NewItem,
         const FGuid& ContainerGuid,
+        int32 InRowIndex,
         int32 InSectionIndex,
         int32 InPosX, int32 InPosY
     );    
     void Implement_AddItemToPos(
         UItemInstance*& NewItem, 
         const FGuid& ContainerGuid,
+        int32 InRowIndex,
         int32 InSectionIndex, 
         int32 InPosX, int32 InPosY);
 #pragma endregion
