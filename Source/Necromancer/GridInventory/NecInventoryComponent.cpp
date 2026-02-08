@@ -5,7 +5,40 @@
 #include "Net/UnrealNetwork.h"
 #include "GridInventory/ItemInstance/ItemInstance.h"
 #include "GridInventory/ItemInstance/ItemInstanceComponent.h"
+#include "GridInventory/ItemData/ItemDataSubsystem.h"
 #include "Engine/ActorChannel.h"
+
+bool ItemTypeToEquipmentSlot(
+	EItemType ItemType,
+	EEquipmentSlot& OutSlot
+)
+{
+	switch (ItemType)
+	{
+	case EItemType::Equipment_Head:
+		OutSlot = EEquipmentSlot::Head;
+		return true;
+
+	case EItemType::Equipment_UpperBody:
+		OutSlot = EEquipmentSlot::Body;
+		return true;
+
+	case EItemType::Equipment_DownBody:
+		OutSlot = EEquipmentSlot::Legs;
+		return true;
+
+	case EItemType::Bag:
+		OutSlot = EEquipmentSlot::Bag;
+		return true;
+
+	case EItemType::Weapon:
+		OutSlot = EEquipmentSlot::Weapon;
+		return true;
+
+	default:
+		return false;
+	}
+}
 
 UNecInventoryComponent::UNecInventoryComponent()
 {
@@ -30,12 +63,31 @@ inline void UNecInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UNecInventoryComponent, DefaultContainer);
+
+	// ===== Equipment : ItemInstance =====
+	DOREPLIFETIME(UNecInventoryComponent, HeadItem);
+	DOREPLIFETIME(UNecInventoryComponent, BodyItem);
+	DOREPLIFETIME(UNecInventoryComponent, LegsItem);
+	DOREPLIFETIME(UNecInventoryComponent, BagItem);
+	DOREPLIFETIME(UNecInventoryComponent, WeaponItem);
+
+	// ===== Equipment : Actor =====
+	DOREPLIFETIME(UNecInventoryComponent, HeadActor);
+	DOREPLIFETIME(UNecInventoryComponent, BodyActor);
+	DOREPLIFETIME(UNecInventoryComponent, LegsActor);
+	DOREPLIFETIME(UNecInventoryComponent, BagActor);
+	DOREPLIFETIME(UNecInventoryComponent, WeaponActor);
 }
 
 bool UNecInventoryComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch, FReplicationFlags* RepFlags)
 {
 	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
 	WroteSomething |= Channel->ReplicateSubobject(DefaultContainer, *Bunch, *RepFlags);
+	if (HeadItem)   WroteSomething |= Channel->ReplicateSubobject(HeadItem, *Bunch, *RepFlags);
+	if (BodyItem)   WroteSomething |= Channel->ReplicateSubobject(BodyItem, *Bunch, *RepFlags);
+	if (LegsItem)   WroteSomething |= Channel->ReplicateSubobject(LegsItem, *Bunch, *RepFlags);
+	if (BagItem)    WroteSomething |= Channel->ReplicateSubobject(BagItem, *Bunch, *RepFlags);
+	if (WeaponItem) WroteSomething |= Channel->ReplicateSubobject(WeaponItem, *Bunch, *RepFlags);
 
 	return WroteSomething;
 }
@@ -78,3 +130,157 @@ UItemInstance* UNecInventoryComponent::GetDefaultContainer() const
 	return DefaultContainer;
 }
 
+inline UItemInstance* UNecInventoryComponent::GetEquipmentItem(EEquipmentSlot Slot) const
+{
+	switch (Slot)
+	{
+	case EEquipmentSlot::Head:   return HeadItem;
+	case EEquipmentSlot::Body:   return BodyItem;
+	case EEquipmentSlot::Legs:   return LegsItem;
+	case EEquipmentSlot::Bag:    return BagItem;
+	case EEquipmentSlot::Weapon: return WeaponItem;
+	default: return nullptr;
+	}
+}
+
+AActor* UNecInventoryComponent::GetEquipmentActor(EEquipmentSlot Slot) const
+{
+	switch (Slot)
+	{
+	case EEquipmentSlot::Head:		return HeadActor;
+	case EEquipmentSlot::Body:		return BodyActor;
+	case EEquipmentSlot::Legs:		return LegsActor;
+	case EEquipmentSlot::Bag:		return BagActor;
+	case EEquipmentSlot::Weapon:	return WeaponActor;
+	default:	return nullptr;
+	}
+}
+
+void UNecInventoryComponent::EquipItem(UItemInstance* EquipItem)
+{
+	if (!EquipItem)
+	{
+		return;
+	}
+
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		EquipItem_Internal(EquipItem);
+	}
+	else
+	{
+		Server_EquipItem(EquipItem);
+	}
+}
+
+void UNecInventoryComponent::UnequipItem(EEquipmentSlot Slot)
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority())
+	{
+		return;
+	}
+
+	AActor* OldActor = GetEquipmentActor(Slot);
+	if (OldActor)
+	{
+		OldActor->Destroy();
+	}
+
+	SetEquipmentActor(Slot, nullptr);
+	SetEquipmentItem(Slot, nullptr);
+}
+
+void UNecInventoryComponent::SetEquipmentItem(EEquipmentSlot Slot, UItemInstance* NewItem)
+{
+	switch (Slot)
+	{
+	case EEquipmentSlot::Head:	HeadItem = NewItem;		break;
+	case EEquipmentSlot::Body:	BodyItem = NewItem;		break;
+	case EEquipmentSlot::Legs:	LegsItem = NewItem;		break;
+	case EEquipmentSlot::Bag:	BagItem = NewItem;		break;
+	case EEquipmentSlot::Weapon:WeaponItem = NewItem;	break;
+	default:											break;
+	}
+}
+
+void UNecInventoryComponent::SetEquipmentActor(EEquipmentSlot Slot,	AActor* NewActor)
+{
+	switch (Slot)
+	{
+	case EEquipmentSlot::Head:	HeadActor = NewActor;		break;
+	case EEquipmentSlot::Body:	BodyActor = NewActor;		break;
+	case EEquipmentSlot::Legs:	LegsActor = NewActor;		break;
+	case EEquipmentSlot::Bag:	BagActor = NewActor;		break;
+	case EEquipmentSlot::Weapon:WeaponActor = NewActor;		break;
+	default:												break;
+	}
+}
+
+void UNecInventoryComponent::EquipItem_Internal(UItemInstance* EquipItem)
+{
+	if (!EquipItem)
+	{
+		return;
+	}
+
+	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor || !OwnerActor->HasAuthority())
+	{
+		return;
+	}
+
+	UItemDataSubsystem* Subsystem =
+		GetWorld()->GetGameInstance()->GetSubsystem<UItemDataSubsystem>();
+
+	if (!Subsystem)
+	{
+		return;
+	}
+
+	const FItemData* Data = Subsystem->GetItemData(EquipItem->ItemID);
+	if (!Data)
+	{
+		return;
+	}
+
+	EEquipmentSlot TargetSlot;
+	if (!ItemTypeToEquipmentSlot(Data->m_ItemType, TargetSlot))
+	{
+		return;
+	}
+
+	if (GetEquipmentItem(TargetSlot))
+	{
+		UnequipItem(TargetSlot);
+	}
+
+	AActor* SpawnedActor = nullptr;
+
+	if (Data->EquipItemActorClass)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = OwnerActor;
+		SpawnParams.Instigator = Cast<APawn>(OwnerActor);
+		SpawnParams.SpawnCollisionHandlingOverride =
+			ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		SpawnedActor = GetWorld()->SpawnActor<AActor>(
+			Data->EquipItemActorClass,
+			FTransform::Identity,
+			SpawnParams
+		);
+
+		if (SpawnedActor)
+		{
+			SpawnedActor->SetReplicates(true);
+		}
+	}
+
+	SetEquipmentItem(TargetSlot, EquipItem);
+	SetEquipmentActor(TargetSlot, SpawnedActor);
+}
+
+void UNecInventoryComponent::Server_EquipItem_Implementation(UItemInstance* EquipItem)
+{
+	EquipItem_Internal(EquipItem);
+}
