@@ -1,5 +1,6 @@
 #include "Component/TargetingComponent.h"
 #include "Character/NecPlayerCharacter.h"
+#include "AI/MonsterBase.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -56,6 +57,21 @@ void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
     if (bHasTarget)
     {
+        /*AMonsterBase* MonsterTarget = Cast<AMonsterBase>(CurrentTarget);
+        if (MonsterTarget && MonsterTarget->IsDead())
+        {
+            if (OwnerCharacter->HasAuthority())
+            {
+                ClearLockOn();
+            }
+            else
+            {
+                Server_ToggleLockOn();
+            }
+
+            return;
+        }*/
+
         float Dist = OwnerCharacter->GetDistanceTo(CurrentTarget);
         if (Dist > SearchRadius * 1.5f)
         {
