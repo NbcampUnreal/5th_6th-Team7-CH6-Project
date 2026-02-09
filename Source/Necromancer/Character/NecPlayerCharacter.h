@@ -13,6 +13,7 @@ class UPlayerMovementComponent;
 class UCombatComponent;
 class UUserWidget;
 class UTargetingComponent;
+class AWeapon_Item_Base;
 struct FInputActionValue;
 
 UCLASS()
@@ -65,6 +66,9 @@ protected:
 
 	void LinkPlayerStateComponents();
 
+	UFUNCTION(Server, Reliable)
+	void Server_EquipWeapon(AWeapon_Item_Base* WeaponToEquip);
+
 public:
 	UFUNCTION(Server, Reliable)
 	void Server_SetSprint(bool bIsSprinting);
@@ -104,4 +108,7 @@ protected:
 		
 	UPROPERTY()
 	TObjectPtr<UUserWidget> InGameMenuInstance;
+
+	UPROPERTY(EditAnywhere, Category = "Test")
+	float InteractRange = 200.0f;
 };

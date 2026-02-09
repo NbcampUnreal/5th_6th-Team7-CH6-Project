@@ -22,6 +22,10 @@ public:
 
 	virtual void EndAttack();
 
+	UAnimMontage* GetAttackMontage() const { return AttackMontage; }
+	float GetDamage() const { return Damage; }
+	float GetStaminaCost() const { return StaminaCost; }
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	USkeletalMeshComponent* WeaponMesh;
@@ -44,4 +48,10 @@ protected:
 		bool bFromSweep,
 		const FHitResult& SweepResult
 	);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TObjectPtr<UAnimMontage> AttackMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	float StaminaCost = 20.0f;
 };

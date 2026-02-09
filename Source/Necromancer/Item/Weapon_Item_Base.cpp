@@ -11,6 +11,9 @@ AWeapon_Item_Base::AWeapon_Item_Base()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
+	bReplicates = true;
+	SetReplicateMovement(true);
+
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	WeaponMesh->SetupAttachment(RootComponent);
 
@@ -48,8 +51,20 @@ void AWeapon_Item_Base::OnAttackHit(
 	const FHitResult& SweepResult
 )
 {
-	if (!OtherActor || OtherActor == GetOwner())
+	if (OtherActor == GetOwner())
+	{
 		return;
+	}
 
-	UE_LOG(LogTemp, Log, TEXT("Weapon Hit: %s"), *OtherActor->GetName());
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	if (OwnerPawn)
+	{
+		UGameplayStatics::ApplyDamage(
+			OtherActor,
+			Damage,
+			OwnerPawn->GetController(),
+			this,
+			UDamageType::StaticClass()
+		);
+	}
 }
