@@ -10,14 +10,18 @@
 #include "Component/StaminaComponent.h"
 #include "Component/PlayerMovementComponent.h"
 #include "Component/CombatComponent.h"
+#include "Component/TargetingComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/StaticMeshActor.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
+	PrimaryActorTick.bCanEverTick = true;
+
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;	
@@ -35,14 +39,21 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	CameraComponent->bUsePawnControlRotation = false;
 
 	PlayerMovementComponent = CreateDefaultSubobject<UPlayerMovementComponent>(TEXT("PlayerMovementComponent"));
-
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
-	CombatComponent->SetIsReplicated(true);
+	TargetingComponent = CreateDefaultSubobject<UTargetingComponent>(TEXT("TargetingComponent"));
 }
 
 void ANecPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+
+}
+
+void ANecPlayerCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
 	
 }
 
@@ -122,7 +133,7 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 			{
 				EnhancedInputComp->BindAction(
 					PlayerController->LockOnAction,
-					ETriggerEvent::Triggered,
+					ETriggerEvent::Started,
 					this,
 					&ANecPlayerCharacter::LockOn
 				);
@@ -175,6 +186,12 @@ void ANecPlayerCharacter::Move(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::Look(const FInputActionValue& Value)
 {
+	if (IsValid(TargetingComponent) && TargetingComponent->GetCurrentTarget())
+	{
+		TargetingComponent->HandleLockOnInput(Value.Get<FVector2D>());
+		return;
+	}
+
 	if (IsValid(PlayerMovementComponent))
 	{
 		PlayerMovementComponent->ProcessLook(Value.Get<FVector2D>());
@@ -245,7 +262,10 @@ void ANecPlayerCharacter::StopGuard(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::LockOn(const FInputActionValue& Value)
 {
-
+	if (IsValid(CombatComponent))
+	{
+		TargetingComponent->ToggleLockOn();
+	}
 }
 
 void ANecPlayerCharacter::ToggleMenu(const FInputActionValue& Value)
@@ -386,6 +406,23 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 FGenericTeamId ANecPlayerCharacter::GetGenericTeamId() const
 {
 	return FGenericTeamId(TEAM_ID_PLAYER);
+}
+
+void ANecPlayerCharacter::SetLockOn(bool bEnable)
+{
+	if (bEnable)
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		bUseControllerRotationYaw = true;
+	}
+	else
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		bUseControllerRotationPitch = false;
+		bUseControllerRotationYaw = false;
+		bUseControllerRotationRoll = false;
+	}
+
 }
 
 void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)

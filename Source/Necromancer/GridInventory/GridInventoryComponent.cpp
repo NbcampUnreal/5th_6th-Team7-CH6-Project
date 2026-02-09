@@ -124,6 +124,21 @@ inline void UGridInventoryComponent::GetInventory(TArray<UItemInstance*>& OutIte
     OutItems = Items;
 }
 
+bool UGridInventoryComponent::FindInventoryContainer(
+    FGuid ContainerId, 
+    TArray<UItemInstance*>& OutItems)
+{
+    OutItems.Reset();
+
+    if (TArray<UItemInstance*>* ItemsInContainer =
+        ItemsByOwnerGuid.Find(ContainerId))
+    {
+        OutItems = *ItemsInContainer;
+        return true;
+    }
+    return false;
+}
+
 void UGridInventoryComponent::AddRootItem(UItemInstance* NewItem)
 {
     if (!IsValid(NewItem))
@@ -147,6 +162,7 @@ void UGridInventoryComponent::AddRootItem(UItemInstance* NewItem)
 
 bool UGridInventoryComponent::AddItemToPos(UItemInstance* NewItem,
     const FGuid& ContainerGuid, 
+    int32 InRowIndex,
     int32 InSectionIndex, 
     int32 InPosX, int32 InPosY)
 {
@@ -158,6 +174,7 @@ bool UGridInventoryComponent::AddItemToPos(UItemInstance* NewItem,
     if (!CanAddItemToPos(
         NewItem,
         ContainerGuid,
+        InRowIndex,
         InSectionIndex,
         InPosX,
         InPosY))
@@ -171,6 +188,7 @@ bool UGridInventoryComponent::AddItemToPos(UItemInstance* NewItem,
         Server_AddItemToPos(
             NewItem,
             ContainerGuid,
+            InRowIndex,
             InSectionIndex,
             InPosX,
             InPosY
@@ -181,6 +199,7 @@ bool UGridInventoryComponent::AddItemToPos(UItemInstance* NewItem,
         Implement_AddItemToPos(
             NewItem,
             ContainerGuid,
+            InRowIndex,
             InSectionIndex,
             InPosX,
             InPosY
@@ -227,32 +246,40 @@ bool UGridInventoryComponent::AddItemToContainer(
     if (!Data||!ContainerData) {
         return false;
     }
-    if (ContainerData->Sections.Num() < 1)
+    if (ContainerData->Rows.Num() < 1)
     {
         return false;
     }
     int32 InPosX=0; int32 InPosY=0;
-    int32 SectionIndex = ContainerData->Sections.Num();
-    int32 InSectionIndex = 0;
-
+    int32 RowIndex = ContainerData->Rows.Num();
+    int32 InRowIndex = 0;
     bool bFoundPos = false;
 
-    for (; InSectionIndex < SectionIndex; InSectionIndex++) {
-        for (InPosX = 0; InPosX < ContainerData->Sections[InSectionIndex].Width; InPosX++) {
-            for (InPosY = 0; InPosY < ContainerData->Sections[InSectionIndex].Height; InPosY++) {
-                if (CanAddItemToPos(
-                    NewItem,
-                    ContainerGuid,
-                    InSectionIndex,
-                    InPosX,
-                    InPosY))
-                {
-                    bFoundPos = true;
-                    break;
+
+    int32 SectionIndex = ContainerData->Rows[InRowIndex].Sections.Num();
+    int32 InSectionIndex = 0;
+
+    
+    for (; InRowIndex < RowIndex; InRowIndex++) {
+        for (; InSectionIndex < SectionIndex; InSectionIndex++) {
+            for (InPosX = 0; InPosX < ContainerData->Rows[InRowIndex].Sections[InSectionIndex].Width; InPosX++) {
+                for (InPosY = 0; InPosY < ContainerData->Rows[InRowIndex].Sections[InSectionIndex].Height; InPosY++) {
+                    if (CanAddItemToPos(
+                        NewItem,
+                        ContainerGuid,
+                        InRowIndex,
+                        InSectionIndex,
+                        InPosX,
+                        InPosY))
+                    {
+                        bFoundPos = true;
+                        break;
+                    }
                 }
+                if (bFoundPos) break;
             }
             if (bFoundPos) break;
-        }       
+        }
         if (bFoundPos) break;
     }
     if (!bFoundPos) {
@@ -265,6 +292,7 @@ bool UGridInventoryComponent::AddItemToContainer(
         Server_AddItemToPos(
             NewItem,
             ContainerGuid,
+            InRowIndex,
             InSectionIndex,
             InPosX,
             InPosY
@@ -275,6 +303,7 @@ bool UGridInventoryComponent::AddItemToContainer(
         Implement_AddItemToPos(
             NewItem,
             ContainerGuid,
+            InRowIndex,
             InSectionIndex,
             InPosX,
             InPosY
@@ -296,6 +325,7 @@ bool UGridInventoryComponent::AddItemToContainer(
 
 bool UGridInventoryComponent::CanAddItemToPos(UItemInstance* NewItem, 
     const FGuid& ContainerGuid,
+    int32 InRowIndex,
     int32 InSectionIndex,
     int32 InPosX, int32 InPosY)
 {
@@ -327,19 +357,20 @@ bool UGridInventoryComponent::CanAddItemToPos(UItemInstance* NewItem,
     if (!ItemData||!ContainerData) {
         return false;
     }
-    if (ContainerData->Sections.Num() < 1)
+
+    if (ContainerData->Rows.Num() < 1)
     {
         return false;
     }
 
     /* 3. 섹션 인덱스 체크 */
-    if (!ContainerData->Sections.IsValidIndex(InSectionIndex))
+    if (!ContainerData->Rows[InRowIndex].Sections.IsValidIndex(InSectionIndex))
     {
         return false;
     }
 
     const FInventorySection& Section =
-        ContainerData->Sections[InSectionIndex];
+        ContainerData->Rows[InRowIndex].Sections[InSectionIndex];
 
     /* 4. 아이템 크기 계산 (회전 고려) */
     int32 ItemWidth = NewItem->bRotated ? /*Height*/ ItemData->Height : /*Width*/ ItemData->Width;
@@ -409,15 +440,17 @@ void UGridInventoryComponent::Implement_AddRootItem(UItemInstance*& NewItem)
 
 void UGridInventoryComponent::Server_AddItemToPos_Implementation(UItemInstance* NewItem, 
     const FGuid& ContainerGuid, 
+    int32 InRowIndex,
     int32 InSectionIndex, 
     int32 InPosX, int32 InPosY)
 {
-    Implement_AddItemToPos(NewItem, ContainerGuid, InSectionIndex, InPosX, InPosY);
+    Implement_AddItemToPos(NewItem, ContainerGuid, InRowIndex, InSectionIndex, InPosX, InPosY);
 }
 
 void UGridInventoryComponent::Implement_AddItemToPos(
     UItemInstance*& NewItem, 
     const FGuid& ContainerGuid, 
+    int32 InRowIndex,
     int32 InSectionIndex, 
     int32 InPosX, int32 InPosY)
 {
@@ -431,6 +464,7 @@ void UGridInventoryComponent::Implement_AddItemToPos(
     if (!CanAddItemToPos(
         NewItem,
         ContainerGuid,
+        InRowIndex,
         InSectionIndex,
         InPosX,
         InPosY))
@@ -445,6 +479,7 @@ void UGridInventoryComponent::Implement_AddItemToPos(
 
     NewItem->OwnerItemGuid = ContainerGuid;
     NewItem->SectionIndex = InSectionIndex;
+    NewItem->RowIndex = InRowIndex;
     NewItem->PosX = InPosX;
     NewItem->PosY = InPosY;
 
@@ -504,6 +539,7 @@ void UGridInventoryComponent::Implement_RemoveItem(UItemInstance*& Item)
 
     Item->OwnerItemGuid.Invalidate();
     Item->SectionIndex = INDEX_NONE;
+    Item->RowIndex = INDEX_NONE;
     Item->PosX = 0;
     Item->PosY = 0;
 

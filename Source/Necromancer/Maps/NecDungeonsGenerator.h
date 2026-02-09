@@ -33,6 +33,10 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Overlap")
 	void CheckForOverlap();
 
+	// 문 생성 함수
+	UFUNCTION(BlueprintCallable, Category = "Door")
+	void SpawnDoor();
+
 	// 구멍 막기
 	UFUNCTION(BlueprintCallable, Category = "Wall")
 	void CloseHoles();
@@ -54,9 +58,9 @@ public:
 	void OnDelayComplete();
 
 	// 블루프린트의 RandomArrayItemFromStream 구현
-	TSubclassOf<AActor> RandomArrayItemFromStreamRoom(const TArray<TSubclassOf<AActor>>& Array);
+	TSubclassOf<AActor> RandomArrayItemFromRoom(const TArray<TSubclassOf<AActor>>& Array);
 
-	USceneComponent* RandomArrayItemFromStreamArrow(const TArray<USceneComponent*>& Array);
+	USceneComponent* RandomArrayItemFromArrow(const TArray<USceneComponent*>& Array);
 
 	bool GetbIsDungeonComplete() { return bIsDungeonComplete; }
 
@@ -87,7 +91,6 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<AActor>>RoomListBase;
 
-
 	//  방 배열 temp
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<AActor>>RoomList;
@@ -95,6 +98,14 @@ protected:
 	// 특수 방 배열
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<AActor>>SpecialRoomList;
+
+	// 문 설치할 Arrow 담을 배열 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Door")
+	TArray<USceneComponent*>DoorList;
+
+	// 문
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Door")
+	TArray<TSubclassOf<AActor>>DoorActor;
 
 	// 방의 출구 Arrow Component를 담을 배열
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exits")

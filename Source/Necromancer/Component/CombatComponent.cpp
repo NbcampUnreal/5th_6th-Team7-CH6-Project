@@ -6,8 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
-UCombatComponent::UCombatComponent() :
-    AttackMontage(nullptr)
+UCombatComponent::UCombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
@@ -131,6 +130,16 @@ void UCombatComponent::SetGuard(bool bInGuarding)
     UpdateGuardVisuals();
 
     Server_SetGuard(bInGuarding);
+}
+
+bool UCombatComponent::IsAttacking() const
+{
+    if (OwnerCharacter && OwnerCharacter->GetMesh()->GetAnimInstance() && AttackMontage)
+    {
+        return OwnerCharacter->GetMesh()->GetAnimInstance()->Montage_IsPlaying(AttackMontage);
+    }
+
+    return false;
 }
 
 void UCombatComponent::OnRep_bIsGuarding()
