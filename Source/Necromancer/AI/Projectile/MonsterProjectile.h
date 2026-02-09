@@ -10,29 +10,37 @@ class UNiagaraSystem;
 class USphereComponent;
 class UProjectileMovementComponent;
 class UNiagaraComponent;
+
 UCLASS()
 class NECROMANCER_API AMonsterProjectile : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	
+
 	AMonsterProjectile();
-	
+
 	virtual void PostInitializeComponents() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	
+	void InitProjectile(float InDamage, float InSpeed, float InGravityScale);
 
 protected:
-	UPROPERTY(EditDefaultsOnly,Category ="Effect")
+	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	TObjectPtr<UNiagaraSystem> ExplosionEffect;
-	
-	UPROPERTY(EditDefaultsOnly,Category ="Compomemts")
+
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	TObjectPtr<USphereComponent> SphereComponent;
-	
-	UPROPERTY(EditDefaultsOnly,Category ="Compomemts")
-	TObjectPtr<UNiagaraComponent> LoopNiagaraComponent;;
-	
-	UPROPERTY(EditDefaultsOnly,Category ="Compomemts")
+
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	TObjectPtr<UNiagaraComponent> LoopNiagaraComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	TObjectPtr<UProjectileMovementComponent> ProjectileMovementComponent;
+
+	UPROPERTY(Replicated)
+	float ProjectileDamage = 10.0f;
 
 	UFUNCTION()
 	void OnActorHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
