@@ -47,6 +47,9 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_Attack();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_Attack();
+
 	UFUNCTION(Server, Reliable)
 	void Server_SetGuard(bool bInGuarding);
 

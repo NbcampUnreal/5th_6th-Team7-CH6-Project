@@ -31,7 +31,33 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 void UCombatComponent::Attack()
 {
-    Server_Attack();
+    if (!OwnerCharacter || !CurrentWeapon)
+    {
+        return;
+    }
+
+    UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
+    if (AttackMontage)
+    {
+        UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+        if (AnimInstance && AnimInstance->Montage_IsPlaying(AttackMontage))
+        {
+            return;
+        }
+
+        UStaminaComponent* StaminaComp = OwnerCharacter->GetStaminaComponent();
+        float StaminaCost = CurrentWeapon->GetStaminaCost();
+
+        if (StaminaComp && StaminaComp->GetCurrentStamina() < StaminaCost)
+        {
+            return;
+        }
+
+        OwnerCharacter->PlayAnimMontage(AttackMontage);
+        StaminaComp->ConsumeStamina_Predictive(StaminaCost);
+
+        Server_Attack();
+    }
 }
 
 void UCombatComponent::EquipWeapon(AWeapon_Item_Base* NewWeapon)
@@ -120,6 +146,25 @@ void UCombatComponent::UpdateGuardVisuals()
     }
 }
 
+void UCombatComponent::Multicast_Attack_Implementation()
+{
+    if (!OwnerCharacter || !CurrentWeapon)
+    {
+        return;
+    }
+
+    if (OwnerCharacter->IsLocallyControlled())
+    {
+        return;
+    }
+
+    UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
+    if (AttackMontage)
+    {
+        OwnerCharacter->PlayAnimMontage(AttackMontage);
+    }
+}
+
 void UCombatComponent::Server_SetGuard_Implementation(bool bInGuarding)
 {    
     bIsGuarding = bInGuarding;
@@ -137,26 +182,19 @@ void UCombatComponent::Server_Attack_Implementation()
         return;
     }
 
+    UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
     UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
-    UAnimMontage* WeaponMontage = CurrentWeapon->GetAttackMontage();
 
-    if (AnimInstance && WeaponMontage && AnimInstance->Montage_IsPlaying(WeaponMontage))
+    if (!OwnerCharacter->IsLocallyControlled() && AttackMontage && AnimInstance && AnimInstance->Montage_IsPlaying(AttackMontage))
     {
         return;
     }
-
-    UStaminaComponent* StaminaComponent = OwnerCharacter->GetStaminaComponent();
+    
+    UStaminaComponent* StaminaComp = OwnerCharacter->GetStaminaComponent();
     float StaminaCost = CurrentWeapon->GetStaminaCost();
 
-    if (StaminaComponent)
+    if (StaminaComp && StaminaComp->ConsumeStamina(StaminaCost))
     {
-        if (StaminaComponent->IsExhausted() || StaminaComponent->GetCurrentStamina() < StaminaCost)
-        {
-            return;
-        }
-
-        StaminaComponent->ConsumeStamina_Predictive(StaminaCost);
+        Multicast_Attack();
     }
-
-    OwnerCharacter->PlayAnimMontage(WeaponMontage);
 }
