@@ -57,8 +57,8 @@ void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
     if (bHasTarget)
     {
-        /*AMonsterBase* MonsterTarget = Cast<AMonsterBase>(CurrentTarget);
-        if (MonsterTarget && MonsterTarget->IsDead())
+        AMonsterBase* MonsterTarget = Cast<AMonsterBase>(CurrentTarget);
+        if (MonsterTarget && MonsterTarget->GetIsDead())
         {
             if (OwnerCharacter->HasAuthority())
             {
@@ -70,7 +70,7 @@ void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
             }
 
             return;
-        }*/
+        }
 
         float Dist = OwnerCharacter->GetDistanceTo(CurrentTarget);
         if (Dist > SearchRadius * 1.5f)
