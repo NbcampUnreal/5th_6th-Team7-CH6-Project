@@ -81,7 +81,7 @@ void UCombatComponent::EquipWeapon(AWeapon_Item_Base* NewWeapon)
         CurrentWeapon->AttachToComponent(
             OwnerCharacter->GetMesh(),
             FAttachmentTransformRules::SnapToTargetIncludingScale,
-            FName("hand_r")
+            FName("hand_r_weapon")
         );
     }
 }
