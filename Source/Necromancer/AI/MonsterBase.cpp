@@ -5,6 +5,7 @@
 
 #include "AIController.h"
 #include "BrainComponent.h"
+#include "MonsterEngagementSubsystem.h"
 #include "MonsterStatComponent.h"
 #include "Necromancer.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -17,12 +18,16 @@ AMonsterBase::AMonsterBase()
 {
 	MonsterStatComponent = CreateDefaultSubobject<UMonsterStatComponent>(TEXT("MonsterStatComponent"));
 	SetRVOAvoidanceEnabled(true);
-	
+
 	bReplicates = true;
-	SetReplicatingMovement(true);  
-	NetUpdateFrequency = 10.0f;   
+	SetReplicatingMovement(true);
+	NetUpdateFrequency = 10.0f;
 	MinNetUpdateFrequency = 2.0f;
+
 	
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationRoll = false;
 }
 
 
@@ -37,31 +42,70 @@ void AMonsterBase::SetRVOAvoidanceEnabled(bool bEnable)
 	}
 }
 
+bool AMonsterBase::GetIsDead()
+{
+	return bIsDead;
+}
+
 void AMonsterBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	MonsterStatComponent->OnDamageReceived.AddDynamic(this, &AMonsterBase::OnDamageReceived);
+
 	MonsterStatComponent->OnDeath.AddDynamic(this, &AMonsterBase::OnDeath);
 	MonsterStatComponent->OnStagger.AddUObject(this, &AMonsterBase::OnStagger);
 	MonsterStatComponent->OnStun.AddUObject(this, &AMonsterBase::OnStun);
+
+	
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->bOrientRotationToMovement = false;
+		MoveComp->bUseControllerDesiredRotation = false;
+
+		
+		MoveComp->MaxAcceleration = MovementAcceleration;
+		MoveComp->BrakingDecelerationWalking = MovementDeceleration;
+	}
 }
 
 void AMonsterBase::OnStagger()
 {
 	StopAnimMontage();
+
+	if (AAIController* AIC = GetController<AAIController>())
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(FName(NAME_IsStaggered), true);
+		}
+	}
 }
 
 void AMonsterBase::OnStun()
 {
 	StopAnimMontage();
+
+	if (AAIController* AIC = GetController<AAIController>())
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(FName(NAME_IsStaggered), true);
+		}
+	}
 }
 
 void AMonsterBase::OnDeath()
 {
-	
 	if (!HasAuthority()) return;
 
-	bIsDead = true;  
+	bIsDead = true;
+
+	
+	if (UMonsterEngagementSubsystem* Engagement = GetWorld()->GetSubsystem<UMonsterEngagementSubsystem>())
+	{
+		Engagement->ReleaseAllSlotsForMonster(this);
+	}
 
 	AAIController* AIController = GetController<AAIController>();
 	if (AIController && AIController->GetBrainComponent())
@@ -69,13 +113,11 @@ void AMonsterBase::OnDeath()
 		AIController->GetBrainComponent()->StopLogic("Dead");
 		AIController->UnPossess();
 	}
-	
+
 	GetCharacterMovement()->StopMovementImmediately();
 	GetCharacterMovement()->DisableMovement();
-	
 
 	Multicast_PlayDeathMontage();
-	
 }
 
 void AMonsterBase::StartRagdoll()
@@ -124,4 +166,9 @@ void AMonsterBase::Multicast_PlayMontage_Implementation(UAnimMontage* Montage)
 	{
 		PlayAnimMontage(Montage);
 	}
+}
+
+void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
+{
+	MonsterStatComponent->ApplyPoise(DamageAmount);
 }

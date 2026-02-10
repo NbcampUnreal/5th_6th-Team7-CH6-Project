@@ -33,6 +33,16 @@ public:
 	float GetAttackRange() const;
 	UFUNCTION(BlueprintCallable)
 	float GetDetectRange() const;
+
+	// 원거리 스탯
+	UFUNCTION(BlueprintCallable)
+	float GetProjectileSpeed() const;
+	UFUNCTION(BlueprintCallable)
+	float GetProjectileGravityScale() const;
+	UFUNCTION(BlueprintCallable)
+	float GetMinAttackRange() const;
+	UFUNCTION(BlueprintCallable)
+	bool GetIsRanged() const;
 	
 	
 
@@ -58,6 +68,19 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Poise")
 	float SinglePoiseThreshold = 30.0f;
+
+	// 원거리 전투
+	UPROPERTY(EditDefaultsOnly, Category = "Stat|Ranged")
+	float ProjectileSpeed = 2000.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stat|Ranged")
+	float ProjectileGravityScale = 0.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stat|Ranged")
+	float MinAttackRange = 0.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stat|Ranged")
+	bool bIsRanged = false;
 
 	// 등급
 	UPROPERTY(EditDefaultsOnly, Category = "Stat")

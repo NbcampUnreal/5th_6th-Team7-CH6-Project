@@ -18,7 +18,7 @@ class NECROMANCER_API AMonsterAIController : public AAIController
 public:
 	AMonsterAIController();
 
-	// Blackboard 헬퍼
+	
 	UFUNCTION(BlueprintCallable, Category = "AI")
 	void SetTargetActor(AActor* NewTarget);
 
