@@ -44,8 +44,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void AddNecInventory(AActor* NewItemActor);
 
+	bool AddItemToInventory(UItemInstance* NewItem);
+
 	UFUNCTION(BlueprintPure, Category = "Inventory")
 	UItemInstance* GetDefaultContainer() const;
+
+	UFUNCTION(BlueprintCallable)
+	void DropItemInWorld(TSubclassOf<AActor> SpawnActor);
+protected:
+	UFUNCTION(Server, Reliable)
+	void Server_DropItemInWorld(TSubclassOf<AActor> SpawnActor);
+private:
+	void DropItemInWorld_Internal(TSubclassOf<AActor> SpawnActor);
 
 #pragma region Equipment
 private:
@@ -99,6 +109,11 @@ protected:
 	void Server_EquipItem(UItemInstance* EquipItem);
 
 	void EquipItem_Internal(UItemInstance* EquipItem);
+
+	UFUNCTION(Server, Reliable)
+	void Server_UnequipItem(EEquipmentSlot Slot);
+
+	void UnequipItem_Internal(EEquipmentSlot Slot);
 #pragma endregion
 
 
