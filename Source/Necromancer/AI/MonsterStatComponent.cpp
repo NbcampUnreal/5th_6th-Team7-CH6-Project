@@ -53,3 +53,23 @@ float UMonsterStatComponent::GetDetectRange() const
 {
 	return DetectRange;
 }
+
+float UMonsterStatComponent::GetProjectileSpeed() const
+{
+	return ProjectileSpeed;
+}
+
+float UMonsterStatComponent::GetProjectileGravityScale() const
+{
+	return ProjectileGravityScale;
+}
+
+float UMonsterStatComponent::GetMinAttackRange() const
+{
+	return MinAttackRange;
+}
+
+bool UMonsterStatComponent::GetIsRanged() const
+{
+	return bIsRanged;
+}
