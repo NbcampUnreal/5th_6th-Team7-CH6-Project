@@ -18,6 +18,10 @@ class NECROMANCER_API AWeapon_Item_Base : public AItemBass
 public:
 	AWeapon_Item_Base();
 
+protected:
+	virtual void Tick(float DeltaTime) override;
+
+public:
 	virtual void StartAttack();
 
 	virtual void EndAttack();
@@ -27,14 +31,23 @@ public:
 	float GetStaminaCost() const { return StaminaCost; }
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
-	USkeletalMeshComponent* WeaponMesh;
+	void PerformTrace();
 
+protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
-	UBoxComponent* AttackHitBox;
+	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
+	FVector TraceExtent = FVector(30.0f, 30.0f, 30.0f);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
+	FName SocketNameStart = FName("TraceStart");
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
+	FName SocketNameEnd = FName("TraceEnd");
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Sound")
-	USoundBase* AttackSound;
+	TObjectPtr<USoundBase> AttackSound;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float Damage = 10.f;
@@ -54,4 +67,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float StaminaCost = 20.0f;
+
+	bool bIsAttacking = false;
+
+	TArray<AActor*> HitActors;
+
+	FVector LastSocketLocation;
+
+	FVector LastCenterLocation;
 };
