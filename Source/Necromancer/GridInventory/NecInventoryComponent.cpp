@@ -217,7 +217,7 @@ void UNecInventoryComponent::DropItemInWorld_Internal(TSubclassOf<AActor> SpawnA
 
 	return;
 }
-s
+
 void UNecInventoryComponent::Server_DropItemInWorld_Implementation(TSubclassOf<AActor> SpawnActor)
 {
 	DropItemInWorld_Internal(SpawnActor);
