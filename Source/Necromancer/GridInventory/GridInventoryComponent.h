@@ -45,7 +45,7 @@ private:
 
     TMap<FGuid, TArray<UItemInstance*>> ItemsByOwnerGuid;
 public:
-    void RebuildItemOwnerMap();    
+    virtual void RebuildItemOwnerMap();    
 public:
     UFUNCTION()
     void OnRep_Items();
@@ -86,7 +86,14 @@ private:
         int32 InSectionIndex,
         int32 InPosX, int32 InPosY
     );
-
+    UFUNCTION(BlueprintCallable)
+    bool CanAddToConatiner(
+        UItemInstance* NewItem,
+        const FGuid& ContainerGuid,
+        int32& OutRowIndex,
+        int32& OutSectionIndex,
+        int32& OutPosX,
+        int32& OutPosY);
     UFUNCTION(Server, Reliable)
     void Server_AddRootItem(UItemInstance* NewItem);
     void Implement_AddRootItem(UItemInstance*& NewItem);
@@ -111,13 +118,7 @@ private:
 public:
     UFUNCTION(BlueprintCallable)
     bool RemoveItem(UItemInstance* Item);
-    bool CanAddToConatiner(
-        UItemInstance* NewItem,
-        const FGuid& ContainerGuid,
-        int32& OutRowIndex,
-        int32& OutSectionIndex,
-        int32& OutPosX,
-        int32& OutPosY);
+    
 protected:
     UFUNCTION(Server, Reliable)
     void Server_RemoveItem(UItemInstance* Item);
