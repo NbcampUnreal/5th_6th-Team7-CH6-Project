@@ -20,4 +20,12 @@ protected:
 protected:	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> ExitButton;
+
+
+protected:
+	UFUNCTION()
+	void OnInviteFriendButtonClicked();
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> InviteFriendButton;
 };
