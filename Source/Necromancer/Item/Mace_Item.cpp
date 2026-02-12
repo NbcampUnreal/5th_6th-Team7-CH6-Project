@@ -24,38 +24,3 @@ AMace_Item::AMace_Item()
 	//}
 }
 
-void AMace_Item::OnAttackHit(
-	UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex,
-	bool bFromSweep,
-	const FHitResult& SweepResult
-)
-{
-	if (!HasAuthority())
-	{
-		return;
-	}
-
-	if (!OtherActor || OtherActor == this)
-	{
-		return;
-	}
-
-	APawn* HitPawn = Cast<APawn>(OtherActor);
-	if (!HitPawn)
-	{
-		return;
-	}
-
-	UGameplayStatics::ApplyDamage(
-		HitPawn,
-		Damage,
-		GetInstigatorController(),
-		this,
-		UDamageType::StaticClass()
-	);
-
-	UE_LOG(LogTemp, Log, TEXT("[Mace] Hit %s (%f Damage)"), *OtherActor->GetName(), Damage);
-}
