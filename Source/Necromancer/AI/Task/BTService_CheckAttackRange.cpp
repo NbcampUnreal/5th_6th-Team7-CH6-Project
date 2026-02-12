@@ -4,21 +4,23 @@
 #include "BTService_CheckAttackRange.h"
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include  "Necromancer.h"
+#include "MonsterStatComponent.h"
+#include "Necromancer.h"
 
 UBTService_CheckAttackRange::UBTService_CheckAttackRange()
 {
 	NodeName = "Check Attack Range";
 	Interval = 0.5f;
 	RandomDeviation = 0.1f;
-	
+
 	TargetActorKey.SelectedKeyName = NAME_TargetActor;
+	AttackRangeKey.SelectedKeyName = NAME_InAttackRange;
 }
 
 void UBTService_CheckAttackRange::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
-	
+
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 	if (!BB)
 	{
@@ -44,17 +46,28 @@ void UBTService_CheckAttackRange::TickNode(UBehaviorTreeComponent& OwnerComp, ui
 		return;
 	}
 	
-	float Distance = FVector::Dist(AIpawn->GetActorLocation(), TargetActor->GetActorLocation());
-	bool bWthinRange = Distance <= MaxAttackRange;
 	
-	bool bHasLOS = false;
-	if (bWthinRange)
+	UMonsterStatComponent* StatComp = AIpawn->FindComponentByClass<UMonsterStatComponent>();
+	float EffectiveRange = StatComp ? StatComp->GetAttackRange() : MaxAttackRange;
+
+	float Distance = FVector::Dist(AIpawn->GetActorLocation(), TargetActor->GetActorLocation());
+	bool bWithinRange = Distance <= EffectiveRange;
+
+	
+	bool bTooClose = false;
+	if (StatComp && StatComp->GetIsRanged())
 	{
-		//레이 케스트로 공격 가능 판단.
+		bTooClose = Distance < StatComp->GetMinAttackRange();
+	}
+	BB->SetValueAsBool(FName(NAME_IsTooClose), bTooClose);
+
+	bool bHasLOS = false;
+	if (bWithinRange)
+	{
+		
 		bHasLOS = AIC->LineOfSightTo(TargetActor);
 	}
-	
-	BB->SetValueAsBool(AttackRangeKey.SelectedKeyName, bWthinRange && bHasLOS);
-	
-	
+
+	bool bFinalResult = bWithinRange && bHasLOS && !bTooClose;
+	BB->SetValueAsBool(AttackRangeKey.SelectedKeyName, bFinalResult);
 }

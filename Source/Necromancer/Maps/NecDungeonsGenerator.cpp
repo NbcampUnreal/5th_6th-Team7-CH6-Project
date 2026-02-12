@@ -28,7 +28,7 @@ void ANecDungeonsGenerator::BeginPlay()
 	SpawnNextRoom();
 }
 
-TSubclassOf<AActor> ANecDungeonsGenerator::RandomArrayItemFromStreamRoom(const TArray<TSubclassOf<AActor>>& Array)
+TSubclassOf<AActor> ANecDungeonsGenerator::RandomArrayItemFromRoom(const TArray<TSubclassOf<AActor>>& Array)
 {
 	if (Array.Num() == 0)
 	{
@@ -39,7 +39,7 @@ TSubclassOf<AActor> ANecDungeonsGenerator::RandomArrayItemFromStreamRoom(const T
 	return Array[OutIndex];
 }
 
-USceneComponent* ANecDungeonsGenerator::RandomArrayItemFromStreamArrow(const TArray<USceneComponent*>& Array)
+USceneComponent* ANecDungeonsGenerator::RandomArrayItemFromArrow(const TArray<USceneComponent*>& Array)
 {
 	if (Array.Num() == 0)
 	{
@@ -93,9 +93,9 @@ void ANecDungeonsGenerator::SpawnNextRoom()
 	{
 		return;
 	}
-	SelectedExitPoint = RandomArrayItemFromStreamArrow(ExitsList);
+	SelectedExitPoint = RandomArrayItemFromArrow(ExitsList);
 	// 랜덤방
-	TSubclassOf<AActor>NextRoom = RandomArrayItemFromStreamRoom(RoomList);
+	TSubclassOf<AActor>NextRoom = RandomArrayItemFromRoom(RoomList);
 	// 스폰 위치 
 	FTransform SpawnTransform = SelectedExitPoint->GetComponentTransform();
 
@@ -184,12 +184,15 @@ void ANecDungeonsGenerator::CheckForOverlap()
 				}
 			}
 		}
+
+		// 문 설치할 곳 리스트에 담기
+		DoorList.Add(SelectedExitPoint);
 	}
 
 	// 아직 방 설치 가능하면 방설치
 	if (RoomCount < RoomAmount)
 	{
-		// 방 20개마다 특수 방 설치
+		// 특수한 방 추가
 		if (RoomCount % (RoomAmount - 1) == 0)
 		{
 			RoomList = SpecialRoomList;
@@ -204,7 +207,8 @@ void ANecDungeonsGenerator::CheckForOverlap()
 	{
 		// 구멍 막기
 		CloseHoles();
-
+		// 문 생성
+		SpawnDoor();
 		// 타이머 종료
 		GetWorld()->GetTimerManager().ClearTimer(DungeonTimerHandle);
 
@@ -231,6 +235,23 @@ void ANecDungeonsGenerator::CloseHoles()
 	}
 }
 
+void ANecDungeonsGenerator::SpawnDoor()
+{
+	if (DoorList.Num() > 0)
+	{
+		for (USceneComponent* DoorPoint : DoorList)
+		{
+			TSubclassOf<AActor> Door = RandomArrayItemFromRoom(DoorActor);
+			FTransform Transform = DoorPoint->GetComponentTransform();
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			GetWorld()->SpawnActor<AActor>(Door, Transform, SpawnParams);
+
+
+		}
+	}
+}
+
 void ANecDungeonsGenerator::StartDungeonTimer()
 {
 	// 시작 시간 기록
@@ -240,7 +261,7 @@ void ANecDungeonsGenerator::StartDungeonTimer()
 	GetWorld()->GetTimerManager().SetTimer(
 		DungeonTimerHandle,
 		this,
-		&ANecDungeonsGenerator::CheckForDungeonComplete, // 델리게이트
+		&ANecDungeonsGenerator::CheckForDungeonComplete,
 		1.0f, // 1초마다 체크
 		true // 루프
 	);
@@ -251,7 +272,6 @@ void ANecDungeonsGenerator::CheckForDungeonComplete()
 	// 경과시간 계산
 	float RunningTime = GetWorld()->GetTimeSeconds() - DungeonStartTime;
 
-	// 경과시간이 초과 되면
 	if (RunningTime >= MaxDungeonTime)
 	{
 		// 레벨 재시작

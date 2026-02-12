@@ -6,6 +6,7 @@
 
 class ANecPlayerCharacter;
 class UStaminaComponent;
+class AWeapon_Item_Base;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class NECROMANCER_API UCombatComponent : public UActorComponent
@@ -22,8 +23,15 @@ protected:
 public:		
 	void Attack();
 
+	void EquipWeapon(AWeapon_Item_Base* NewWeapon);
+
 	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void PerformAttackTrace();
+	void EnableWeaponCollision();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void DisableWeaponCollision();
+
+	AWeapon_Item_Base* GetCurrentWeapon() const { return CurrentWeapon; }
 
 	void SetGuard(bool bInGuarding);
 
@@ -39,29 +47,21 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_Attack();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_Attack();
+
 	UFUNCTION(Server, Reliable)
 	void Server_SetGuard(bool bInGuarding);
 
+protected:
 	UPROPERTY()
 	TObjectPtr<ANecPlayerCharacter> OwnerCharacter;
 
-protected:
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	TObjectPtr<UAnimMontage> AttackMontage;
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	TObjectPtr<AWeapon_Item_Base> CurrentWeapon;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TObjectPtr<UAnimMontage> GuardMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	float AttackDamage = 20.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	float AttackStaminaCost = 15.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	float AttackRange = 150.0f;
-
-	bool bHasAppliedDamageInCurrentAttack = false;
 
 	UPROPERTY(ReplicatedUsing = OnRep_bIsGuarding, BlueprintReadOnly, Category = "Combat")
 	bool bIsGuarding = false;

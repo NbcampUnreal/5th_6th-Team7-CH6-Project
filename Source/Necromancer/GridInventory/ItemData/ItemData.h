@@ -47,6 +47,18 @@ public:
 };
 
 USTRUCT(BlueprintType)
+struct FInventoryRow
+{
+    GENERATED_BODY()
+
+public:
+    FInventoryRow() {}
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TArray<FInventorySection> Sections;
+};
+
+USTRUCT(BlueprintType)
 struct NECROMANCER_API FItemData : public FTableRowBase
 {
 	GENERATED_BODY()
@@ -73,7 +85,7 @@ public:
     TSubclassOf<UObject> UseActionClass;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
-    TArray<FInventorySection> Sections;
+    TArray<FInventoryRow> Rows;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
     int32 MaxStack; //인벤토리 한칸의 크기
@@ -89,4 +101,7 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
     int32 Height;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
+    int32 Cost;
 };

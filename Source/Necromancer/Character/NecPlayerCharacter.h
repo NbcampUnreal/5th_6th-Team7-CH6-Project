@@ -12,6 +12,8 @@ class UStaminaComponent;
 class UPlayerMovementComponent;
 class UCombatComponent;
 class UUserWidget;
+class UTargetingComponent;
+class AWeapon_Item_Base;
 struct FInputActionValue;
 
 UCLASS()
@@ -24,6 +26,7 @@ public:
 
 protected:	
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
@@ -63,6 +66,9 @@ protected:
 
 	void LinkPlayerStateComponents();
 
+	UFUNCTION(Server, Reliable)
+	void Server_EquipWeapon(AWeapon_Item_Base* WeaponToEquip);
+
 public:
 	UFUNCTION(Server, Reliable)
 	void Server_SetSprint(bool bIsSprinting);
@@ -72,6 +78,8 @@ public:
 
 	UStatComponent* GetStatComponent() const { return StatComponent; }
 	UStaminaComponent* GetStaminaComponent() const { return StaminaComponent; }
+
+	void SetLockOn(bool bEnable);
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
@@ -92,9 +100,15 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Combat")
 	TObjectPtr<UCombatComponent> CombatComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Combat")
+	TObjectPtr<UTargetingComponent> TargetingComponent;
+
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> InGameMenuClass;
 		
 	UPROPERTY()
 	TObjectPtr<UUserWidget> InGameMenuInstance;
+
+	UPROPERTY(EditAnywhere, Category = "Test")
+	float InteractRange = 200.0f;
 };

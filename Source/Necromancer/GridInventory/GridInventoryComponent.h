@@ -45,40 +45,55 @@ private:
 
     TMap<FGuid, TArray<UItemInstance*>> ItemsByOwnerGuid;
 public:
-
-private:
-    void RebuildItemOwnerMap();    
+    virtual void RebuildItemOwnerMap();    
 public:
     UFUNCTION()
     void OnRep_Items();
+
+    void HandleItemChanged(UItemInstance* Item);
 
     void SetInventory(const TArray<UItemInstance*>& InItems);
 
     void GetInventory(TArray<UItemInstance*>& OutItems) const;
 
+    UFUNCTION(BlueprintCallable)
+    bool FindInventoryContainer(FGuid ContainerId, TArray<UItemInstance*>& OutItems);
 #pragma region AddItem
 public:
+    UFUNCTION(BlueprintCallable)
     void AddRootItem(UItemInstance* NewItem);
 
+    UFUNCTION(BlueprintCallable)
     bool AddItemToPos(
         UItemInstance* NewItem,
         const FGuid& ContainerGuid,
+        int32 InRowIndex,
         int32 InSectionIndex,
         int32 InPosX, int32 InPosY
     );
 
+    UFUNCTION(BlueprintCallable)
     bool AddItemToContainer(
         UItemInstance* NewItem,
         const FGuid& ContainerGuid
     );
 
 private:
+    UFUNCTION(BlueprintCallable)
     bool CanAddItemToPos(UItemInstance* NewItem,
         const FGuid& ContainerGuid,
+        int32 InRowIndex,
         int32 InSectionIndex,
         int32 InPosX, int32 InPosY
     );
-
+    UFUNCTION(BlueprintCallable)
+    bool CanAddToConatiner(
+        UItemInstance* NewItem,
+        const FGuid& ContainerGuid,
+        int32& OutRowIndex,
+        int32& OutSectionIndex,
+        int32& OutPosX,
+        int32& OutPosY);
     UFUNCTION(Server, Reliable)
     void Server_AddRootItem(UItemInstance* NewItem);
     void Implement_AddRootItem(UItemInstance*& NewItem);
@@ -87,20 +102,23 @@ private:
     void Server_AddItemToPos(
         UItemInstance* NewItem,
         const FGuid& ContainerGuid,
+        int32 InRowIndex,
         int32 InSectionIndex,
         int32 InPosX, int32 InPosY
     );    
     void Implement_AddItemToPos(
         UItemInstance*& NewItem, 
         const FGuid& ContainerGuid,
+        int32 InRowIndex,
         int32 InSectionIndex, 
         int32 InPosX, int32 InPosY);
 #pragma endregion
 
 #pragma region RemoveItem
 public:
+    UFUNCTION(BlueprintCallable)
     bool RemoveItem(UItemInstance* Item);
-
+    
 protected:
     UFUNCTION(Server, Reliable)
     void Server_RemoveItem(UItemInstance* Item);

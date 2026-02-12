@@ -33,8 +33,26 @@ public:
 	float GetAttackRange() const;
 	UFUNCTION(BlueprintCallable)
 	float GetDetectRange() const;
-	
-	
+
+	// 원거리 스탯
+	UFUNCTION(BlueprintCallable)
+	float GetProjectileSpeed() const;
+	UFUNCTION(BlueprintCallable)
+	float GetProjectileGravityScale() const;
+	UFUNCTION(BlueprintCallable)
+	float GetMinAttackRange() const;
+	UFUNCTION(BlueprintCallable)
+	bool GetIsRanged() const;
+
+	// 공격 쿨타임
+	UFUNCTION(BlueprintCallable)
+	bool CanAttack() const;
+
+	UFUNCTION(BlueprintCallable)
+	void MarkAttackUsed();
+
+	UFUNCTION(BlueprintCallable)
+	float GetAttackCooldown() const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -58,6 +76,25 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Poise")
 	float SinglePoiseThreshold = 30.0f;
+
+	// 원거리 전투
+	UPROPERTY(EditDefaultsOnly, Category = "Stat|Ranged")
+	float ProjectileSpeed = 2000.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stat|Ranged")
+	float ProjectileGravityScale = 0.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stat|Ranged")
+	float MinAttackRange = 0.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stat|Ranged")
+	bool bIsRanged = false;
+
+	// 공격 쿨타임
+	UPROPERTY(EditDefaultsOnly, Category = "Stat|Cooldown")
+	float AttackCooldown = 2.0f;
+
+	float LastAttackTime = -999.0f;
 
 	// 등급
 	UPROPERTY(EditDefaultsOnly, Category = "Stat")

@@ -10,14 +10,19 @@
 #include "Component/StaminaComponent.h"
 #include "Component/PlayerMovementComponent.h"
 #include "Component/CombatComponent.h"
+#include "Component/TargetingComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/StaticMeshActor.h"
+#include "Item/Weapon_Item_Base.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
+	PrimaryActorTick.bCanEverTick = true;
+
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;	
@@ -35,14 +40,23 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	CameraComponent->bUsePawnControlRotation = false;
 
 	PlayerMovementComponent = CreateDefaultSubobject<UPlayerMovementComponent>(TEXT("PlayerMovementComponent"));
-
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
-	CombatComponent->SetIsReplicated(true);
+	TargetingComponent = CreateDefaultSubobject<UTargetingComponent>(TEXT("TargetingComponent"));
+
+	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 }
 
 void ANecPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+
+}
+
+void ANecPlayerCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
 	
 }
 
@@ -122,7 +136,7 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 			{
 				EnhancedInputComp->BindAction(
 					PlayerController->LockOnAction,
-					ETriggerEvent::Triggered,
+					ETriggerEvent::Started,
 					this,
 					&ANecPlayerCharacter::LockOn
 				);
@@ -175,6 +189,12 @@ void ANecPlayerCharacter::Move(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::Look(const FInputActionValue& Value)
 {
+	if (IsValid(TargetingComponent) && TargetingComponent->GetCurrentTarget())
+	{
+		TargetingComponent->HandleLockOnInput(Value.Get<FVector2D>());
+		return;
+	}
+
 	if (IsValid(PlayerMovementComponent))
 	{
 		PlayerMovementComponent->ProcessLook(Value.Get<FVector2D>());
@@ -245,7 +265,10 @@ void ANecPlayerCharacter::StopGuard(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::LockOn(const FInputActionValue& Value)
 {
-
+	if (IsValid(CombatComponent))
+	{
+		TargetingComponent->ToggleLockOn();
+	}
 }
 
 void ANecPlayerCharacter::ToggleMenu(const FInputActionValue& Value)
@@ -285,60 +308,41 @@ void ANecPlayerCharacter::Interact()
 {
 	// Temp Function
 	
-	if (!CameraComponent)
-	{
-		return;
-	}
+	FVector Start = GetActorLocation();
+	FVector End = Start;
 
-	FVector Start = CameraComponent->GetComponentLocation();
-	FVector ForwardVector = CameraComponent->GetForwardVector();
-	float InteractionDistance = 500.0f;
-	FVector End = Start + (ForwardVector * InteractionDistance);
-	
-	FHitResult HitResult;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldDynamic));
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(
-		HitResult,
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
+
+	TArray<FHitResult> OutHits;
+
+	bool bHit = UKismetSystemLibrary::SphereTraceMultiForObjects(
+		this,
 		Start,
 		End,
-		ECC_Visibility,
-		Params
+		InteractRange,
+		ObjectTypes,
+		false,
+		ActorsToIgnore,
+		EDrawDebugTrace::ForDuration,
+		OutHits,
+		true
 	);
 
-	DrawDebugLine(GetWorld(), 
-		Start, 
-		End, 
-		bHit ? FColor::Green : FColor::Red, 
-		false, 
-		2.0f
-	);
-
-	if (bHit && HitResult.GetActor())
+	if (bHit)
 	{
-		AActor* HitActor = HitResult.GetActor();
-		UPrimitiveComponent* HitComponent = HitResult.GetComponent();
-
-		bool bIsTarget = false;
-
-		if (HitActor->GetName().Contains(TEXT("SM_Torture_Devices_Cage_Open")))
+		for (const FHitResult& Hit : OutHits)
 		{
-			bIsTarget = true;
-		}
-		else if (UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(HitComponent))
-		{
-			if (MeshComp->GetStaticMesh() && MeshComp->GetStaticMesh()->GetName() == TEXT("SM_Torture_Devices_Cage_Open"))
+			AWeapon_Item_Base* PickedWeapon = Cast<AWeapon_Item_Base>(Hit.GetActor());
+			if (PickedWeapon)
 			{
-				bIsTarget = true;
-			}
-		}
+				UE_LOG(LogTemp, Warning, TEXT("Find Weapon: %s"), *PickedWeapon->GetName());
 
-		if (bIsTarget)
-		{
-			if (APlayerController* PC = Cast<APlayerController>(GetController()))
-			{
-				UKismetSystemLibrary::QuitGame(this, PC, EQuitPreference::Quit, false);
+				Server_EquipWeapon(PickedWeapon);
+				break;
 			}
 		}
 	}
@@ -383,9 +387,34 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 	}
 }
 
+void ANecPlayerCharacter::Server_EquipWeapon_Implementation(AWeapon_Item_Base* WeaponToEquip)
+{
+	if (CombatComponent && WeaponToEquip)
+	{
+		CombatComponent->EquipWeapon(WeaponToEquip);
+	}
+}
+
 FGenericTeamId ANecPlayerCharacter::GetGenericTeamId() const
 {
 	return FGenericTeamId(TEAM_ID_PLAYER);
+}
+
+void ANecPlayerCharacter::SetLockOn(bool bEnable)
+{
+	if (bEnable)
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		bUseControllerRotationYaw = true;
+	}
+	else
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		bUseControllerRotationPitch = false;
+		bUseControllerRotationYaw = false;
+		bUseControllerRotationRoll = false;
+	}
+
 }
 
 void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)

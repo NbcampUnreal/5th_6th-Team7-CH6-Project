@@ -5,9 +5,9 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Item/Weapon_Item_Base.h"
 
-UCombatComponent::UCombatComponent() :
-    AttackMontage(nullptr)
+UCombatComponent::UCombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
@@ -26,97 +26,79 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(UCombatComponent, bIsGuarding);
+    DOREPLIFETIME(UCombatComponent, CurrentWeapon);
 }
 
 void UCombatComponent::Attack()
 {
-    if (!OwnerCharacter || !OwnerCharacter->GetStaminaComponent())
-    {
-        return;
-    }
-        
-    if (OwnerCharacter->GetMesh()->GetAnimInstance() && AttackMontage)
-    {
-        if (OwnerCharacter->GetMesh()->GetAnimInstance()->Montage_IsPlaying(AttackMontage))
-        {
-            return;
-        }
-    }
-
-    UStaminaComponent* StaminaComp = OwnerCharacter->GetStaminaComponent();
-
-    if (StaminaComp->IsExhausted() || StaminaComp->GetCurrentStamina() < AttackStaminaCost)
+    if (!OwnerCharacter || !CurrentWeapon)
     {
         return;
     }
 
+    UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
     if (AttackMontage)
     {
         UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
-        if (AnimInstance)
+        if (AnimInstance && AnimInstance->Montage_IsPlaying(AttackMontage))
         {
-            if (!AnimInstance->Montage_IsPlaying(AttackMontage))
-            {
-                OwnerCharacter->PlayAnimMontage(AttackMontage);
-            }
+            return;
         }
+
+        UStaminaComponent* StaminaComp = OwnerCharacter->GetStaminaComponent();
+        float StaminaCost = CurrentWeapon->GetStaminaCost();
+
+        if (StaminaComp && StaminaComp->GetCurrentStamina() < StaminaCost)
+        {
+            return;
+        }
+
+        OwnerCharacter->PlayAnimMontage(AttackMontage);
+        StaminaComp->ConsumeStamina_Predictive(StaminaCost);
+
+        Server_Attack();
     }
-
-    StaminaComp->ConsumeStamina_Predictive(AttackStaminaCost);
-
-    Server_Attack();
 }
 
-void UCombatComponent::PerformAttackTrace()
+void UCombatComponent::EquipWeapon(AWeapon_Item_Base* NewWeapon)
 {
-    if (!GetOwner()->HasAuthority())
+    if (!OwnerCharacter || !OwnerCharacter->HasAuthority())
     {
         return;
     }
 
-    if (bHasAppliedDamageInCurrentAttack)
+    if (CurrentWeapon)
     {
-        return;
+        CurrentWeapon->Destroy();
     }
 
-    if (!OwnerCharacter)
+    CurrentWeapon = NewWeapon;
+
+    if (CurrentWeapon)
     {
-        return;
-    }
+        CurrentWeapon->SetOwner(OwnerCharacter);
 
-    FVector Start = OwnerCharacter->GetActorLocation();
-    FVector End = Start + (OwnerCharacter->GetActorForwardVector() * AttackRange);
-    TArray<AActor*> ActorsToIgnore;
-    ActorsToIgnore.Add(OwnerCharacter);
-
-    FHitResult HitResult;
-
-    bool bHit = UKismetSystemLibrary::SphereTraceSingleForObjects(
-        GetWorld(),
-        Start,
-        End,
-        50.0f,
-        { UEngineTypes::ConvertToObjectType(ECC_Pawn) },
-        false,
-        ActorsToIgnore,
-        EDrawDebugTrace::ForDuration,
-        HitResult,
-        true
-    );
-
-    if (bHit && HitResult.GetActor())
-    {
-        bHasAppliedDamageInCurrentAttack = true;
-
-        UGameplayStatics::ApplyDamage(
-            HitResult.GetActor(),
-            AttackDamage,
-            OwnerCharacter->GetController(),
-            OwnerCharacter,
-            UDamageType::StaticClass()
+        CurrentWeapon->AttachToComponent(
+            OwnerCharacter->GetMesh(),
+            FAttachmentTransformRules::SnapToTargetIncludingScale,
+            FName("hand_r_weapon")
         );
+    }
+}
 
-        UE_LOG(LogTemp, Log, TEXT("Hit Actor: %s"), *HitResult.GetActor()->GetName());
+void UCombatComponent::EnableWeaponCollision()
+{
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->StartAttack();
+    }
+}
+
+void UCombatComponent::DisableWeaponCollision()
+{
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->EndAttack();
     }
 }
 
@@ -164,6 +146,25 @@ void UCombatComponent::UpdateGuardVisuals()
     }
 }
 
+void UCombatComponent::Multicast_Attack_Implementation()
+{
+    if (!OwnerCharacter || !CurrentWeapon)
+    {
+        return;
+    }
+
+    if (OwnerCharacter->IsLocallyControlled())
+    {
+        return;
+    }
+
+    UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
+    if (AttackMontage)
+    {
+        OwnerCharacter->PlayAnimMontage(AttackMontage);
+    }
+}
+
 void UCombatComponent::Server_SetGuard_Implementation(bool bInGuarding)
 {    
     bIsGuarding = bInGuarding;
@@ -176,26 +177,24 @@ void UCombatComponent::Server_SetGuard_Implementation(bool bInGuarding)
 
 void UCombatComponent::Server_Attack_Implementation()
 {
-    if (!OwnerCharacter)
+    if (!OwnerCharacter || !CurrentWeapon)
     {
         return;
     }
 
+    UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
+    UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+
+    if (!OwnerCharacter->IsLocallyControlled() && AttackMontage && AnimInstance && AnimInstance->Montage_IsPlaying(AttackMontage))
+    {
+        return;
+    }
+    
     UStaminaComponent* StaminaComp = OwnerCharacter->GetStaminaComponent();
-    if (!StaminaComp)
+    float StaminaCost = CurrentWeapon->GetStaminaCost();
+
+    if (StaminaComp && StaminaComp->ConsumeStamina(StaminaCost))
     {
-        return;
-    }
-
-    if (StaminaComp->GetCurrentStamina() >= AttackStaminaCost)
-    {
-        StaminaComp->ConsumeStamina(AttackStaminaCost);
-
-        bHasAppliedDamageInCurrentAttack = false;
-
-        if (AttackMontage)
-        {
-            OwnerCharacter->PlayAnimMontage(AttackMontage);
-        }
+        Multicast_Attack();
     }
 }
