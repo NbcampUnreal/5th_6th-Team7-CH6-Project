@@ -24,13 +24,14 @@ public class Necromancer : ModuleRules
 
             "OnlineSubsystem", "OnlineSubsystemSteam", "OnlineSubsystemUtils",
             
-            "Niagara",
+           
         });
 
         PublicIncludePaths.AddRange(new string[]
         {
             "Necromancer",
-            "Necromancer/AI"
+            "Necromancer/AI",
+            "Necromancer/AI/Data"
         });
     }
 }

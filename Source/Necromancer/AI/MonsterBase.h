@@ -95,6 +95,5 @@ protected:
 	UFUNCTION()
 	void OnDamageReceived(float DamageAmount, FVector HitLocation);
 
-
-	
+	void OnHitReactMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 };

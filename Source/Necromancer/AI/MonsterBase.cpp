@@ -170,5 +170,61 @@ void AMonsterBase::Multicast_PlayMontage_Implementation(UAnimMontage* Montage)
 
 void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
 {
+	if (bIsDead)
+	{
+		return;
+	}
+
+	
+	StopAnimMontage();
+
+	
+	if (AAIController* AIC = GetController<AAIController>())
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(FName(NAME_IsAttacking), false);
+		}
+	}
+
+	
 	MonsterStatComponent->ApplyPoise(DamageAmount);
+
+	
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->DisableMovement();
+
+	
+	if (HitReactMontage)
+	{
+		Multicast_PlayMontage(HitReactMontage);
+
+		
+		if (HasAuthority())
+		{
+			if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+			{
+				FOnMontageEnded EndDelegate;
+				EndDelegate.BindUObject(this, &AMonsterBase::OnHitReactMontageEnded);
+				AnimInstance->Montage_SetEndDelegate(EndDelegate, HitReactMontage);
+			}
+		}
+	}
+}
+
+void AMonsterBase::OnHitReactMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	// 이동 복구
+	if (!bIsDead)
+	{
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	}
+
+	if (AAIController* AIC = GetController<AAIController>())
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(FName(NAME_IsStaggered), false);
+		}
+	}
 }

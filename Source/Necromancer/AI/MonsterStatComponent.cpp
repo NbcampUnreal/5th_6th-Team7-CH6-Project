@@ -73,3 +73,26 @@ bool UMonsterStatComponent::GetIsRanged() const
 {
 	return bIsRanged;
 }
+
+bool UMonsterStatComponent::CanAttack() const
+{
+	const UWorld* World = GetWorld();
+	if (!World)
+	{
+		return false;
+	}
+	return (World->GetTimeSeconds() - LastAttackTime) >= AttackCooldown;
+}
+
+void UMonsterStatComponent::MarkAttackUsed()
+{
+	if (const UWorld* World = GetWorld())
+	{
+		LastAttackTime = World->GetTimeSeconds();
+	}
+}
+
+float UMonsterStatComponent::GetAttackCooldown() const
+{
+	return AttackCooldown;
+}
