@@ -1,4 +1,4 @@
-#include "Character/NecPlayerCharacter.h"
+﻿#include "Character/NecPlayerCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
@@ -18,6 +18,9 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/StaticMeshActor.h"
 #include "Item/Weapon_Item_Base.h"
+
+
+#include "WorldActor/Interactable.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
@@ -42,6 +45,8 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	PlayerMovementComponent = CreateDefaultSubobject<UPlayerMovementComponent>(TEXT("PlayerMovementComponent"));
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	TargetingComponent = CreateDefaultSubobject<UTargetingComponent>(TEXT("TargetingComponent"));
+	InventoryComponent = CreateDefaultSubobject<UNecInventoryComponent>(TEXT("NecInventoryComponent"));
+
 
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 }
@@ -49,7 +54,10 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 void ANecPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	InventoryComponent->OnEquipmentUpdated.AddDynamic(
+		CombatComponent,
+		&UCombatComponent::SetCurrentWeapon
+	);
 
 }
 
@@ -336,14 +344,26 @@ void ANecPlayerCharacter::Interact()
 	{
 		for (const FHitResult& Hit : OutHits)
 		{
-			AWeapon_Item_Base* PickedWeapon = Cast<AWeapon_Item_Base>(Hit.GetActor());
+			AActor* HitActor = Hit.GetActor();
+			if (!HitActor) continue;
+
+			if (HitActor->Implements<UInteractable>())
+			{
+				if (HitActor->Implements<UInteractable>())
+				{
+					IInteractable::Execute_Interact(HitActor, this);
+					break; // 첫 번째 인터랙트 가능한 것만
+				}
+			}
+
+			/*AWeapon_Item_Base* PickedWeapon = Cast<AWeapon_Item_Base>(Hit.GetActor());
 			if (PickedWeapon)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Find Weapon: %s"), *PickedWeapon->GetName());
 
 				Server_EquipWeapon(PickedWeapon);
 				break;
-			}
+			}*/
 		}
 	}
 }
@@ -415,6 +435,11 @@ void ANecPlayerCharacter::SetLockOn(bool bEnable)
 		bUseControllerRotationRoll = false;
 	}
 
+}
+
+AActor* ANecPlayerCharacter::GetCurrentEquipmentActor(EEquipmentSlot Slot)
+{
+	return InventoryComponent->GetEquipmentActor(Slot);
 }
 
 void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)
