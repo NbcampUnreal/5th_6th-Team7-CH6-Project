@@ -125,7 +125,7 @@ inline void UGridInventoryComponent::SetInventory(const TArray<UItemInstance*>& 
     }*/
 }
 
-inline void UGridInventoryComponent::GetInventory(TArray<UItemInstance*>& OutItems) const
+void UGridInventoryComponent::GetInventory(TArray<UItemInstance*>& OutItems) const
 {
     OutItems = Items;
 }

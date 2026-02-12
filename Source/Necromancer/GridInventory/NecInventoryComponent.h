@@ -9,6 +9,7 @@
 /**
  * 
  */
+
 UENUM(BlueprintType)
 enum class EEquipmentSlot : uint8
 {
@@ -21,6 +22,9 @@ enum class EEquipmentSlot : uint8
 };
 
 class UItemInstance;
+class UInventoryHub;
+
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
 
 UCLASS(ClassGroup = (Custom),meta = (BlueprintSpawnableComponent))
 class NECROMANCER_API UNecInventoryComponent : public UGridInventoryComponent
@@ -63,7 +67,7 @@ private:
 	void AddNecInventory_Internal(AActor* NewItemActor);
 	void DropItemInWorld_Internal(TSubclassOf<AActor> SpawnActor);
 
-	void ValidateEquipmentSlot(UItemInstance*& SlotItem);
+	
 #pragma region Equipment
 private:
 	UPROPERTY(Replicated)
@@ -121,7 +125,20 @@ protected:
 	void Server_UnequipItem(EEquipmentSlot Slot);
 
 	void UnequipItem_Internal(EEquipmentSlot Slot);
+private:
+	void ValidateEquipmentSlot(UItemInstance*& SlotItem, AActor*& SlotActor);
 #pragma endregion
 
+#pragma region UI
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UInventoryHub> InventoryWidgetClass;
 
+	// 현재 생성된 위젯
+	UPROPERTY()
+	UInventoryHub* InventoryWidget;
+public:
+	UFUNCTION(BlueprintCallable)
+	void ToggleInventoryUI();
+#pragma endregion
 };

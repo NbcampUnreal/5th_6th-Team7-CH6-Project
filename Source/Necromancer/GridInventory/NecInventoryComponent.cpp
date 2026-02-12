@@ -8,6 +8,7 @@
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
 #include "GameFramework/Character.h"
 #include "Engine/ActorChannel.h"
+#include "UI/InventoryHub.h"
 
 bool ItemTypeToEquipmentSlot(
 	EItemType ItemType,
@@ -138,17 +139,17 @@ UItemInstance* UNecInventoryComponent::GetDefaultContainer() const
 
 void UNecInventoryComponent::DropItemInWorld(TSubclassOf<AActor> SpawnActor)
 {
-
+	Server_DropItemInWorld(SpawnActor);
 }
 
 void UNecInventoryComponent::RebuildItemOwnerMap()
 {
 	Super::RebuildItemOwnerMap();
-	ValidateEquipmentSlot(HeadItem);
-	ValidateEquipmentSlot(BodyItem);
-	ValidateEquipmentSlot(LegsItem);
-	ValidateEquipmentSlot(BagItem);
-	ValidateEquipmentSlot(WeaponItem);
+	ValidateEquipmentSlot(HeadItem, HeadActor);
+	ValidateEquipmentSlot(BodyItem, BodyActor);
+	ValidateEquipmentSlot(LegsItem, LegsActor);
+	ValidateEquipmentSlot(BagItem, BagActor);
+	ValidateEquipmentSlot(WeaponItem, WeaponActor);
 }
 
 void UNecInventoryComponent::Server_AddNecInventory_Implementation(AActor* NewItemActor)
@@ -250,27 +251,45 @@ void UNecInventoryComponent::DropItemInWorld_Internal(TSubclassOf<AActor> SpawnA
 	return;
 }
 
-inline void UNecInventoryComponent::ValidateEquipmentSlot(UItemInstance*& SlotItem)
+inline void UNecInventoryComponent::ValidateEquipmentSlot(UItemInstance*& SlotItem, AActor*& SlotActor)
 {
+	bool bInvalid = false;
+
 	if (!IsValid(SlotItem))
 	{
-		SlotItem = nullptr;
-		return;
+		bInvalid = true;
+	}
+	else
+	{
+		// 장착 상태가 아니면 슬롯 비움
+		if (SlotItem->OwnerItemGuid != FGuid())
+		{
+			bInvalid = true;
+		}
+		else
+		{
+			TArray<UItemInstance*> InventoryItems;
+			GetInventory(InventoryItems);
+
+			if (!InventoryItems.Contains(SlotItem))
+			{
+				bInvalid = true;
+			}
+		}
 	}
 
-	// 장착 상태가 아니면 슬롯 비움
-	if (SlotItem->OwnerItemGuid != FGuid())
+	if (bInvalid)
 	{
 		SlotItem = nullptr;
-		return;
-	}
 
-	TArray<UItemInstance*> InventoryItems;
-	GetInventory(InventoryItems);
-
-	if (!InventoryItems.Contains(SlotItem))
-	{
-		SlotItem = nullptr;
+		if (IsValid(SlotActor))
+		{
+			if (SlotActor->HasAuthority())
+			{
+				SlotActor->Destroy();
+			}
+			SlotActor = nullptr;
+		}
 	}
 }
 
@@ -460,6 +479,43 @@ void UNecInventoryComponent::UnequipItem_Internal(EEquipmentSlot Slot)
 
 	SetEquipmentActor(Slot, nullptr);
 	SetEquipmentItem(Slot, nullptr);
+}
+
+void UNecInventoryComponent::ToggleInventoryUI()
+{
+	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor) return;
+
+	APawn* PawnOwner = Cast<APawn>(OwnerActor);
+	if (!PawnOwner) return;
+
+	APlayerController* PC = Cast<APlayerController>(PawnOwner->GetController());
+	if (!PC) return;
+
+	// 이미 열려있으면 닫기
+	if (InventoryWidget)
+	{
+		InventoryWidget->RemoveFromParent();
+		InventoryWidget = nullptr;
+
+		PC->bShowMouseCursor = false;
+		PC->SetInputMode(FInputModeGameOnly());
+		return;
+	}
+
+	// 새로 생성
+	if (InventoryWidgetClass)
+	{
+		InventoryWidget = CreateWidget<UInventoryHub>(PC, InventoryWidgetClass);
+		if (InventoryWidget)
+		{
+			InventoryWidget->SetInventoryComponent(this);
+			InventoryWidget->AddToViewport();
+
+			PC->bShowMouseCursor = true;
+			PC->SetInputMode(FInputModeGameAndUI());
+		}
+	}
 }
 
 void UNecInventoryComponent::Server_EquipItem_Implementation(UItemInstance* EquipItem)
