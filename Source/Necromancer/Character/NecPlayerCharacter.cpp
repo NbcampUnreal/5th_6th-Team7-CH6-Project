@@ -47,13 +47,17 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	TargetingComponent = CreateDefaultSubobject<UTargetingComponent>(TEXT("TargetingComponent"));
 	InventoryComponent = CreateDefaultSubobject<UNecInventoryComponent>(TEXT("NecInventoryComponent"));
 
+
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 }
 
 void ANecPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	InventoryComponent->OnEquipmentUpdated.AddDynamic(
+		CombatComponent,
+		&UCombatComponent::SetCurrentWeapon
+	);
 
 }
 

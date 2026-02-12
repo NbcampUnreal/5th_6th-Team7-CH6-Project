@@ -9,6 +9,7 @@
 #include "GameFramework/Character.h"
 #include "Engine/ActorChannel.h"
 #include "UI/InventoryHub.h"
+#include "GameFramework/Actor.h"
 
 bool ItemTypeToEquipmentSlot(
 	EItemType ItemType,
@@ -149,7 +150,11 @@ void UNecInventoryComponent::RebuildItemOwnerMap()
 	ValidateEquipmentSlot(BodyItem, BodyActor);
 	ValidateEquipmentSlot(LegsItem, LegsActor);
 	ValidateEquipmentSlot(BagItem, BagActor);
+
+	UItemInstance* PrevWeaponItem = WeaponItem;
 	ValidateEquipmentSlot(WeaponItem, WeaponActor);
+	OnEquipmentUpdated.Broadcast(WeaponActor);
+	
 }
 
 void UNecInventoryComponent::Server_AddNecInventory_Implementation(AActor* NewItemActor)
@@ -452,7 +457,7 @@ void UNecInventoryComponent::EquipItem_Internal(UItemInstance* EquipItem)
 			if (Character && Character->GetMesh())
 			{
 				if (Data->m_ItemType == EItemType::Weapon) {
-					FName SocketName = "Weapon"; // ItemData에 소켓 이름 저장해두는 게 베스트
+					FName SocketName = "hand_r_weapon"; // ItemData에 소켓 이름 저장해두는 게 베스트
 
 					SpawnedActor->AttachToComponent(
 						Character->GetMesh(),
@@ -464,9 +469,9 @@ void UNecInventoryComponent::EquipItem_Internal(UItemInstance* EquipItem)
 		}
 	}
 
-	AddRootItem(EquipItem);
 	SetEquipmentItem(TargetSlot, EquipItem);
 	SetEquipmentActor(TargetSlot, SpawnedActor);
+	AddRootItem(EquipItem);	
 }
 
 void UNecInventoryComponent::UnequipItem_Internal(EEquipmentSlot Slot)
@@ -511,6 +516,7 @@ void UNecInventoryComponent::ToggleInventoryUI()
 		{
 			InventoryWidget->SetInventoryComponent(this);
 			InventoryWidget->AddToViewport();
+			//InventoryWidget->SetInventoryComponent(this);
 
 			PC->bShowMouseCursor = true;
 			PC->SetInputMode(FInputModeGameAndUI());

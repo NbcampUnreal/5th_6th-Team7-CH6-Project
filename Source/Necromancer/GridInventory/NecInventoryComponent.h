@@ -21,10 +21,11 @@ enum class EEquipmentSlot : uint8
 	Default  UMETA(DisplayName = "Default")
 };
 
+class AActor;
 class UItemInstance;
 class UInventoryHub;
 
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEquipmentUpdated, AActor*, updateEquipment);
 
 UCLASS(ClassGroup = (Custom),meta = (BlueprintSpawnableComponent))
 class NECROMANCER_API UNecInventoryComponent : public UGridInventoryComponent
@@ -32,6 +33,9 @@ class NECROMANCER_API UNecInventoryComponent : public UGridInventoryComponent
 	GENERATED_BODY()
 public:
 	UNecInventoryComponent();
+
+	UPROPERTY(BlueprintAssignable)
+	FOnEquipmentUpdated OnEquipmentUpdated;
 protected:
 	virtual void BeginPlay() override;
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) 
