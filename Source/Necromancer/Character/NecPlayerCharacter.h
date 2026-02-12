@@ -1,8 +1,9 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "GenericTeamAgentInterface.h"
+#include "GridInventory/NecInventoryComponent.h"
 #include "NecPlayerCharacter.generated.h"
 
 class USpringArmComponent;
@@ -78,6 +79,7 @@ public:
 
 	UStatComponent* GetStatComponent() const { return StatComponent; }
 	UStaminaComponent* GetStaminaComponent() const { return StaminaComponent; }
+	UNecInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 
 	void SetLockOn(bool bEnable);
 
@@ -111,4 +113,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Test")
 	float InteractRange = 200.0f;
+	
+protected:
+	//인벤토리
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Inventory")
+	TObjectPtr<UNecInventoryComponent> InventoryComponent;
+public:
+	AActor* GetCurrentEquipmentActor(EEquipmentSlot Slot);
 };
