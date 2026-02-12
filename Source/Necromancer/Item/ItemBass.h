@@ -1,49 +1,54 @@
-// ItemBass.h
+//ItemBass.h
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Net/UnrealNetwork.h"
 #include "GridInventory/ItemInstance/ItemInstanceComponent.h"
 #include "ItemBass.generated.h"
 
 USTRUCT(BlueprintType)
 struct FItemInstanceData
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FName ItemID;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FName ItemID;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 Count = 1;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    int32 Count = 1;
 };
 
 UCLASS()
 class NECROMANCER_API AItemBass : public AActor
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	AItemBass();
+    AItemBass();
 
-	const FItemInstanceData& GetItemData() const { return ItemData; }
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	bool AddCount(int32 Amount);
-	bool RemoveCount(int32 Amount);
-	bool IsEmpty() const { return ItemData.Count <= 0; }
+    const FItemInstanceData& GetItemData() const { return ItemData; }
 
-	virtual void OnDropped(const FVector& WorldLocation);
+    UFUNCTION(Server, Reliable)
+    void Server_Use(class ACharacter* User);
 
-	UItemInstanceComponent* GetItemInstanceComponent() const
-	{
-		return ItemInstanceComponent;
-	}
+    UFUNCTION(Server, Reliable)
+    void Server_Drop(const FVector& DropLocation);
+
+    bool AddCount(int32 Amount);
+    bool RemoveCount(int32 Amount);
+    bool IsEmpty() const { return ItemData.Count <= 0; }
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
-	FItemInstanceData ItemData;
+    virtual void ExecuteUse(class ACharacter* User);
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
-	UItemInstanceComponent* ItemInstanceComponent;
+protected:
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Item")
+    FItemInstanceData ItemData;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
+    UItemInstanceComponent* ItemInstanceComponent;
 };
