@@ -170,5 +170,61 @@ void AMonsterBase::Multicast_PlayMontage_Implementation(UAnimMontage* Montage)
 
 void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
 {
+	if (bIsDead)
+	{
+		return;
+	}
+
+	// 현재 몽타주 중단 (공격 포함)
+	StopAnimMontage();
+
+	// IsAttacking BB키 리셋 (공격 중단되었으므로)
+	if (AAIController* AIC = GetController<AAIController>())
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(FName(NAME_IsAttacking), false);
+		}
+	}
+
+	// Poise를 HitReact 전에 처리 (OnStagger의 StopAnimMontage가 HitReact를 중단하는 것 방지)
 	MonsterStatComponent->ApplyPoise(DamageAmount);
+
+	// 피격 중 이동 정지
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->DisableMovement();
+
+	// HitReact 몽타주 무조건 재생 (Poise 처리 후)
+	if (HitReactMontage)
+	{
+		Multicast_PlayMontage(HitReactMontage);
+
+		// 서버에서 몽타주 종료 콜백 등록 → IsStaggered 원복 + 이동 복구
+		if (HasAuthority())
+		{
+			if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+			{
+				FOnMontageEnded EndDelegate;
+				EndDelegate.BindUObject(this, &AMonsterBase::OnHitReactMontageEnded);
+				AnimInstance->Montage_SetEndDelegate(EndDelegate, HitReactMontage);
+			}
+		}
+	}
+}
+
+void AMonsterBase::OnHitReactMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	// 이동 복구
+	if (!bIsDead)
+	{
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	}
+
+	if (AAIController* AIC = GetController<AAIController>())
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(FName(NAME_IsStaggered), false);
+		}
+	}
 }

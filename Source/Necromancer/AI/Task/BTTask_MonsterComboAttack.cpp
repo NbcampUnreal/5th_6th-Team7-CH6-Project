@@ -5,7 +5,9 @@
 #include "ComboAttackData.h"
 #include "AIController.h"
 #include "MonsterBase.h"
+#include "MonsterStatComponent.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 UBTTask_MonsterComboAttack::UBTTask_MonsterComboAttack()
@@ -33,6 +35,17 @@ EBTNodeResult::Type UBTTask_MonsterComboAttack::ExecuteTask(
     {
         return EBTNodeResult::Failed;
     }
+
+    // 쿨타임 체크
+    UMonsterStatComponent* StatComp = Character->FindComponentByClass<UMonsterStatComponent>();
+    if (StatComp && !StatComp->CanAttack())
+    {
+        return EBTNodeResult::Failed;
+    }
+
+    // 공격 중 이동 정지
+    Character->GetCharacterMovement()->StopMovementImmediately();
+    Character->GetCharacterMovement()->DisableMovement();
 
     CurrentComboIndex = 0;
     bComboTransitioning = false;
@@ -110,6 +123,17 @@ void UBTTask_MonsterComboAttack::FinishCombo(EBTNodeResult::Type Result)
     if (UBlackboardComponent* BB = CachedOwnerComp->GetBlackboardComponent())
     {
         BB->SetValueAsBool(FName("IsAttacking"), false);
+    }
+
+    // 이동 복구 + 쿨타임 마킹
+    if (CachedCharacter)
+    {
+        CachedCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+        if (UMonsterStatComponent* StatComp = CachedCharacter->FindComponentByClass<UMonsterStatComponent>())
+        {
+            StatComp->MarkAttackUsed();
+        }
     }
 
     FinishLatentTask(*CachedOwnerComp, Result);
