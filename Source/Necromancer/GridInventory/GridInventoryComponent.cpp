@@ -88,7 +88,7 @@ void UGridInventoryComponent::RebuildItemOwnerMap()
     }
 }
 
-inline void UGridInventoryComponent::OnRep_Items()
+void UGridInventoryComponent::OnRep_Items()
 {
     if (bInventoryActive)
     {
@@ -97,13 +97,13 @@ inline void UGridInventoryComponent::OnRep_Items()
     }
 }
 
-inline void UGridInventoryComponent::HandleItemChanged(UItemInstance* Item)
+void UGridInventoryComponent::HandleItemChanged(UItemInstance* Item)
 {
     RebuildItemOwnerMap();
     OnInventoryUpdated.Broadcast();
 }
 
-inline void UGridInventoryComponent::SetInventory(const TArray<UItemInstance*>& InItems) {
+void UGridInventoryComponent::SetInventory(const TArray<UItemInstance*>& InItems) {
     Items = InItems;
     RebuildItemOwnerMap();
 
@@ -125,7 +125,7 @@ inline void UGridInventoryComponent::SetInventory(const TArray<UItemInstance*>& 
     }*/
 }
 
-inline void UGridInventoryComponent::GetInventory(TArray<UItemInstance*>& OutItems) const
+void UGridInventoryComponent::GetInventory(TArray<UItemInstance*>& OutItems) const
 {
     OutItems = Items;
 }
@@ -407,8 +407,8 @@ void UGridInventoryComponent::Implement_AddRootItem(UItemInstance*& NewItem)
     }
     NewItem->OwnerItemGuid = FGuid();
 
-   //RebuildItemOwnerMap();
-   //OnInventoryUpdated.Broadcast();
+   RebuildItemOwnerMap();
+   OnInventoryUpdated.Broadcast();
 }
 
 void UGridInventoryComponent::Server_AddItemToPos_Implementation(UItemInstance* NewItem, 
@@ -445,19 +445,19 @@ void UGridInventoryComponent::Implement_AddItemToPos(
         return;
     }
 
-    if (!Items.Contains(NewItem))
+    if (Items.Contains(NewItem))
     {
-        Items.Add(NewItem);
+        Items.Remove(NewItem);
     }
-
+    Items.Add(NewItem);
     NewItem->OwnerItemGuid = ContainerGuid;
     NewItem->SectionIndex = InSectionIndex;
     NewItem->RowIndex = InRowIndex;
     NewItem->PosX = InPosX;
     NewItem->PosY = InPosY;
 
-    //RebuildItemOwnerMap();
-    //OnInventoryUpdated.Broadcast();
+    RebuildItemOwnerMap();
+    OnInventoryUpdated.Broadcast();
 }
 
 
@@ -577,6 +577,6 @@ void UGridInventoryComponent::Implement_RemoveItem(UItemInstance*& Item)
     Item->PosX = 0;
     Item->PosY = 0;
 
-    //RebuildItemOwnerMap();
-    //OnInventoryUpdated.Broadcast();
+    RebuildItemOwnerMap();
+    OnInventoryUpdated.Broadcast();
 }

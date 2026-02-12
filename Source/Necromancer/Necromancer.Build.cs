@@ -20,7 +20,7 @@ public class Necromancer : ModuleRules
             "UMG",
             "Niagara",
             "GameplayTags",
-            "AnimationModifierLibrary",
+            //"AnimationModifierLibrary",
 
             "OnlineSubsystem", "OnlineSubsystemSteam", "OnlineSubsystemUtils",
             
