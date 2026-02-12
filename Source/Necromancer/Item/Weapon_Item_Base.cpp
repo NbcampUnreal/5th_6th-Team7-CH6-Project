@@ -18,9 +18,15 @@ AWeapon_Item_Base::AWeapon_Item_Base()
     SetReplicateMovement(true);
 
     WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
-    SetRootComponent(WeaponMesh);
-
+    WeaponMesh->SetupAttachment(RootComponent);
     WeaponMesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+
+    TracePreviewBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TracePreviewBox"));
+    TracePreviewBox->SetupAttachment(WeaponMesh);
+    TracePreviewBox->SetHiddenInGame(true);
+    TracePreviewBox->SetCollisionProfileName(TEXT("NoCollision"));
+    TracePreviewBox->ShapeColor = FColor::Red;
+    TracePreviewBox->SetLineThickness(1.0f);
 }
 
 void AWeapon_Item_Base::Tick(float DeltaTime)
@@ -33,13 +39,36 @@ void AWeapon_Item_Base::Tick(float DeltaTime)
     }
 }
 
+void AWeapon_Item_Base::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
+
+    if (WeaponMesh && WeaponMesh->DoesSocketExist(StartSocketName) && WeaponMesh->DoesSocketExist(EndSocketName))
+    {
+        const FVector StartPos = WeaponMesh->GetSocketLocation(StartSocketName);
+        const FVector EndPos = WeaponMesh->GetSocketLocation(EndSocketName);
+        const FVector CenterPos = (StartPos + EndPos) * 0.5f;
+        const FVector Direction = EndPos - StartPos;
+        const float WeaponLength = Direction.Length();
+
+        if (!Direction.IsNearlyZero())
+        {
+            FQuat BoxRotation = FRotationMatrix::MakeFromX(Direction).ToQuat();
+
+            TracePreviewBox->SetWorldLocation(CenterPos);
+            TracePreviewBox->SetWorldRotation(BoxRotation);
+            TracePreviewBox->SetBoxExtent(FVector(WeaponLength * 0.5f, TraceExtent.Y, TraceExtent.Z));
+        }
+    }
+}
+
 void AWeapon_Item_Base::StartAttack()
 {
     bIsAttacking = true;
     HitActors.Empty();
 
-    FVector StartPos = WeaponMesh->GetSocketLocation(SocketNameStart);
-    FVector EndPos = WeaponMesh->GetSocketLocation(SocketNameEnd);
+    FVector StartPos = WeaponMesh->GetSocketLocation(StartSocketName);
+    FVector EndPos = WeaponMesh->GetSocketLocation(EndSocketName);
 
     LastCenterLocation = (StartPos + EndPos) * 0.5f;
 
@@ -58,39 +87,47 @@ void AWeapon_Item_Base::EndAttack()
 }
 
 void AWeapon_Item_Base::PerformTrace()
-{    
-    FVector StartSocket = WeaponMesh->GetSocketLocation(SocketNameStart);
-    FVector EndSocket = WeaponMesh->GetSocketLocation(SocketNameEnd);
+{
+    const FVector StartPos = WeaponMesh->GetSocketLocation(StartSocketName);
+    const FVector EndPos = WeaponMesh->GetSocketLocation(EndSocketName);
+    const FVector CurrentCenterLocation = (StartPos + EndPos) * 0.5f;
+    const FVector Direction = EndPos - StartPos;
+    const float WeaponLength = Direction.Length();
 
-    FVector CurrentCenterLocation = (StartSocket + EndSocket) * 0.5f;
+    const FQuat BoxRotation = FRotationMatrix::MakeFromX(Direction).ToQuat();
 
-    FVector Direction = EndSocket - StartSocket;
-    FRotator BoxRotation = UKismetMathLibrary::MakeRotFromX(Direction);
+    const FVector BoxHalfExtent = FVector(WeaponLength * 0.5f, TraceExtent.Y, TraceExtent.Z);
+    const FCollisionShape BoxShape = FCollisionShape::MakeBox(BoxHalfExtent);
 
-    float WeaponLength = Direction.Size();
-    FVector BoxHalfSize = FVector(WeaponLength * 0.5f, TraceExtent.Y, TraceExtent.Z);
+    FCollisionQueryParams QueryParams;
+    QueryParams.AddIgnoredActor(this);
+    QueryParams.AddIgnoredActor(GetOwner());
+    QueryParams.bTraceComplex = false;
+    QueryParams.bReturnPhysicalMaterial = false;
 
     TArray<FHitResult> HitResults;
-    TArray<AActor*> ActorsToIgnore;
-    ActorsToIgnore.Add(this);
-    ActorsToIgnore.Add(GetOwner());
-
-    bool bHit = UKismetSystemLibrary::BoxTraceMulti(
-        this,
+    bool bHit = GetWorld()->SweepMultiByChannel(
+        HitResults,
         LastCenterLocation,
         CurrentCenterLocation,
-        BoxHalfSize,
         BoxRotation,
-        UEngineTypes::ConvertToTraceType(ECC_Pawn),
-        false,
-        ActorsToIgnore,
-        EDrawDebugTrace::ForDuration,
-        HitResults,
-        true
+        ECC_Pawn,
+        BoxShape,
+        QueryParams
     );
+
+    FColor DrawColor = bHit ? FColor::Green : FColor::Red;
+    DrawDebugBox(GetWorld(), LastCenterLocation, BoxHalfExtent, BoxRotation, DrawColor, false, 1.0f);
+    DrawDebugLine(GetWorld(), LastCenterLocation, CurrentCenterLocation, FColor::Yellow, false, 1.0f);
 
     if (bHit)
     {
+        APawn* OwnerPawn = Cast<APawn>(GetOwner());
+        if (!OwnerPawn)
+        {
+            return;
+        }
+
         for (const FHitResult& Hit : HitResults)
         {
             AActor* HitActor = Hit.GetActor();
@@ -98,21 +135,17 @@ void AWeapon_Item_Base::PerformTrace()
             {
                 HitActors.Add(HitActor);
 
-                APawn* OwnerPawn = Cast<APawn>(GetOwner());
-                if (OwnerPawn)
-                {
-                    UGameplayStatics::ApplyDamage(
-                        HitActor,
-                        Damage,
-                        OwnerPawn->GetController(),
-                        this,
-                        UDamageType::StaticClass()
-                    );
-                }
+                UGameplayStatics::ApplyDamage(
+                    HitActor,
+                    Damage,
+                    OwnerPawn->GetController(),
+                    this,
+                    UDamageType::StaticClass()
+                );
             }
         }
     }
-        
+
     LastCenterLocation = CurrentCenterLocation;
 }
 
@@ -125,20 +158,5 @@ void AWeapon_Item_Base::OnAttackHit(
     const FHitResult& SweepResult
 )
 {
-    if (OtherActor == GetOwner())
-    {
-        return;
-    }
 
-    APawn* OwnerPawn = Cast<APawn>(GetOwner());
-    if (OwnerPawn)
-    {
-        UGameplayStatics::ApplyDamage(
-            OtherActor,
-            Damage,
-            OwnerPawn->GetController(),
-            this,
-            UDamageType::StaticClass()
-        );
-    }
 }
