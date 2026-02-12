@@ -102,5 +102,6 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
     int32 Height;
 
-
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
+    int32 Cost;
 };

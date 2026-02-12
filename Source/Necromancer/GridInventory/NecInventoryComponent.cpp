@@ -6,6 +6,7 @@
 #include "GridInventory/ItemInstance/ItemInstance.h"
 #include "GridInventory/ItemInstance/ItemInstanceComponent.h"
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
+#include "GameFramework/Character.h"
 #include "Engine/ActorChannel.h"
 
 bool ItemTypeToEquipmentSlot(
@@ -99,20 +100,15 @@ void UNecInventoryComponent::AddNecInventory(AActor* NewItemActor)
 		return;
 	}
 
-	
-	UItemInstanceComponent* ItemComp =
-		NewItemActor->FindComponentByClass<UItemInstanceComponent>();
-
-	if (!IsValid(ItemComp))
+	if (GetOwnerRole() < ROLE_Authority)
 	{
-		return;
+		Server_AddNecInventory(NewItemActor);
 	}
-
-	UItemInstance* NewItem = ItemComp->GetItemInstance();
-
-	if (AddItemToInventory(NewItem)) {
-		NewItemActor->Destroy();
+	else
+	{
+		AddNecInventory_Internal(NewItemActor);
 	}
+	return;
 }
 
 bool UNecInventoryComponent::AddItemToInventory(UItemInstance* NewItem)
@@ -143,6 +139,42 @@ UItemInstance* UNecInventoryComponent::GetDefaultContainer() const
 void UNecInventoryComponent::DropItemInWorld(TSubclassOf<AActor> SpawnActor)
 {
 
+}
+
+void UNecInventoryComponent::RebuildItemOwnerMap()
+{
+	Super::RebuildItemOwnerMap();
+	ValidateEquipmentSlot(HeadItem);
+	ValidateEquipmentSlot(BodyItem);
+	ValidateEquipmentSlot(LegsItem);
+	ValidateEquipmentSlot(BagItem);
+	ValidateEquipmentSlot(WeaponItem);
+}
+
+void UNecInventoryComponent::Server_AddNecInventory_Implementation(AActor* NewItemActor)
+{
+	AddNecInventory_Internal(NewItemActor);
+}
+
+void UNecInventoryComponent::AddNecInventory_Internal(AActor* NewItemActor)
+{
+	if (!IsValid(NewItemActor))
+	{
+		return;
+	}
+	UItemInstanceComponent* ItemComp =
+		NewItemActor->FindComponentByClass<UItemInstanceComponent>();
+
+	if (!IsValid(ItemComp))
+	{
+		return;
+	}
+
+	UItemInstance* NewItem = ItemComp->GetItemInstance();
+
+	if (AddItemToInventory(NewItem)) {
+		NewItemActor->Destroy();
+	}
 }
 
 void UNecInventoryComponent::DropItemInWorld_Internal(TSubclassOf<AActor> SpawnActor)
@@ -218,6 +250,30 @@ void UNecInventoryComponent::DropItemInWorld_Internal(TSubclassOf<AActor> SpawnA
 	return;
 }
 
+inline void UNecInventoryComponent::ValidateEquipmentSlot(UItemInstance*& SlotItem)
+{
+	if (!IsValid(SlotItem))
+	{
+		SlotItem = nullptr;
+		return;
+	}
+
+	// 장착 상태가 아니면 슬롯 비움
+	if (SlotItem->OwnerItemGuid != FGuid())
+	{
+		SlotItem = nullptr;
+		return;
+	}
+
+	TArray<UItemInstance*> InventoryItems;
+	GetInventory(InventoryItems);
+
+	if (!InventoryItems.Contains(SlotItem))
+	{
+		SlotItem = nullptr;
+	}
+}
+
 void UNecInventoryComponent::Server_DropItemInWorld_Implementation(TSubclassOf<AActor> SpawnActor)
 {
 	DropItemInWorld_Internal(SpawnActor);
@@ -227,11 +283,17 @@ inline UItemInstance* UNecInventoryComponent::GetEquipmentItem(EEquipmentSlot Sl
 {
 	switch (Slot)
 	{
-	case EEquipmentSlot::Head:   return HeadItem;
-	case EEquipmentSlot::Body:   return BodyItem;
-	case EEquipmentSlot::Legs:   return LegsItem;
-	case EEquipmentSlot::Bag:    return BagItem;
-	case EEquipmentSlot::Weapon: return WeaponItem;
+	case EEquipmentSlot::Head:   
+		return HeadItem;
+	case EEquipmentSlot::Body:   
+		return BodyItem;
+	case EEquipmentSlot::Legs:   
+		return LegsItem;
+	case EEquipmentSlot::Bag:    
+		return BagItem;
+	case EEquipmentSlot::Weapon: 
+		return WeaponItem;
+	case EEquipmentSlot::Default:	return DefaultContainer;
 	default: return nullptr;
 	}
 }
@@ -365,6 +427,21 @@ void UNecInventoryComponent::EquipItem_Internal(UItemInstance* EquipItem)
 		if (SpawnedActor)
 		{
 			SpawnedActor->SetReplicates(true);
+
+			// 👇 캐릭터 메쉬 가져오기
+			ACharacter* Character = Cast<ACharacter>(OwnerActor);
+			if (Character && Character->GetMesh())
+			{
+				if (Data->m_ItemType == EItemType::Weapon) {
+					FName SocketName = "Weapon"; // ItemData에 소켓 이름 저장해두는 게 베스트
+
+					SpawnedActor->AttachToComponent(
+						Character->GetMesh(),
+						FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+						SocketName
+					);
+				}
+			}
 		}
 	}
 
