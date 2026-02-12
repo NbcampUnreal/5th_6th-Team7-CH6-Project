@@ -16,7 +16,8 @@ enum class EEquipmentSlot : uint8
 	Body    UMETA(DisplayName = "Body"),
 	Legs    UMETA(DisplayName = "Legs"),
 	Bag     UMETA(DisplayName = "Bag"),
-	Weapon  UMETA(DisplayName = "Weapon")
+	Weapon  UMETA(DisplayName = "Weapon"),
+	Default  UMETA(DisplayName = "Default")
 };
 
 class UItemInstance;
@@ -44,9 +45,25 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void AddNecInventory(AActor* NewItemActor);
 
+	bool AddItemToInventory(UItemInstance* NewItem);
+
 	UFUNCTION(BlueprintPure, Category = "Inventory")
 	UItemInstance* GetDefaultContainer() const;
 
+	UFUNCTION(BlueprintCallable)
+	void DropItemInWorld(TSubclassOf<AActor> SpawnActor);
+
+	virtual void RebuildItemOwnerMap() override;
+protected:
+	UFUNCTION(Server, Reliable)
+	void Server_AddNecInventory(AActor* NewItemActor);
+	UFUNCTION(Server, Reliable)
+	void Server_DropItemInWorld(TSubclassOf<AActor> SpawnActor);
+private:
+	void AddNecInventory_Internal(AActor* NewItemActor);
+	void DropItemInWorld_Internal(TSubclassOf<AActor> SpawnActor);
+
+	void ValidateEquipmentSlot(UItemInstance*& SlotItem);
 #pragma region Equipment
 private:
 	UPROPERTY(Replicated)
@@ -99,6 +116,11 @@ protected:
 	void Server_EquipItem(UItemInstance* EquipItem);
 
 	void EquipItem_Internal(UItemInstance* EquipItem);
+
+	UFUNCTION(Server, Reliable)
+	void Server_UnequipItem(EEquipmentSlot Slot);
+
+	void UnequipItem_Internal(EEquipmentSlot Slot);
 #pragma endregion
 
 

@@ -6,6 +6,7 @@
 #include "GridInventory/ItemInstance/ItemInstance.h"
 #include "GridInventory/ItemInstance/ItemInstanceComponent.h"
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
+#include "GameFramework/Character.h"
 #include "Engine/ActorChannel.h"
 
 bool ItemTypeToEquipmentSlot(
@@ -99,7 +100,68 @@ void UNecInventoryComponent::AddNecInventory(AActor* NewItemActor)
 		return;
 	}
 
-	
+	if (GetOwnerRole() < ROLE_Authority)
+	{
+		Server_AddNecInventory(NewItemActor);
+	}
+	else
+	{
+		AddNecInventory_Internal(NewItemActor);
+	}
+	return;
+}
+
+bool UNecInventoryComponent::AddItemToInventory(UItemInstance* NewItem)
+{
+	if (!IsValid(NewItem))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AddNecInventory: ItemInstance is null"));
+		return false;
+	}
+	if (BodyItem && AddItemToContainer(NewItem, BodyItem->InstanceID))	{
+	}
+	else if (BagItem && AddItemToContainer(NewItem, BagItem->InstanceID))	{
+	}
+	else if (DefaultContainer && AddItemToContainer(NewItem, DefaultContainer->InstanceID))	{
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("AddNecInventory: Inventory is full"));
+		return false;
+	}
+	return true;
+}
+
+UItemInstance* UNecInventoryComponent::GetDefaultContainer() const
+{
+	return DefaultContainer;
+}
+
+void UNecInventoryComponent::DropItemInWorld(TSubclassOf<AActor> SpawnActor)
+{
+
+}
+
+void UNecInventoryComponent::RebuildItemOwnerMap()
+{
+	Super::RebuildItemOwnerMap();
+	ValidateEquipmentSlot(HeadItem);
+	ValidateEquipmentSlot(BodyItem);
+	ValidateEquipmentSlot(LegsItem);
+	ValidateEquipmentSlot(BagItem);
+	ValidateEquipmentSlot(WeaponItem);
+}
+
+void UNecInventoryComponent::Server_AddNecInventory_Implementation(AActor* NewItemActor)
+{
+	AddNecInventory_Internal(NewItemActor);
+}
+
+void UNecInventoryComponent::AddNecInventory_Internal(AActor* NewItemActor)
+{
+	if (!IsValid(NewItemActor))
+	{
+		return;
+	}
 	UItemInstanceComponent* ItemComp =
 		NewItemActor->FindComponentByClass<UItemInstanceComponent>();
 
@@ -110,35 +172,128 @@ void UNecInventoryComponent::AddNecInventory(AActor* NewItemActor)
 
 	UItemInstance* NewItem = ItemComp->GetItemInstance();
 
-	if (!IsValid(NewItem))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AddNecInventory: ItemInstance is null"));
-		return;
-	}
-	if (AddItemToContainer(NewItem,
-		DefaultContainer->InstanceID)) {
+	if (AddItemToInventory(NewItem)) {
 		NewItemActor->Destroy();
-	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("AddNecInventory: Inventory is full"));
-		return;
 	}
 }
 
-UItemInstance* UNecInventoryComponent::GetDefaultContainer() const
+void UNecInventoryComponent::DropItemInWorld_Internal(TSubclassOf<AActor> SpawnActor)
 {
-	return DefaultContainer;
+	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor)
+	{
+		return;
+	}
+
+	UWorld* World = OwnerActor->GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	FVector Start = OwnerActor->GetActorLocation() + FVector(0.f, 0.f, 10.f);
+	FVector Forward = OwnerActor->GetActorForwardVector();
+	FVector End = Start + Forward * 300.f;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(OwnerActor);
+
+	FHitResult ForwardHit;
+	bool bHitForward = World->LineTraceSingleByChannel(
+		ForwardHit,
+		Start,
+		End,
+		ECC_Visibility,
+		Params
+	);
+
+	FVector DownStart;
+	if (bHitForward)
+	{
+		DownStart = ForwardHit.Location + FVector(0.f, 0.f, 50.f);
+	}
+	else
+	{
+		DownStart = End + FVector(0.f, 0.f, 50.f);
+	}
+
+	FVector DownEnd = DownStart - FVector(0.f, 0.f, 800.f);
+
+	FHitResult DownHit;
+	bool bHitDown = World->LineTraceSingleByChannel(
+		DownHit,
+		DownStart,
+		DownEnd,
+		ECC_Visibility,
+		Params
+	);
+
+	if (!bHitDown)
+	{
+		return;
+	}
+
+	FVector SpawnLocation = DownHit.Location;
+	FRotator SpawnRotation = OwnerActor->GetActorRotation();
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = nullptr;
+	SpawnParams.Instigator = nullptr;
+
+	AActor* SpawnedItem = World->SpawnActor<AActor>(
+		SpawnActor,
+		SpawnLocation,
+		SpawnRotation,
+		SpawnParams
+	);
+
+	return;
+}
+
+inline void UNecInventoryComponent::ValidateEquipmentSlot(UItemInstance*& SlotItem)
+{
+	if (!IsValid(SlotItem))
+	{
+		SlotItem = nullptr;
+		return;
+	}
+
+	// 장착 상태가 아니면 슬롯 비움
+	if (SlotItem->OwnerItemGuid != FGuid())
+	{
+		SlotItem = nullptr;
+		return;
+	}
+
+	TArray<UItemInstance*> InventoryItems;
+	GetInventory(InventoryItems);
+
+	if (!InventoryItems.Contains(SlotItem))
+	{
+		SlotItem = nullptr;
+	}
+}
+
+void UNecInventoryComponent::Server_DropItemInWorld_Implementation(TSubclassOf<AActor> SpawnActor)
+{
+	DropItemInWorld_Internal(SpawnActor);
 }
 
 inline UItemInstance* UNecInventoryComponent::GetEquipmentItem(EEquipmentSlot Slot) const
 {
 	switch (Slot)
 	{
-	case EEquipmentSlot::Head:   return HeadItem;
-	case EEquipmentSlot::Body:   return BodyItem;
-	case EEquipmentSlot::Legs:   return LegsItem;
-	case EEquipmentSlot::Bag:    return BagItem;
-	case EEquipmentSlot::Weapon: return WeaponItem;
+	case EEquipmentSlot::Head:   
+		return HeadItem;
+	case EEquipmentSlot::Body:   
+		return BodyItem;
+	case EEquipmentSlot::Legs:   
+		return LegsItem;
+	case EEquipmentSlot::Bag:    
+		return BagItem;
+	case EEquipmentSlot::Weapon: 
+		return WeaponItem;
+	case EEquipmentSlot::Default:	return DefaultContainer;
 	default: return nullptr;
 	}
 }
@@ -171,23 +326,22 @@ void UNecInventoryComponent::EquipItem(UItemInstance* EquipItem)
 	{
 		Server_EquipItem(EquipItem);
 	}
+	RebuildItemOwnerMap();
+	OnInventoryUpdated.Broadcast();
 }
 
 void UNecInventoryComponent::UnequipItem(EEquipmentSlot Slot)
 {
-	if (!GetOwner() || !GetOwner()->HasAuthority())
+	if (GetOwner() && GetOwner()->HasAuthority())
 	{
-		return;
+		UnequipItem_Internal(Slot);
 	}
-
-	AActor* OldActor = GetEquipmentActor(Slot);
-	if (OldActor)
+	else
 	{
-		OldActor->Destroy();
+		Server_UnequipItem(Slot);
 	}
-
-	SetEquipmentActor(Slot, nullptr);
-	SetEquipmentItem(Slot, nullptr);
+	RebuildItemOwnerMap();
+	OnInventoryUpdated.Broadcast();
 }
 
 void UNecInventoryComponent::SetEquipmentItem(EEquipmentSlot Slot, UItemInstance* NewItem)
@@ -224,7 +378,7 @@ void UNecInventoryComponent::EquipItem_Internal(UItemInstance* EquipItem)
 	}
 
 	AActor* OwnerActor = GetOwner();
-	if (!OwnerActor || !OwnerActor->HasAuthority())
+	if (!OwnerActor)
 	{
 		return;
 	}
@@ -249,7 +403,7 @@ void UNecInventoryComponent::EquipItem_Internal(UItemInstance* EquipItem)
 		return;
 	}
 
-	if (GetEquipmentItem(TargetSlot))
+	if (UItemInstance* equipItem =GetEquipmentItem(TargetSlot))
 	{
 		UnequipItem(TargetSlot);
 	}
@@ -273,14 +427,47 @@ void UNecInventoryComponent::EquipItem_Internal(UItemInstance* EquipItem)
 		if (SpawnedActor)
 		{
 			SpawnedActor->SetReplicates(true);
+
+			// 👇 캐릭터 메쉬 가져오기
+			ACharacter* Character = Cast<ACharacter>(OwnerActor);
+			if (Character && Character->GetMesh())
+			{
+				if (Data->m_ItemType == EItemType::Weapon) {
+					FName SocketName = "Weapon"; // ItemData에 소켓 이름 저장해두는 게 베스트
+
+					SpawnedActor->AttachToComponent(
+						Character->GetMesh(),
+						FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+						SocketName
+					);
+				}
+			}
 		}
 	}
 
+	AddRootItem(EquipItem);
 	SetEquipmentItem(TargetSlot, EquipItem);
 	SetEquipmentActor(TargetSlot, SpawnedActor);
+}
+
+void UNecInventoryComponent::UnequipItem_Internal(EEquipmentSlot Slot)
+{
+	AActor* OldActor = GetEquipmentActor(Slot);
+	if (OldActor)
+	{
+		OldActor->Destroy();
+	}
+
+	SetEquipmentActor(Slot, nullptr);
+	SetEquipmentItem(Slot, nullptr);
 }
 
 void UNecInventoryComponent::Server_EquipItem_Implementation(UItemInstance* EquipItem)
 {
 	EquipItem_Internal(EquipItem);
+}
+
+void UNecInventoryComponent::Server_UnequipItem_Implementation(EEquipmentSlot Slot)
+{
+	UnequipItem_Internal(Slot);
 }

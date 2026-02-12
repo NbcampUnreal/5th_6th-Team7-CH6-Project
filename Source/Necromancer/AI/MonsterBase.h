@@ -26,7 +26,7 @@ public:
 	
 	virtual FGenericTeamId GetGenericTeamId() const override;
 	
-	// AN_MonsterNextAttack이 Execute, BTTask가 Bind
+	
 	FOnNextComboRequested OnNextComboRequested;
 	
 	UFUNCTION(BlueprintCallable,Category="RVO")
@@ -37,6 +37,9 @@ public:
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayDeathMontage();
+	
+	UFUNCTION(BlueprintCallable)
+	bool GetIsDead();
 
 protected:
 	
@@ -66,14 +69,31 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> DeathMontage;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> HitReactMontage;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> StunMontage;
+	
 	void StartRagdoll();
 	
-	// RVO 회피 설정
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RVO")
 	float AvoidanceRadius = 100.0f;
-	// RVO 계급 설정
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RVO")
 	float AvoidanceWeight = 0.5f;
+
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float MovementAcceleration = 300.0f;
+
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float MovementDeceleration = 300.0f;
+	
+	UFUNCTION()
+	void OnDamageReceived(float DamageAmount, FVector HitLocation);
 
 
 	

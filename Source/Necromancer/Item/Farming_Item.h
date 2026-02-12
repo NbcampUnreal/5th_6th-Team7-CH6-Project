@@ -16,7 +16,6 @@ public:
 	AFarming_Item();
 
 protected:
-
 	UPROPERTY(EditDefaultsOnly, Category = "Farming")
 	bool bStackable = true;
 
@@ -33,7 +32,6 @@ protected:
 	bool bCanSellToShop = true;
 
 public:
-
 	bool IsStackable() const { return bStackable; }
 	int32 GetMaxStack() const { return MaxStackCount; }
 	int32 GetSellPrice() const { return SellPrice; }

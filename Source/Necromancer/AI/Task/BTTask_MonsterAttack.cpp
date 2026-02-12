@@ -4,6 +4,8 @@
 #include "BTTask_MonsterAttack.h"
 #include "AIController.h"
 #include "MonsterBase.h"
+#include "MonsterEngagementSubsystem.h"
+#include "Necromancer.h"
 #include "GameFramework/Character.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
@@ -47,6 +49,7 @@ EBTNodeResult::Type UBTTask_MonsterAttack::ExecuteTask(UBehaviorTreeComponent& O
 	{
 		Monster->Multicast_PlayMontage(AttackMontage);
 	}
+
 	float Duration = AttackMontage ? AttackMontage->GetPlayLength() : 0.0f;
 	if (Duration <= 0.0f)
 	{
@@ -70,13 +73,31 @@ void UBTTask_MonsterAttack::OnMontageEnded(UAnimMontage* Montage, bool bInterrup
 	{
 		return;
 	}
-	
+
 	UBlackboardComponent* BB = OwnerComp->GetBlackboardComponent();
 	if (BB)
 	{
 		BB->SetValueAsBool(FName("IsAttacking"), false);
 	}
-	
-	FinishLatentTask(*OwnerComp,bInterrupted ? EBTNodeResult::Failed : EBTNodeResult::Succeeded);
-	
+
+	// 공격 완료 시 슬롯 즉시 반환
+	if (AAIController* AIC = OwnerComp->GetAIOwner())
+	{
+		if (APawn* Pawn = AIC->GetPawn())
+		{
+			if (UWorld* World = Pawn->GetWorld())
+			{
+				if (UMonsterEngagementSubsystem* Engagement = World->GetSubsystem<UMonsterEngagementSubsystem>())
+				{
+					AActor* Target = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
+					if (Target)
+					{
+						Engagement->ReleaseAttackSlot(Pawn, Target);
+					}
+				}
+			}
+		}
+	}
+
+	FinishLatentTask(*OwnerComp, bInterrupted ? EBTNodeResult::Failed : EBTNodeResult::Succeeded);
 }
