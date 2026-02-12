@@ -279,7 +279,7 @@ void UNecInventoryComponent::Server_DropItemInWorld_Implementation(TSubclassOf<A
 	DropItemInWorld_Internal(SpawnActor);
 }
 
-inline UItemInstance* UNecInventoryComponent::GetEquipmentItem(EEquipmentSlot Slot) const
+UItemInstance* UNecInventoryComponent::GetEquipmentItem(EEquipmentSlot Slot) const
 {
 	switch (Slot)
 	{
