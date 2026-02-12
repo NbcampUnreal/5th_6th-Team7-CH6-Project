@@ -23,17 +23,11 @@ protected:
 	void OnCreateSessionButtonClicked();
 
 	UFUNCTION()
-	void OnFindSessionButtonClicked();
-
-	UFUNCTION()
 	void OnInviteFriendButtonClicked();
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = USTitleWidget, Meta = (AllowPrivateAccess, BindWidget))
 	TObjectPtr<UButton> CreateSessionButton;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = USTitleWidget, Meta = (AllowPrivateAccess, BindWidget))
-	TObjectPtr<UButton> FindSessionButton;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = USTitleWidget, Meta = (AllowPrivateAccess, BindWidget))
 	TObjectPtr<UButton> InviteFirendButton;

@@ -6,39 +6,30 @@
 #include "Components/Button.h"
 
 #include "Controller/NecLobbyPlayerController.h"
+#include "GameInstance/NecAFGameInstance.h"
 
 void ULobbyWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
 	CreateSessionButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnCreateSessionButtonClicked);
-	FindSessionButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnFindSessionButtonClicked);
 	InviteFirendButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnInviteFriendButtonClicked);
 }
 
 void ULobbyWidget::OnCreateSessionButtonClicked()
 {
-	ANecLobbyPlayerController* OwningPlayerController = GetOwningPlayer<ANecLobbyPlayerController>();
-	if (IsValid(OwningPlayerController))
+	UNecAFGameInstance* NecAFGameInstance = Cast<UNecAFGameInstance>(GetGameInstance());
+	if (NecAFGameInstance)
 	{
-		OwningPlayerController->OnClickCreateSession();
-	}
-}
-
-void ULobbyWidget::OnFindSessionButtonClicked()
-{
-	ANecLobbyPlayerController* OwningPlayerController = GetOwningPlayer<ANecLobbyPlayerController>();
-	if (IsValid(OwningPlayerController))
-	{
-		OwningPlayerController->OnClickFindSession();
+		NecAFGameInstance->CreateSession();
 	}
 }
 
 void ULobbyWidget::OnInviteFriendButtonClicked()
 {
-	ANecLobbyPlayerController* OwningPlayerController = GetOwningPlayer<ANecLobbyPlayerController>();
-	if (IsValid(OwningPlayerController))
+	UNecAFGameInstance* NecAFGameInstance = Cast<UNecAFGameInstance>(GetGameInstance());
+	if (NecAFGameInstance)
 	{
-		OwningPlayerController->OnClickInviteFriend();
+		NecAFGameInstance->InviteFriend();
 	}
 }

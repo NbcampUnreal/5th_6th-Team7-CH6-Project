@@ -13,11 +13,8 @@
 #include "OnlineSessionSettings.h"
 
 ANecLobbyPlayerController::ANecLobbyPlayerController()
-	: CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ANecLobbyPlayerController::OnCreateSessionComplete))
-	, FindSessionCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &ANecLobbyPlayerController::OnFindSessionComplete))
-	, JoinSessionCompleteDelegate(FOnJoinSessionCompleteDelegate::CreateUObject(this, &ANecLobbyPlayerController::OnJoinSessionComplate))
 {
-	bIsLoggedIn = false;
+
 }
 
 void ANecLobbyPlayerController::BeginPlay()
@@ -44,7 +41,6 @@ void ANecLobbyPlayerController::BeginPlay()
 		}
 	}
 
-	GetOnlineSubsystem();
 	//Login();
 }
 
@@ -56,10 +52,6 @@ void ANecLobbyPlayerController::GetOnlineSubsystem()
 	{
 		OnlineSessionInterface = OnlineSubsystem->GetSessionInterface();
 
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::Printf(TEXT("Subsystem Name : % s"), *OnlineSubsystem->GetSubsystemName().ToString()));
-		}
 
 		if (OnlineSessionInterface)
 		{
@@ -303,23 +295,11 @@ void ANecLobbyPlayerController::OnInviteAccepted(bool bWasSuccessful, int32 Loca
 			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString::Printf(TEXT("Invite From: %s, Session ID: %s"), *OwningUser, *SessionId));
 		}
 
-		//OnlineSessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
-		//const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-		//if (LocalPlayer)
-		//{
-		//	OnlineSessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(),  FName(TEXT("Necromancer")), InviteResult);
-		//}
-		FTimerHandle TimerHandle;
-		GetWorldTimerManager().SetTimer(TimerHandle, [this, LocalUserNum, InviteResult]()
-			{
-				if (OnlineSessionInterface.IsValid())
-				{
-					OnlineSessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
-
-
-					const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-					OnlineSessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, InviteResult);
-				}
-			}, 0.5f, false);
+		OnlineSessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+		const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+		if (LocalPlayer)
+		{
+			OnlineSessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(),  FName(TEXT("Necromancer")), InviteResult);
+		}
 	}
 }
