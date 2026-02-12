@@ -13,7 +13,6 @@ void ULobbyWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	CreateSessionButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnCreateSessionButtonClicked);
-	InviteFirendButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnInviteFriendButtonClicked);
 }
 
 void ULobbyWidget::OnCreateSessionButtonClicked()
@@ -25,11 +24,3 @@ void ULobbyWidget::OnCreateSessionButtonClicked()
 	}
 }
 
-void ULobbyWidget::OnInviteFriendButtonClicked()
-{
-	UNecAFGameInstance* NecAFGameInstance = Cast<UNecAFGameInstance>(GetGameInstance());
-	if (NecAFGameInstance)
-	{
-		NecAFGameInstance->InviteFriend();
-	}
-}
