@@ -37,6 +37,7 @@ bool UBucketInventoryComponent::ReplicateSubobjects(UActorChannel* Channel, FOut
 {
 	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
 	WroteSomething |= Channel->ReplicateSubobject(DefaultContainer, *Bunch, *RepFlags);
+    return WroteSomething;
 }
 
 UItemInstance* UBucketInventoryComponent::GetDefaultContainer() const
