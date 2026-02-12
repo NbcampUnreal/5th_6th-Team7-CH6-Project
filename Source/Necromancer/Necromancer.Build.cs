@@ -20,17 +20,18 @@ public class Necromancer : ModuleRules
             "UMG",
             "Niagara",
             "GameplayTags",
-            "AnimationModifierLibrary",
+            //"AnimationModifierLibrary",
 
             "OnlineSubsystem", "OnlineSubsystemSteam", "OnlineSubsystemUtils",
             
-            "Niagara",
+           
         });
 
         PublicIncludePaths.AddRange(new string[]
         {
             "Necromancer",
-            "Necromancer/AI"
+            "Necromancer/AI",
+            "Necromancer/AI/Data"
         });
     }
 }

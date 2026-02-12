@@ -20,10 +20,10 @@ public:
 
 protected:
 	virtual void Tick(float DeltaTime) override;
+	virtual void OnConstruction(const FTransform& Transform) override;
 
 public:
 	virtual void StartAttack();
-
 	virtual void EndAttack();
 
 	UAnimMontage* GetAttackMontage() const { return AttackMontage; }
@@ -40,27 +40,20 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
 	FVector TraceExtent = FVector(30.0f, 30.0f, 30.0f);
 
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
-	FName SocketNameStart = FName("TraceStart");
+	UPROPERTY(VisibleAnywhere, Category = "Weapon|Combat")
+	TObjectPtr<UBoxComponent> TracePreviewBox;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
-	FName SocketNameEnd = FName("TraceEnd");
+	FName StartSocketName = FName("TraceStart");
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
+	FName EndSocketName = FName("TraceEnd");
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Sound")
 	TObjectPtr<USoundBase> AttackSound;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	float Damage = 10.f;
-
-	UFUNCTION()
-	virtual void OnAttackHit(
-		UPrimitiveComponent* OverlappedComponent,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex,
-		bool bFromSweep,
-		const FHitResult& SweepResult
-	);
+	float Damage = 10.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	TObjectPtr<UAnimMontage> AttackMontage;
@@ -72,7 +65,5 @@ protected:
 
 	TArray<AActor*> HitActors;
 
-	FVector LastSocketLocation;
-
-	FVector LastCenterLocation;
+	FVector LastCenterLocation = FVector::ZeroVector;
 };

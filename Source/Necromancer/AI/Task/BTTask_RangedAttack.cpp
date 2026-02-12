@@ -4,7 +4,9 @@
 #include "AIController.h"
 #include "MonsterBase.h"
 #include "MonsterEngagementSubsystem.h"
+#include "MonsterStatComponent.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Necromancer.h"
 
@@ -29,6 +31,13 @@ EBTNodeResult::Type UBTTask_RangedAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 		return EBTNodeResult::Failed;
 	}
 
+	// 쿨타임 체크
+	UMonsterStatComponent* StatComp = Character->FindComponentByClass<UMonsterStatComponent>();
+	if (StatComp && !StatComp->CanAttack())
+	{
+		return EBTNodeResult::Failed;
+	}
+
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 	if (!BB)
 	{
@@ -40,6 +49,10 @@ EBTNodeResult::Type UBTTask_RangedAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 	{
 		return EBTNodeResult::Failed;
 	}
+
+	// 공격 중 이동 정지
+	Character->GetCharacterMovement()->StopMovementImmediately();
+	Character->GetCharacterMovement()->DisableMovement();
 
 	AMonsterBase* Monster = Cast<AMonsterBase>(Character);
 	if (Monster)
@@ -77,11 +90,21 @@ void UBTTask_RangedAttack::OnMontageEnded(UAnimMontage* Montage, bool bInterrupt
 		BB->SetValueAsBool(FName(NAME_IsAttacking), false);
 	}
 
-	// 공격 완료 시 슬롯 즉시 반환
+	// 공격 완료 시 이동 복구 + 슬롯 반환 + 쿨타임 마킹
 	if (AAIController* AIC = OwnerComp->GetAIOwner())
 	{
 		if (APawn* Pawn = AIC->GetPawn())
 		{
+			if (ACharacter* Char = Cast<ACharacter>(Pawn))
+			{
+				Char->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+			}
+			// 쿨타임 마킹
+			if (UMonsterStatComponent* StatComp = Pawn->FindComponentByClass<UMonsterStatComponent>())
+			{
+				StatComp->MarkAttackUsed();
+			}
+
 			if (UWorld* World = Pawn->GetWorld())
 			{
 				if (UMonsterEngagementSubsystem* Engagement = World->GetSubsystem<UMonsterEngagementSubsystem>())

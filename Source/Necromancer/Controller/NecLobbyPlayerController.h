@@ -85,6 +85,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnClickInviteFriend();
 
+	void OnInviteAccepted(bool bWasSuccessful, int32 LocalUserNum, TSharedPtr<const FUniqueNetId> UserId, const FOnlineSessionSearchResult& InviteResult);
+
 private:
 	
 

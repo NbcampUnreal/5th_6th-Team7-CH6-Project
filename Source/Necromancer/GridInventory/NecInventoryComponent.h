@@ -9,6 +9,7 @@
 /**
  * 
  */
+
 UENUM(BlueprintType)
 enum class EEquipmentSlot : uint8
 {
@@ -16,10 +17,15 @@ enum class EEquipmentSlot : uint8
 	Body    UMETA(DisplayName = "Body"),
 	Legs    UMETA(DisplayName = "Legs"),
 	Bag     UMETA(DisplayName = "Bag"),
-	Weapon  UMETA(DisplayName = "Weapon")
+	Weapon  UMETA(DisplayName = "Weapon"),
+	Default  UMETA(DisplayName = "Default")
 };
 
+class AActor;
 class UItemInstance;
+class UInventoryHub;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEquipmentUpdated, AActor*, updateEquipment);
 
 UCLASS(ClassGroup = (Custom),meta = (BlueprintSpawnableComponent))
 class NECROMANCER_API UNecInventoryComponent : public UGridInventoryComponent
@@ -27,6 +33,9 @@ class NECROMANCER_API UNecInventoryComponent : public UGridInventoryComponent
 	GENERATED_BODY()
 public:
 	UNecInventoryComponent();
+
+	UPROPERTY(BlueprintAssignable)
+	FOnEquipmentUpdated OnEquipmentUpdated;
 protected:
 	virtual void BeginPlay() override;
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) 
@@ -51,12 +60,18 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void DropItemInWorld(TSubclassOf<AActor> SpawnActor);
+
+	virtual void RebuildItemOwnerMap() override;
 protected:
+	UFUNCTION(Server, Reliable)
+	void Server_AddNecInventory(AActor* NewItemActor);
 	UFUNCTION(Server, Reliable)
 	void Server_DropItemInWorld(TSubclassOf<AActor> SpawnActor);
 private:
+	void AddNecInventory_Internal(AActor* NewItemActor);
 	void DropItemInWorld_Internal(TSubclassOf<AActor> SpawnActor);
 
+	
 #pragma region Equipment
 private:
 	UPROPERTY(Replicated)
@@ -114,7 +129,20 @@ protected:
 	void Server_UnequipItem(EEquipmentSlot Slot);
 
 	void UnequipItem_Internal(EEquipmentSlot Slot);
+private:
+	void ValidateEquipmentSlot(UItemInstance*& SlotItem, AActor*& SlotActor);
 #pragma endregion
 
+#pragma region UI
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UInventoryHub> InventoryWidgetClass;
 
+	// 현재 생성된 위젯
+	UPROPERTY()
+	UInventoryHub* InventoryWidget;
+public:
+	UFUNCTION(BlueprintCallable)
+	void ToggleInventoryUI();
+#pragma endregion
 };

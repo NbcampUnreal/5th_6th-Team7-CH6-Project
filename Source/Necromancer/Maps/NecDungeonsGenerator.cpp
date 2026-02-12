@@ -192,7 +192,7 @@ void ANecDungeonsGenerator::CheckForOverlap()
 	// 아직 방 설치 가능하면 방설치
 	if (RoomCount < RoomAmount)
 	{
-		// 방 20개마다 특수 방 설치
+		// 특수한 방 추가
 		if (RoomCount % (RoomAmount - 1) == 0)
 		{
 			RoomList = SpecialRoomList;
@@ -261,7 +261,7 @@ void ANecDungeonsGenerator::StartDungeonTimer()
 	GetWorld()->GetTimerManager().SetTimer(
 		DungeonTimerHandle,
 		this,
-		&ANecDungeonsGenerator::CheckForDungeonComplete, // 델리게이트
+		&ANecDungeonsGenerator::CheckForDungeonComplete,
 		1.0f, // 1초마다 체크
 		true // 루프
 	);
@@ -272,7 +272,6 @@ void ANecDungeonsGenerator::CheckForDungeonComplete()
 	// 경과시간 계산
 	float RunningTime = GetWorld()->GetTimeSeconds() - DungeonStartTime;
 
-	// 경과시간이 초과 되면
 	if (RunningTime >= MaxDungeonTime)
 	{
 		// 레벨 재시작

@@ -43,8 +43,16 @@ public:
 	float GetMinAttackRange() const;
 	UFUNCTION(BlueprintCallable)
 	bool GetIsRanged() const;
-	
-	
+
+	// 공격 쿨타임
+	UFUNCTION(BlueprintCallable)
+	bool CanAttack() const;
+
+	UFUNCTION(BlueprintCallable)
+	void MarkAttackUsed();
+
+	UFUNCTION(BlueprintCallable)
+	float GetAttackCooldown() const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -81,6 +89,12 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Stat|Ranged")
 	bool bIsRanged = false;
+
+	// 공격 쿨타임
+	UPROPERTY(EditDefaultsOnly, Category = "Stat|Cooldown")
+	float AttackCooldown = 2.0f;
+
+	float LastAttackTime = -999.0f;
 
 	// 등급
 	UPROPERTY(EditDefaultsOnly, Category = "Stat")

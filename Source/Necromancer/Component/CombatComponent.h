@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
@@ -24,6 +24,9 @@ public:
 	void Attack();
 
 	void EquipWeapon(AWeapon_Item_Base* NewWeapon);
+
+	UFUNCTION()
+	void SetCurrentWeapon(AActor* NewWeaponActor);
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void EnableWeaponCollision();

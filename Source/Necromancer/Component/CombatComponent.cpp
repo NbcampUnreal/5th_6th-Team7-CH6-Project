@@ -1,4 +1,4 @@
-#include "Component/CombatComponent.h"
+﻿#include "Component/CombatComponent.h"
 #include "Character/NecPlayerCharacter.h"
 #include "Component/StaminaComponent.h"
 #include "GameFramework/Character.h"
@@ -84,6 +84,18 @@ void UCombatComponent::EquipWeapon(AWeapon_Item_Base* NewWeapon)
             FName("hand_r_weapon")
         );
     }
+}
+
+void UCombatComponent::SetCurrentWeapon(AActor* NewWeaponActor)
+{
+    AWeapon_Item_Base* NewWeapon = Cast<AWeapon_Item_Base>(NewWeaponActor);
+
+    if (CurrentWeapon == NewWeapon)
+    {
+        return;
+    }
+
+    CurrentWeapon = NewWeapon;
 }
 
 void UCombatComponent::EnableWeaponCollision()
