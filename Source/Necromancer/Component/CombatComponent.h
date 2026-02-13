@@ -36,6 +36,8 @@ public:
 
 	AWeapon_Item_Base* GetCurrentWeapon() const { return CurrentWeapon; }
 
+	void CheckComboTransition();
+
 	void SetGuard(bool bInGuarding);
 
 	UFUNCTION(BlueprintPure, Category = "Combat")
@@ -48,13 +50,15 @@ protected:
 	void UpdateGuardVisuals();
 
 	UFUNCTION(Server, Reliable)
-	void Server_Attack();
+	void Server_Attack(int32 ComboIndex);
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_Attack();
+	void Multicast_Attack(int32 ComboIndex);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetGuard(bool bInGuarding);
+
+	void PlayComboAttack();
 
 protected:
 	UPROPERTY()
@@ -68,4 +72,8 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_bIsGuarding, BlueprintReadOnly, Category = "Combat")
 	bool bIsGuarding = false;
+
+	int32 CurrentComboIndex = 0;
+
+	bool bHasInputBuffer = false;
 };
