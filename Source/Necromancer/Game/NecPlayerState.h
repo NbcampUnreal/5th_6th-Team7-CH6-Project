@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
@@ -6,6 +6,7 @@
 
 class UStatComponent;
 class UStaminaComponent;
+class UNecInventoryComponent;
 
 UCLASS()
 class NECROMANCER_API ANecPlayerState : public APlayerState
@@ -17,7 +18,7 @@ public:
 
 	UStatComponent* GetStatComponent() const { return StatComponent; }
 	UStaminaComponent* GetStaminaComponent() const { return StaminaComponent; }
-
+	UNecInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 protected:
 	virtual void CopyProperties(APlayerState* PlayerState) override;
 
@@ -26,4 +27,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Component")
 	TObjectPtr<UStaminaComponent> StaminaComponent;
+
+	UPROPERTY(VisibleAnywhere, Category = "Component")
+	TObjectPtr<UNecInventoryComponent> InventoryComponent;
 };
