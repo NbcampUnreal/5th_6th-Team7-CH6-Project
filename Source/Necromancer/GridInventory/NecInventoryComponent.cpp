@@ -61,12 +61,16 @@ inline void UNecInventoryComponent::BeginPlay()
 	Super::BeginPlay();
 	if (GetOwner()->HasAuthority())
 	{
-		DefaultContainer = NewObject<UItemInstance>(this);
-		DefaultContainer->InitializeIdentity(
-			FName("TempBag")
-		);
+		TArray<UItemInstance*> InItems;
+		GetInventory(InItems);
+		if (InItems.IsEmpty()) {
+			DefaultContainer = NewObject<UItemInstance>(this);
+			DefaultContainer->InitializeIdentity(
+				FName("TempBag")
+			);
 
-		AddRootItem(DefaultContainer);
+			AddRootItem(DefaultContainer);
+		}
 	}
 }
 
@@ -119,7 +123,28 @@ void UNecInventoryComponent::SetInventory(const TArray<UItemInstance*>& InItems)
 		}
 	}
 }
+void UNecInventoryComponent::LoadItemsFromSaveData(const TArray<FItemInstanceSaveData>& LoadItems)
+{
+	Super::LoadItemsFromSaveData(LoadItems);
+}
+void UNecInventoryComponent::LoadEquipment()
+{
+	TArray<UItemInstance*> InItems;
+	GetInventory(InItems);
+	DefaultContainer = InItems[0];
+	for (UItemInstance* Item : InItems)
+	{
+		if (!IsValid(Item))
+		{
+			continue;
+		}
 
+		if (Item->OwnerItemGuid == FGuid())
+		{
+			EquipItem(Item);
+		}
+	}
+}
 void UNecInventoryComponent::AddNecInventory(AActor* NewItemActor)
 {
 	if (!IsValid(NewItemActor))
@@ -210,7 +235,9 @@ void UNecInventoryComponent::AddNecInventory_Internal(AActor* NewItemActor)
 
 void UNecInventoryComponent::DropItemInWorld_Internal(TSubclassOf<AActor> SpawnActor)
 {
-	AActor* OwnerActor = GetOwner();
+	APlayerState* PS = Cast<APlayerState>(GetOwner());
+	if (!PS) return;
+	AActor* OwnerActor = Cast<AActor>(PS->GetPawn());
 	if (!OwnerActor)
 	{
 		return;
@@ -426,7 +453,9 @@ void UNecInventoryComponent::EquipItem_Internal(UItemInstance* EquipItem)
 		return;
 	}
 
-	AActor* OwnerActor = GetOwner();
+	APlayerState* PS = Cast<APlayerState>(GetOwner());
+	if (!PS) return;
+	AActor* OwnerActor = Cast<AActor>(PS->GetPawn());
 	if (!OwnerActor)
 	{
 		return;
