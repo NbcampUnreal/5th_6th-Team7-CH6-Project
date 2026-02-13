@@ -210,7 +210,9 @@ void UNecInventoryComponent::AddNecInventory_Internal(AActor* NewItemActor)
 
 void UNecInventoryComponent::DropItemInWorld_Internal(TSubclassOf<AActor> SpawnActor)
 {
-	AActor* OwnerActor = GetOwner();
+	APlayerState* PS = Cast<APlayerState>(GetOwner());
+	if (!PS) return;
+	AActor* OwnerActor = Cast<AActor>(PS->GetPawn());
 	if (!OwnerActor)
 	{
 		return;
@@ -426,7 +428,9 @@ void UNecInventoryComponent::EquipItem_Internal(UItemInstance* EquipItem)
 		return;
 	}
 
-	AActor* OwnerActor = GetOwner();
+	APlayerState* PS = Cast<APlayerState>(GetOwner());
+	if (!PS) return;
+	AActor* OwnerActor = Cast<AActor>(PS->GetPawn());
 	if (!OwnerActor)
 	{
 		return;

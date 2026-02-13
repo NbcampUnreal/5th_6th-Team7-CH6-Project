@@ -6,6 +6,7 @@
 #include "GridInventory/ItemInstance/ItemInstance.h"
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
 #include "Engine/ActorChannel.h"
+#include "GameFramework/PlayerState.h"
 
 // Sets default values for this component's properties
 UGridInventoryComponent::UGridInventoryComponent()
@@ -29,7 +30,9 @@ void UGridInventoryComponent::BeginPlay()
         return;
     }
 
-    APawn* OwnerPawn = Cast<APawn>(GetOwner());
+    APlayerState* PS = Cast<APlayerState>(GetOwner());
+    if (!PS) return;    
+    APawn* OwnerPawn = Cast<APawn>(PS->GetPawn());
     if (!OwnerPawn)
     {
         // Pawn이 아니면 기본적으로 비활성 (상자 등)
