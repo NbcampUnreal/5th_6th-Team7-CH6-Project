@@ -31,8 +31,8 @@ void ANecPlayerState::CopyProperties(APlayerState* PlayerState)
 		}
 		if (NewPS->InventoryComponent) {
 			TArray<UItemInstance*> TempItems;
-			InventoryComponent->GetInventory(TempItems);
-			NewPS->InventoryComponent->SetInventory(TempItems);
+			;
+			NewPS->InventoryComponent->LoadItemsFromSaveData(InventoryComponent->GetSavedItems());
 		}
 	}
 }

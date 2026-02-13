@@ -79,7 +79,11 @@ bool UGridInventoryComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBu
 void UGridInventoryComponent::RebuildItemOwnerMap()
 {
     ItemsByOwnerGuid.Reset();
-
+    const bool bIsServer = (GetOwner() && GetOwner()->HasAuthority());
+    if (bIsServer)
+    {
+        SavedItems.Reset();
+    }
     for (UItemInstance* Item : Items)
     {
         if (!Item)
@@ -88,7 +92,31 @@ void UGridInventoryComponent::RebuildItemOwnerMap()
         const FGuid& OwnerGuid = Item->OwnerItemGuid;
 
         ItemsByOwnerGuid.FindOrAdd(OwnerGuid).Add(Item);
+
+        if (bIsServer)
+        {
+            SavedItems.Add(Item->ToSaveData());
+        }
     }
+}
+
+void UGridInventoryComponent::LoadItemsFromSaveData(const TArray<FItemInstanceSaveData>& LoadItems)
+{
+    Items.Reset();
+
+    for (const FItemInstanceSaveData& Data : LoadItems)
+    {
+        UItemInstance* NewItem = NewObject<UItemInstance>(this);
+        if (!NewItem)
+            continue;
+
+        NewItem->LoadFromSaveData(Data);
+
+        Items.Add(NewItem);
+    }
+
+    // 캐시 재구성 필요하면
+    RebuildItemOwnerMap();
 }
 
 void UGridInventoryComponent::OnRep_Items()
@@ -109,23 +137,6 @@ void UGridInventoryComponent::HandleItemChanged(UItemInstance* Item)
 void UGridInventoryComponent::SetInventory(const TArray<UItemInstance*>& InItems) {
     Items = InItems;
     RebuildItemOwnerMap();
-
-    /*void AMyCharacter::PossessedBy(AController * NewController)
-    {
-        Super::PossessedBy(NewController);
-
-        if (HasAuthority())
-        {
-            if (AMyPlayerState* PS = GetPlayerState<AMyPlayerState>())
-            {
-                if (UGridInventoryComponent* Inv =
-                    FindComponentByClass<UGridInventoryComponent>())
-                {
-                    Inv->SetInventory(PS->Items);
-                }
-            }
-        }
-    }*/
 }
 
 void UGridInventoryComponent::GetInventory(TArray<UItemInstance*>& OutItems) const

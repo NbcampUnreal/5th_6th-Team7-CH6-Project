@@ -54,7 +54,7 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 void ANecPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
+	InventoryComponent->LoadEquipment();
 }
 
 void ANecPlayerCharacter::Tick(float DeltaTime)

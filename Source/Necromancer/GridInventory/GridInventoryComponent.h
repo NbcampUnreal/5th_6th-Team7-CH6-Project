@@ -7,6 +7,7 @@
 #include "GridInventoryComponent.generated.h"
 
 class UItemInstance;
+struct FItemInstanceSaveData;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUpdated);
 
@@ -43,9 +44,14 @@ private:
     UPROPERTY(ReplicatedUsing = OnRep_Items)
     TArray<UItemInstance*> Items;
 
+    UPROPERTY()
+    TArray<FItemInstanceSaveData> SavedItems;
     TMap<FGuid, TArray<UItemInstance*>> ItemsByOwnerGuid;
 public:
     virtual void RebuildItemOwnerMap();    
+
+    const TArray<FItemInstanceSaveData>& GetSavedItems() const {return SavedItems; }
+    virtual void LoadItemsFromSaveData(const TArray<FItemInstanceSaveData>& LoadItems);
 public:
     UFUNCTION()
     void OnRep_Items();
