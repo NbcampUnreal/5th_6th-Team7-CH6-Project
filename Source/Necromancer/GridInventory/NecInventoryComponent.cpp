@@ -1,15 +1,18 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "GridInventory/NecInventoryComponent.h"
-#include "Net/UnrealNetwork.h"
+
+#include "GridInventory/ItemData/ItemDataSubsystem.h"
 #include "GridInventory/ItemInstance/ItemInstance.h"
 #include "GridInventory/ItemInstance/ItemInstanceComponent.h"
-#include "GridInventory/ItemData/ItemDataSubsystem.h"
-#include "GameFramework/Character.h"
-#include "Engine/ActorChannel.h"
 #include "UI/InventoryHub.h"
+
+#include "Engine/ActorChannel.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/PlayerState.h"
+
+#include "Net/UnrealNetwork.h"
 
 bool ItemTypeToEquipmentSlot(
 	EItemType ItemType,
@@ -45,6 +48,12 @@ bool ItemTypeToEquipmentSlot(
 
 UNecInventoryComponent::UNecInventoryComponent()
 {
+	static ConstructorHelpers::FClassFinder<UInventoryHub> WidgetClassFinder(
+		TEXT("/Game/Necromancer/Blueprints/UI/inventory/WBP_InventoryHUB"));
+	if (WidgetClassFinder.Succeeded())
+	{
+		InventoryWidgetClass = WidgetClassFinder.Class;
+	}
 }
 
 inline void UNecInventoryComponent::BeginPlay()
@@ -93,6 +102,22 @@ bool UNecInventoryComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBun
 	if (WeaponItem) WroteSomething |= Channel->ReplicateSubobject(WeaponItem, *Bunch, *RepFlags);
 
 	return WroteSomething;
+}
+
+void UNecInventoryComponent::SetInventory(const TArray<UItemInstance*>& InItems) {
+	Super::SetInventory(InItems);
+	for (UItemInstance* Item : InItems)
+	{
+		if (!IsValid(Item))
+		{
+			continue;
+		}
+
+		if (Item->OwnerItemGuid == FGuid())
+		{		
+			EquipItem(Item);
+		}
+	}
 }
 
 void UNecInventoryComponent::AddNecInventory(AActor* NewItemActor)
@@ -488,10 +513,10 @@ void UNecInventoryComponent::UnequipItem_Internal(EEquipmentSlot Slot)
 
 void UNecInventoryComponent::ToggleInventoryUI()
 {
-	AActor* OwnerActor = GetOwner();
-	if (!OwnerActor) return;
+	APlayerState* PS = Cast<APlayerState>(GetOwner());
+	if (!PS) return;
 
-	APawn* PawnOwner = Cast<APawn>(OwnerActor);
+	APawn* PawnOwner = PS->GetPawn();
 	if (!PawnOwner) return;
 
 	APlayerController* PC = Cast<APlayerController>(PawnOwner->GetController());

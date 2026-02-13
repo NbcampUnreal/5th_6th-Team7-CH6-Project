@@ -52,7 +52,7 @@ public:
 
     void HandleItemChanged(UItemInstance* Item);
 
-    void SetInventory(const TArray<UItemInstance*>& InItems);
+    virtual void SetInventory(const TArray<UItemInstance*>& InItems);
 
     void GetInventory(TArray<UItemInstance*>& OutItems) const;
 

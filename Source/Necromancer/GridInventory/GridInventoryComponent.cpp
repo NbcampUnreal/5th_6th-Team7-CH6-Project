@@ -407,8 +407,8 @@ void UGridInventoryComponent::Implement_AddRootItem(UItemInstance*& NewItem)
     }
     NewItem->OwnerItemGuid = FGuid();
 
-   RebuildItemOwnerMap();
-   OnInventoryUpdated.Broadcast();
+   //RebuildItemOwnerMap();
+   //OnInventoryUpdated.Broadcast();
 }
 
 void UGridInventoryComponent::Server_AddItemToPos_Implementation(UItemInstance* NewItem, 
@@ -456,8 +456,8 @@ void UGridInventoryComponent::Implement_AddItemToPos(
     NewItem->PosX = InPosX;
     NewItem->PosY = InPosY;
 
-    RebuildItemOwnerMap();
-    OnInventoryUpdated.Broadcast();
+    //RebuildItemOwnerMap();
+    //OnInventoryUpdated.Broadcast();
 }
 
 
@@ -577,6 +577,6 @@ void UGridInventoryComponent::Implement_RemoveItem(UItemInstance*& Item)
     Item->PosX = 0;
     Item->PosY = 0;
 
-    RebuildItemOwnerMap();
-    OnInventoryUpdated.Broadcast();
+    //RebuildItemOwnerMap();
+    //OnInventoryUpdated.Broadcast();
 }
