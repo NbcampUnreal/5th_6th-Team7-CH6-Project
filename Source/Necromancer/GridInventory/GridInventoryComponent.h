@@ -46,6 +46,7 @@ private:
 
     UPROPERTY()
     TArray<FItemInstanceSaveData> SavedItems;
+
     TMap<FGuid, TArray<UItemInstance*>> ItemsByOwnerGuid;
 public:
     virtual void RebuildItemOwnerMap();    

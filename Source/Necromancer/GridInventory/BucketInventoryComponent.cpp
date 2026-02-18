@@ -45,6 +45,14 @@ UItemInstance* UBucketInventoryComponent::GetDefaultContainer() const
 	return DefaultContainer;
 }
 
+void UBucketInventoryComponent::RebuildItemOwnerMap()
+{
+    Super::RebuildItemOwnerMap();
+    if (RequirCost < GetBucketTotalCost()) {
+        OnInventoryUpdated.Broadcast();
+    }
+}
+
 void UBucketInventoryComponent::SetRequircost(int32 rcost)
 {
     RequirCost = rcost;

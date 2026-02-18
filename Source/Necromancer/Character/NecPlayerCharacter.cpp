@@ -313,56 +313,10 @@ void ANecPlayerCharacter::ToggleMenu(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::Interact()
 {
-	// Temp Function
-	
-	FVector Start = GetActorLocation();
-	FVector End = Start;
-
-	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
-	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldDynamic));
-
-	TArray<AActor*> ActorsToIgnore;
-	ActorsToIgnore.Add(this);
-
-	TArray<FHitResult> OutHits;
-
-	bool bHit = UKismetSystemLibrary::SphereTraceMultiForObjects(
-		this,
-		Start,
-		End,
-		InteractRange,
-		ObjectTypes,
-		false,
-		ActorsToIgnore,
-		EDrawDebugTrace::ForDuration,
-		OutHits,
-		true
-	);
-
-	if (bHit)
-	{
-		for (const FHitResult& Hit : OutHits)
+	if (InteractTarget) {
+		if (InteractTarget->Implements<UInteractable>())
 		{
-			AActor* HitActor = Hit.GetActor();
-			if (!HitActor) continue;
-
-			if (HitActor->Implements<UInteractable>())
-			{
-				if (HitActor->Implements<UInteractable>())
-				{
-					IInteractable::Execute_Interact(HitActor, this);
-					break; // 첫 번째 인터랙트 가능한 것만
-				}
-			}
-
-			/*AWeapon_Item_Base* PickedWeapon = Cast<AWeapon_Item_Base>(Hit.GetActor());
-			if (PickedWeapon)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Find Weapon: %s"), *PickedWeapon->GetName());
-
-				Server_EquipWeapon(PickedWeapon);
-				break;
-			}*/
+			IInteractable::Execute_Interact(InteractTarget, this);
 		}
 	}
 }

@@ -5,7 +5,9 @@
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
 #include "GridInventory/ItemInstance/ItemInstance.h"
 #include "GridInventory/ItemInstance/ItemInstanceComponent.h"
+#include "GridInventory/BucketInventoryComponent.h"
 #include "UI/InventoryHub.h"
+#include "UI/SubmitWidgetHub.h"
 
 #include "Engine/ActorChannel.h"
 #include "GameFramework/Actor.h"
@@ -48,11 +50,18 @@ bool ItemTypeToEquipmentSlot(
 
 UNecInventoryComponent::UNecInventoryComponent()
 {
-	static ConstructorHelpers::FClassFinder<UInventoryHub> WidgetClassFinder(
+	static ConstructorHelpers::FClassFinder<UInventoryHub> InventoryWidgetFinder(
 		TEXT("/Game/Necromancer/Blueprints/UI/inventory/WBP_InventoryHUB"));
-	if (WidgetClassFinder.Succeeded())
+	if (InventoryWidgetFinder.Succeeded())
 	{
-		InventoryWidgetClass = WidgetClassFinder.Class;
+		InventoryWidgetClass = InventoryWidgetFinder.Class;
+	}
+	
+	static ConstructorHelpers::FClassFinder<UInventoryHub>  SubmitWidgetFinder(
+		TEXT("/Game/Necromancer/Blueprints/UI/SubmitUI/WBP_SubmitHUB"));
+	if (SubmitWidgetFinder.Succeeded())
+	{
+		SubmitWidgetClass = SubmitWidgetFinder.Class;
 	}
 }
 
@@ -540,6 +549,16 @@ void UNecInventoryComponent::UnequipItem_Internal(EEquipmentSlot Slot)
 	SetEquipmentItem(Slot, nullptr);
 }
 
+void UNecInventoryComponent::Server_EquipItem_Implementation(UItemInstance* EquipItem)
+{
+	EquipItem_Internal(EquipItem);
+}
+
+void UNecInventoryComponent::Server_UnequipItem_Implementation(EEquipmentSlot Slot)
+{
+	UnequipItem_Internal(Slot);
+}
+
 void UNecInventoryComponent::ToggleInventoryUI()
 {
 	APlayerState* PS = Cast<APlayerState>(GetOwner());
@@ -551,14 +570,25 @@ void UNecInventoryComponent::ToggleInventoryUI()
 	APlayerController* PC = Cast<APlayerController>(PawnOwner->GetController());
 	if (!PC) return;
 
-	// 이미 열려있으면 닫기
-	if (InventoryWidget)
+	if (CurrentUIState != EUIState::None &&
+		CurrentUIState != EUIState::Inventory)
 	{
-		InventoryWidget->RemoveFromParent();
-		InventoryWidget = nullptr;
+		return;
+	}
+
+	// 인벤토리가 열려있으면 닫기
+	if (CurrentUIState == EUIState::Inventory)
+	{
+		if (InventoryWidget)
+		{
+			InventoryWidget->RemoveFromParent();
+			InventoryWidget = nullptr;
+		}
 
 		PC->bShowMouseCursor = false;
 		PC->SetInputMode(FInputModeGameOnly());
+
+		CurrentUIState = EUIState::None;
 		return;
 	}
 
@@ -570,20 +600,63 @@ void UNecInventoryComponent::ToggleInventoryUI()
 		{
 			InventoryWidget->SetInventoryComponent(this);
 			InventoryWidget->AddToViewport();
-			//InventoryWidget->SetInventoryComponent(this);
 
 			PC->bShowMouseCursor = true;
 			PC->SetInputMode(FInputModeGameAndUI());
+
+			CurrentUIState = EUIState::Inventory;
 		}
 	}
 }
 
-void UNecInventoryComponent::Server_EquipItem_Implementation(UItemInstance* EquipItem)
+void UNecInventoryComponent::ToggleSubmitUI(UBucketInventoryComponent* bucketcomponent)
 {
-	EquipItem_Internal(EquipItem);
+	APlayerState* PS = Cast<APlayerState>(GetOwner());
+	if (!PS) return;
+
+	APawn* PawnOwner = PS->GetPawn();
+	if (!PawnOwner) return;
+
+	APlayerController* PC = Cast<APlayerController>(PawnOwner->GetController());
+	if (!PC) return;
+
+	if (CurrentUIState != EUIState::None &&
+		CurrentUIState != EUIState::Submit)
+	{
+		return;
+	}
+
+	// Submit UI가 열려있으면 닫기
+	if (CurrentUIState == EUIState::Submit)
+	{
+		if (SubmitWidget)
+		{
+			SubmitWidget->RemoveFromParent();
+			SubmitWidget = nullptr;
+		}
+
+		PC->bShowMouseCursor = false;
+		PC->SetInputMode(FInputModeGameOnly());
+
+		CurrentUIState = EUIState::None;
+		return;
+	}
+
+	// 새로 생성
+	if (SubmitWidgetClass)
+	{
+		SubmitWidget = CreateWidget<USubmitWidgetHub>(PC, SubmitWidgetClass);
+		if (SubmitWidget)
+		{
+			SubmitWidget->SetInventoryComponent(this);
+			SubmitWidget->SetBucketInventoryComponent(bucketcomponent);
+			SubmitWidget->AddToViewport();
+
+			PC->bShowMouseCursor = true;
+			PC->SetInputMode(FInputModeGameAndUI());
+
+			CurrentUIState = EUIState::Submit;
+		}
+	}
 }
 
-void UNecInventoryComponent::Server_UnequipItem_Implementation(EEquipmentSlot Slot)
-{
-	UnequipItem_Internal(Slot);
-}

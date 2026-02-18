@@ -21,9 +21,20 @@ enum class EEquipmentSlot : uint8
 	Default  UMETA(DisplayName = "Default")
 };
 
+UENUM()
+enum class EUIState : uint8
+{
+	None,
+	Inventory,
+	Submit,
+	Shop
+};
+
 class AActor;
 class UItemInstance;
 class UInventoryHub;
+class USubmitWidgetHub;
+class UBucketInventoryComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEquipmentUpdated, AActor*, updateEquipment);
 
@@ -139,15 +150,27 @@ private:
 #pragma endregion
 
 #pragma region UI
+private:
+	EUIState CurrentUIState = EUIState::None;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UInventoryHub> InventoryWidgetClass;
-
-	// 현재 생성된 위젯
 	UPROPERTY()
 	UInventoryHub* InventoryWidget;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<USubmitWidgetHub> SubmitWidgetClass;
+	UPROPERTY()
+	USubmitWidgetHub* SubmitWidget;
+
 public:
 	UFUNCTION(BlueprintCallable)
 	void ToggleInventoryUI();
+
+	UFUNCTION(BlueprintCallable)
+	void ToggleSubmitUI(UBucketInventoryComponent* bucketcomponent);
+	USubmitWidgetHub* GetSubmitWidget() { return SubmitWidget; }
+
 #pragma endregion
 };
