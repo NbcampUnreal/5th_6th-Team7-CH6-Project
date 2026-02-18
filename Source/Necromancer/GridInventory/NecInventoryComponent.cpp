@@ -1,15 +1,18 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "GridInventory/NecInventoryComponent.h"
-#include "Net/UnrealNetwork.h"
+
+#include "GridInventory/ItemData/ItemDataSubsystem.h"
 #include "GridInventory/ItemInstance/ItemInstance.h"
 #include "GridInventory/ItemInstance/ItemInstanceComponent.h"
-#include "GridInventory/ItemData/ItemDataSubsystem.h"
-#include "GameFramework/Character.h"
-#include "Engine/ActorChannel.h"
 #include "UI/InventoryHub.h"
+
+#include "Engine/ActorChannel.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/PlayerState.h"
+
+#include "Net/UnrealNetwork.h"
 
 bool ItemTypeToEquipmentSlot(
 	EItemType ItemType,
@@ -45,6 +48,12 @@ bool ItemTypeToEquipmentSlot(
 
 UNecInventoryComponent::UNecInventoryComponent()
 {
+	static ConstructorHelpers::FClassFinder<UInventoryHub> WidgetClassFinder(
+		TEXT("/Game/Necromancer/Blueprints/UI/inventory/WBP_InventoryHUB"));
+	if (WidgetClassFinder.Succeeded())
+	{
+		InventoryWidgetClass = WidgetClassFinder.Class;
+	}
 }
 
 inline void UNecInventoryComponent::BeginPlay()
@@ -52,12 +61,16 @@ inline void UNecInventoryComponent::BeginPlay()
 	Super::BeginPlay();
 	if (GetOwner()->HasAuthority())
 	{
-		DefaultContainer = NewObject<UItemInstance>(this);
-		DefaultContainer->InitializeIdentity(
-			FName("TempBag")
-		);
+		TArray<UItemInstance*> InItems;
+		GetInventory(InItems);
+		if (InItems.IsEmpty()) {
+			DefaultContainer = NewObject<UItemInstance>(this);
+			DefaultContainer->InitializeIdentity(
+				FName("TempBag")
+			);
 
-		AddRootItem(DefaultContainer);
+			AddRootItem(DefaultContainer);
+		}
 	}
 }
 
@@ -95,6 +108,43 @@ bool UNecInventoryComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBun
 	return WroteSomething;
 }
 
+void UNecInventoryComponent::SetInventory(const TArray<UItemInstance*>& InItems) {
+	Super::SetInventory(InItems);
+	for (UItemInstance* Item : InItems)
+	{
+		if (!IsValid(Item))
+		{
+			continue;
+		}
+
+		if (Item->OwnerItemGuid == FGuid())
+		{		
+			EquipItem(Item);
+		}
+	}
+}
+void UNecInventoryComponent::LoadItemsFromSaveData(const TArray<FItemInstanceSaveData>& LoadItems)
+{
+	Super::LoadItemsFromSaveData(LoadItems);
+}
+void UNecInventoryComponent::LoadEquipment()
+{
+	TArray<UItemInstance*> InItems;
+	GetInventory(InItems);
+	DefaultContainer = InItems[0];
+	for (UItemInstance* Item : InItems)
+	{
+		if (!IsValid(Item))
+		{
+			continue;
+		}
+
+		if (Item->OwnerItemGuid == FGuid())
+		{
+			EquipItem(Item);
+		}
+	}
+}
 void UNecInventoryComponent::AddNecInventory(AActor* NewItemActor)
 {
 	if (!IsValid(NewItemActor))
@@ -185,7 +235,9 @@ void UNecInventoryComponent::AddNecInventory_Internal(AActor* NewItemActor)
 
 void UNecInventoryComponent::DropItemInWorld_Internal(TSubclassOf<AActor> SpawnActor)
 {
-	AActor* OwnerActor = GetOwner();
+	APlayerState* PS = Cast<APlayerState>(GetOwner());
+	if (!PS) return;
+	AActor* OwnerActor = Cast<AActor>(PS->GetPawn());
 	if (!OwnerActor)
 	{
 		return;
@@ -401,7 +453,9 @@ void UNecInventoryComponent::EquipItem_Internal(UItemInstance* EquipItem)
 		return;
 	}
 
-	AActor* OwnerActor = GetOwner();
+	APlayerState* PS = Cast<APlayerState>(GetOwner());
+	if (!PS) return;
+	AActor* OwnerActor = Cast<AActor>(PS->GetPawn());
 	if (!OwnerActor)
 	{
 		return;
@@ -488,10 +542,10 @@ void UNecInventoryComponent::UnequipItem_Internal(EEquipmentSlot Slot)
 
 void UNecInventoryComponent::ToggleInventoryUI()
 {
-	AActor* OwnerActor = GetOwner();
-	if (!OwnerActor) return;
+	APlayerState* PS = Cast<APlayerState>(GetOwner());
+	if (!PS) return;
 
-	APawn* PawnOwner = Cast<APawn>(OwnerActor);
+	APawn* PawnOwner = PS->GetPawn();
 	if (!PawnOwner) return;
 
 	APlayerController* PC = Cast<APlayerController>(PawnOwner->GetController());

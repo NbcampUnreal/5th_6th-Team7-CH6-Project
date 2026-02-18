@@ -54,11 +54,7 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 void ANecPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	InventoryComponent->OnEquipmentUpdated.AddDynamic(
-		CombatComponent,
-		&UCombatComponent::SetCurrentWeapon
-	);
-
+	InventoryComponent->LoadEquipment();
 }
 
 void ANecPlayerCharacter::Tick(float DeltaTime)
@@ -185,7 +181,10 @@ void ANecPlayerCharacter::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 
 	LinkPlayerStateComponents();
+
 }
+
+
 
 void ANecPlayerCharacter::Move(const FInputActionValue& Value)
 {
@@ -402,6 +401,16 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 				StatComponent->OnDeath.AddDynamic(this, &ANecPlayerCharacter::HandleDeath);
 
 				UE_LOG(LogTemp, Warning, TEXT("[Server] Successfully linked Component: %s"), *GetName());
+			}
+		}
+		InventoryComponent = PS->GetInventoryComponent();
+		if (InventoryComponent) {
+			InventoryComponent->OnEquipmentUpdated.AddDynamic(
+				CombatComponent,
+				&UCombatComponent::SetCurrentWeapon
+			);
+			if (HasAuthority())
+			{
 			}
 		}
 	}

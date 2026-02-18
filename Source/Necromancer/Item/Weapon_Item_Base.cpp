@@ -135,9 +135,11 @@ void AWeapon_Item_Base::PerformTrace()
             {
                 HitActors.Add(HitActor);
 
+                float FinalDamage = Damage * CurrentDamageMultiplier;
+
                 UGameplayStatics::ApplyDamage(
                     HitActor,
-                    Damage,
+                    FinalDamage,
                     OwnerPawn->GetController(),
                     this,
                     UDamageType::StaticClass()

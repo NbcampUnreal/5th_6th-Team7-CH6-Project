@@ -36,27 +36,22 @@ void UCombatComponent::Attack()
         return;
     }
 
-    UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
-    if (AttackMontage)
+    UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+    if (!AnimInstance)
     {
-        UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
-        if (AnimInstance && AnimInstance->Montage_IsPlaying(AttackMontage))
-        {
-            return;
-        }
+        return;
+    }
 
-        UStaminaComponent* StaminaComp = OwnerCharacter->GetStaminaComponent();
-        float StaminaCost = CurrentWeapon->GetStaminaCost();
+    if (AnimInstance->Montage_IsPlaying(CurrentWeapon->GetAttackMontage()))
+    {
+        bHasInputBuffer = true;
+    }
+    else
+    {
+        CurrentComboIndex = 0;
+        bHasInputBuffer = false;
 
-        if (StaminaComp && StaminaComp->GetCurrentStamina() < StaminaCost)
-        {
-            return;
-        }
-
-        OwnerCharacter->PlayAnimMontage(AttackMontage);
-        StaminaComp->ConsumeStamina_Predictive(StaminaCost);
-
-        Server_Attack();
+        PlayComboAttack();
     }
 }
 
@@ -114,6 +109,17 @@ void UCombatComponent::DisableWeaponCollision()
     }
 }
 
+void UCombatComponent::CheckComboTransition()
+{
+    if (bHasInputBuffer)
+    {
+        bHasInputBuffer = false;
+        ++CurrentComboIndex;
+
+        PlayComboAttack();
+    }
+}
+
 void UCombatComponent::SetGuard(bool bInGuarding)
 {
     if (bIsGuarding == bInGuarding)
@@ -158,7 +164,37 @@ void UCombatComponent::UpdateGuardVisuals()
     }
 }
 
-void UCombatComponent::Multicast_Attack_Implementation()
+void UCombatComponent::PlayComboAttack()
+{
+    const TArray<FComboActionInfo>& ComboList = CurrentWeapon->GetComboActions();
+    if (!ComboList.IsValidIndex(CurrentComboIndex))
+    {
+        return;
+    }
+
+    float StaminaCost = ComboList[CurrentComboIndex].StaminaCost;
+    UStaminaComponent* StaminaComp = OwnerCharacter->GetStaminaComponent();
+
+    if (StaminaComp && StaminaComp->GetCurrentStamina() >= StaminaCost)
+    {
+        StaminaComp->ConsumeStamina_Predictive(StaminaCost);
+
+        float Multiplier = ComboList[CurrentComboIndex].DamageMultiplier;
+        CurrentWeapon->SetDamageMultiplier(Multiplier);
+
+        UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
+        FName MontageSectionName = ComboList[CurrentComboIndex].MontageSectionName;
+
+        if (AttackMontage)
+        {
+            OwnerCharacter->PlayAnimMontage(AttackMontage, 1.0f, MontageSectionName);
+        }
+
+        Server_Attack(CurrentComboIndex);
+    }
+}
+
+void UCombatComponent::Multicast_Attack_Implementation(int32 ComboIndex)
 {
     if (!OwnerCharacter || !CurrentWeapon)
     {
@@ -170,10 +206,18 @@ void UCombatComponent::Multicast_Attack_Implementation()
         return;
     }
 
+    const TArray<FComboActionInfo>& ComboList = CurrentWeapon->GetComboActions();
+    if (!ComboList.IsValidIndex(ComboIndex))
+    {
+        return;
+    }
+
     UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
+    FName MontageSectionName = ComboList[CurrentComboIndex].MontageSectionName;
+
     if (AttackMontage)
     {
-        OwnerCharacter->PlayAnimMontage(AttackMontage);
+        OwnerCharacter->PlayAnimMontage(AttackMontage, 1.0f, MontageSectionName);
     }
 }
 
@@ -181,32 +225,29 @@ void UCombatComponent::Server_SetGuard_Implementation(bool bInGuarding)
 {    
     bIsGuarding = bInGuarding;
 
-    if (GetOwnerRole() == ROLE_Authority)
-    {
-        UpdateGuardVisuals();
-    }
+    UpdateGuardVisuals();
 }
 
-void UCombatComponent::Server_Attack_Implementation()
+void UCombatComponent::Server_Attack_Implementation(int32 ComboIndex)
 {
     if (!OwnerCharacter || !CurrentWeapon)
     {
         return;
     }
 
-    UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
-    UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
-
-    if (!OwnerCharacter->IsLocallyControlled() && AttackMontage && AnimInstance && AnimInstance->Montage_IsPlaying(AttackMontage))
+    const TArray<FComboActionInfo>& ComboList = CurrentWeapon->GetComboActions();
+    if (!ComboList.IsValidIndex(ComboIndex))
     {
         return;
     }
-    
-    UStaminaComponent* StaminaComp = OwnerCharacter->GetStaminaComponent();
-    float StaminaCost = CurrentWeapon->GetStaminaCost();
 
-    if (StaminaComp && StaminaComp->ConsumeStamina(StaminaCost))
+    float StaminaCost = ComboList[CurrentComboIndex].StaminaCost;
+    UStaminaComponent* StaminaComp = OwnerCharacter->GetStaminaComponent();
+
+    if (StaminaComp && StaminaComp->GetCurrentStamina() >= StaminaCost)
     {
-        Multicast_Attack();
+        StaminaComp->ConsumeStamina(StaminaCost);
+
+        Multicast_Attack(ComboIndex);
     }
 }

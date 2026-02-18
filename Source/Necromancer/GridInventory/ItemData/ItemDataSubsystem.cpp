@@ -6,7 +6,7 @@
 UItemDataSubsystem::UItemDataSubsystem()
 {
     static ConstructorHelpers::FObjectFinder<UDataTable> ItemTableFinder(
-        TEXT("/Game/GridTestTable.GridTestTable")
+        TEXT("/Game/Necromancer/Blueprints/Item/DataTable/DT_ItemData.DT_ItemData")
     );
 
     if (ItemTableFinder.Succeeded())

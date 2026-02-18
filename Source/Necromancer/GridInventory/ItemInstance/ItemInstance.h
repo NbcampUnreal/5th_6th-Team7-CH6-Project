@@ -83,6 +83,57 @@ public:
 #pragma endregion
 
 #pragma region Helpers
-
+    FItemInstanceSaveData ToSaveData() const;
+    void LoadFromSaveData(const FItemInstanceSaveData& Data);
 #pragma endregion
+};
+
+
+USTRUCT(BlueprintType)
+struct FItemInstanceSaveData
+{
+    GENERATED_BODY()
+
+public:
+
+    /* =========================
+     * Identity
+     * ========================= */
+
+    UPROPERTY()
+    FGuid InstanceID;
+
+    UPROPERTY()
+    FName ItemID;
+
+
+    /* =========================
+     * State
+     * ========================= */
+
+    UPROPERTY()
+    float CurrentDurability = 0.f;
+
+    UPROPERTY()
+    bool bRotated = false;
+
+
+    /* =========================
+     * Inventory Placement
+     * ========================= */
+
+    UPROPERTY()
+    FGuid OwnerItemGuid;
+
+    UPROPERTY()
+    int32 RowIndex = INDEX_NONE;
+
+    UPROPERTY()
+    int32 SectionIndex = INDEX_NONE;
+
+    UPROPERTY()
+    int32 PosX = INDEX_NONE;
+
+    UPROPERTY()
+    int32 PosY = INDEX_NONE;
 };

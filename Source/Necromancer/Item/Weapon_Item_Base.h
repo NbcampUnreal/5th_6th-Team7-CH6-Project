@@ -10,6 +10,21 @@ class USkeletalMeshComponent;
 class UBoxComponent;
 class USoundBase;
 
+USTRUCT(BlueprintType)
+struct FComboActionInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName MontageSectionName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float StaminaCost;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DamageMultiplier = 1.0f;
+};
+
 UCLASS(Abstract)
 class NECROMANCER_API AWeapon_Item_Base : public AItemBass
 {
@@ -29,6 +44,11 @@ public:
 	UAnimMontage* GetAttackMontage() const { return AttackMontage; }
 	float GetDamage() const { return Damage; }
 	float GetStaminaCost() const { return StaminaCost; }
+
+	const TArray<FComboActionInfo>& GetComboActions() const { return ComboActions; }
+	int32 GetMaxComboCount() const { return ComboActions.Num(); }
+	
+	void SetDamageMultiplier(float NewMultiplier) { CurrentDamageMultiplier = NewMultiplier; }
 
 protected:
 	void PerformTrace();
@@ -55,6 +75,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float Damage = 10.0f;
 
+	float CurrentDamageMultiplier = 1.0f;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	TObjectPtr<UAnimMontage> AttackMontage;
 
@@ -66,4 +88,7 @@ protected:
 	TArray<AActor*> HitActors;
 
 	FVector LastCenterLocation = FVector::ZeroVector;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Combo")
+	TArray<FComboActionInfo> ComboActions;
 };

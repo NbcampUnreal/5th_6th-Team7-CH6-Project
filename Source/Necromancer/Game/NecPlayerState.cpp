@@ -1,6 +1,9 @@
-#include "Game/NecPlayerState.h"
+﻿#include "Game/NecPlayerState.h"
 #include "Component/StatComponent.h"
 #include "Component/StaminaComponent.h"
+#include "GridInventory/NecInventoryComponent.h"
+
+
 
 ANecPlayerState::ANecPlayerState()
 {
@@ -9,6 +12,9 @@ ANecPlayerState::ANecPlayerState()
 
 	StaminaComponent = CreateDefaultSubobject<UStaminaComponent>(TEXT("StaminaComponent"));
 	StaminaComponent->SetIsReplicated(true);
+
+	InventoryComponent = CreateDefaultSubobject<UNecInventoryComponent>(TEXT("InventoryComponent"));
+	InventoryComponent->SetIsReplicated(true);
 }
 
 void ANecPlayerState::CopyProperties(APlayerState* PlayerState)
@@ -22,6 +28,11 @@ void ANecPlayerState::CopyProperties(APlayerState* PlayerState)
 		{
 			NewPS->StatComponent->SetCurrentHealth(StatComponent->GetCurrentHealth());
 			// ...
+		}
+		if (NewPS->InventoryComponent) {
+			TArray<UItemInstance*> TempItems;
+			;
+			NewPS->InventoryComponent->LoadItemsFromSaveData(InventoryComponent->GetSavedItems());
 		}
 	}
 }

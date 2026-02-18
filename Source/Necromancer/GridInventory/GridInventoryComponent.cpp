@@ -6,6 +6,7 @@
 #include "GridInventory/ItemInstance/ItemInstance.h"
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
 #include "Engine/ActorChannel.h"
+#include "GameFramework/PlayerState.h"
 
 // Sets default values for this component's properties
 UGridInventoryComponent::UGridInventoryComponent()
@@ -29,7 +30,9 @@ void UGridInventoryComponent::BeginPlay()
         return;
     }
 
-    APawn* OwnerPawn = Cast<APawn>(GetOwner());
+    APlayerState* PS = Cast<APlayerState>(GetOwner());
+    if (!PS) return;    
+    APawn* OwnerPawn = Cast<APawn>(PS->GetPawn());
     if (!OwnerPawn)
     {
         // Pawn이 아니면 기본적으로 비활성 (상자 등)
@@ -76,7 +79,11 @@ bool UGridInventoryComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBu
 void UGridInventoryComponent::RebuildItemOwnerMap()
 {
     ItemsByOwnerGuid.Reset();
-
+    const bool bIsServer = (GetOwner() && GetOwner()->HasAuthority());
+    if (bIsServer)
+    {
+        SavedItems.Reset();
+    }
     for (UItemInstance* Item : Items)
     {
         if (!Item)
@@ -85,7 +92,31 @@ void UGridInventoryComponent::RebuildItemOwnerMap()
         const FGuid& OwnerGuid = Item->OwnerItemGuid;
 
         ItemsByOwnerGuid.FindOrAdd(OwnerGuid).Add(Item);
+
+        if (bIsServer)
+        {
+            SavedItems.Add(Item->ToSaveData());
+        }
     }
+}
+
+void UGridInventoryComponent::LoadItemsFromSaveData(const TArray<FItemInstanceSaveData>& LoadItems)
+{
+    Items.Reset();
+
+    for (const FItemInstanceSaveData& Data : LoadItems)
+    {
+        UItemInstance* NewItem = NewObject<UItemInstance>(this);
+        if (!NewItem)
+            continue;
+
+        NewItem->LoadFromSaveData(Data);
+
+        Items.Add(NewItem);
+    }
+
+    // 캐시 재구성 필요하면
+    RebuildItemOwnerMap();
 }
 
 void UGridInventoryComponent::OnRep_Items()
@@ -106,23 +137,6 @@ void UGridInventoryComponent::HandleItemChanged(UItemInstance* Item)
 void UGridInventoryComponent::SetInventory(const TArray<UItemInstance*>& InItems) {
     Items = InItems;
     RebuildItemOwnerMap();
-
-    /*void AMyCharacter::PossessedBy(AController * NewController)
-    {
-        Super::PossessedBy(NewController);
-
-        if (HasAuthority())
-        {
-            if (AMyPlayerState* PS = GetPlayerState<AMyPlayerState>())
-            {
-                if (UGridInventoryComponent* Inv =
-                    FindComponentByClass<UGridInventoryComponent>())
-                {
-                    Inv->SetInventory(PS->Items);
-                }
-            }
-        }
-    }*/
 }
 
 void UGridInventoryComponent::GetInventory(TArray<UItemInstance*>& OutItems) const
@@ -407,8 +421,8 @@ void UGridInventoryComponent::Implement_AddRootItem(UItemInstance*& NewItem)
     }
     NewItem->OwnerItemGuid = FGuid();
 
-   RebuildItemOwnerMap();
-   OnInventoryUpdated.Broadcast();
+   //RebuildItemOwnerMap();
+   //OnInventoryUpdated.Broadcast();
 }
 
 void UGridInventoryComponent::Server_AddItemToPos_Implementation(UItemInstance* NewItem, 
@@ -456,8 +470,8 @@ void UGridInventoryComponent::Implement_AddItemToPos(
     NewItem->PosX = InPosX;
     NewItem->PosY = InPosY;
 
-    RebuildItemOwnerMap();
-    OnInventoryUpdated.Broadcast();
+    //RebuildItemOwnerMap();
+    //OnInventoryUpdated.Broadcast();
 }
 
 
@@ -577,6 +591,6 @@ void UGridInventoryComponent::Implement_RemoveItem(UItemInstance*& Item)
     Item->PosX = 0;
     Item->PosY = 0;
 
-    RebuildItemOwnerMap();
-    OnInventoryUpdated.Broadcast();
+    //RebuildItemOwnerMap();
+    //OnInventoryUpdated.Broadcast();
 }

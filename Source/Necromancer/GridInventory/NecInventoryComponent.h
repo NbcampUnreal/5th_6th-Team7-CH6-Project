@@ -50,6 +50,11 @@ private:
 	UItemInstance* DefaultContainer;
 
 public:
+	virtual void SetInventory(const TArray<UItemInstance*>& InItems);
+	virtual void LoadItemsFromSaveData(const TArray<FItemInstanceSaveData>& LoadItems);
+
+	void LoadEquipment();
+
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void AddNecInventory(AActor* NewItemActor);
 

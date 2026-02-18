@@ -68,3 +68,35 @@ void UItemInstance::ClearInventoryPlacement()
     PosX = INDEX_NONE;
     PosY = INDEX_NONE;
 }
+
+FItemInstanceSaveData UItemInstance::ToSaveData() const
+{
+    FItemInstanceSaveData Data;
+
+    Data.InstanceID = InstanceID;
+    Data.ItemID = ItemID;
+    Data.CurrentDurability = CurrentDurability;
+    Data.bRotated = bRotated;
+
+    Data.OwnerItemGuid = OwnerItemGuid;
+    Data.RowIndex = RowIndex;
+    Data.SectionIndex = SectionIndex;
+    Data.PosX = PosX;
+    Data.PosY = PosY;
+
+    return Data;
+}
+
+void UItemInstance::LoadFromSaveData(const FItemInstanceSaveData& Data)
+{
+    InstanceID = Data.InstanceID;
+    ItemID = Data.ItemID;
+    CurrentDurability = Data.CurrentDurability;
+    bRotated = Data.bRotated;
+
+    OwnerItemGuid = Data.OwnerItemGuid;
+    RowIndex = Data.RowIndex;
+    SectionIndex = Data.SectionIndex;
+    PosX = Data.PosX;
+    PosY = Data.PosY;
+}
