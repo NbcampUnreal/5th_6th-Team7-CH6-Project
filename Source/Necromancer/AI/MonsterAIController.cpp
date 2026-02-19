@@ -84,10 +84,23 @@ void AMonsterAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 	if (Stimulus.WasSuccessfullySensed())
 	{
 		GetWorldTimerManager().ClearTimer(LoseTargetTimerHandle);
-		IGenericTeamAgentInterface* GenericTeamAgentInterface = Cast<IGenericTeamAgentInterface>(Actor);
-		if (GenericTeamAgentInterface && GenericTeamAgentInterface->GetGenericTeamId() == FGenericTeamId(TEAM_ID_PLAYER))
+
+		// 타겟 후보 결정: 직접 팀 ID가 없으면 Instigator를 확인
+		AActor* TargetCandidate = Actor;
+		IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(Actor);
+		if (!TeamAgent)
 		{
-			SetTargetActor(Actor);
+			APawn* InstigatorPawn = Actor->GetInstigator();
+			if (InstigatorPawn)
+			{
+				TeamAgent = Cast<IGenericTeamAgentInterface>(InstigatorPawn);
+				TargetCandidate = InstigatorPawn;
+			}
+		}
+
+		if (TeamAgent && TeamAgent->GetGenericTeamId() == FGenericTeamId(TEAM_ID_PLAYER))
+		{
+			SetTargetActor(TargetCandidate);
 
 			// 귀환 취소
 			if (UBlackboardComponent* BB = GetBlackboardComponent())
