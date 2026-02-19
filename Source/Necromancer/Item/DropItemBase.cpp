@@ -38,9 +38,15 @@ void ADropItemBase::Interact_Implementation(AActor* Interactor)
     {
         return;
     }
+
     if (!HasAuthority())
     {
-        Server_Interact(Interactor);
+        ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(Interactor);
+        if (!PlayerCharacter)
+        {
+            return;
+        }
+        PlayerCharacter->Server_Interact(this);
     }
     else {
         Interact_Internal(Interactor);
@@ -54,6 +60,8 @@ void ADropItemBase::Server_Interact_Implementation(AActor* Interactor)
 
 void ADropItemBase::Interact_Internal(AActor* Interactor)
 {
+
+    Super::Interact_Internal(Interactor);
     ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(Interactor);
     if (!PlayerCharacter)
     {
@@ -68,6 +76,8 @@ void ADropItemBase::Interact_Internal(AActor* Interactor)
     }
     // 아이템 추가
     if (Inventory->AddItemToInventory(ItemInstanceComponent->GetItemInstance())) {
+        Inventory->Client_UpdateItem();
+
         Destroy();
     }    
 }
