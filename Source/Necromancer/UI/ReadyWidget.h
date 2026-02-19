@@ -18,9 +18,12 @@ class NECROMANCER_API UReadyWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
+
 protected:
 	virtual void NativeConstruct() override;
 
+
+protected:
 	UFUNCTION()
 	void OnStartGameButtonClicked();
 
@@ -35,4 +38,10 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> InviteFriendButton;
+
+protected:
+	void UpdatePlayerControllerCount(int32 PlayerCount);
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> PlayerCountText;
 };
