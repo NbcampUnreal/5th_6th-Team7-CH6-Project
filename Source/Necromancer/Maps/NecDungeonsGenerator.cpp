@@ -50,7 +50,7 @@ USceneComponent* ANecDungeonsGenerator::RandomArrayItemFromArrow(const TArray<US
 	return Array[OutIndex];
 }
 
-void ANecDungeonsGenerator::SpawnStartRoom()
+void ANecDungeonsGenerator::SpawnStartRoom_Implementation()
 {
 	FVector SpawnLocation = GetActorLocation();
 	FRotator SpawnRotation = FRotator::ZeroRotator;
@@ -86,7 +86,7 @@ void ANecDungeonsGenerator::SpawnStartRoom()
 	}
 }
 
-void ANecDungeonsGenerator::SpawnNextRoom()
+void ANecDungeonsGenerator::SpawnNextRoom_Implementation()
 {
 	// ·£´ý Ãâ±¸
 	if (ExitsList.Num() == 0)
