@@ -48,6 +48,36 @@ bool AMonsterBase::GetIsDead()
 	return bIsDead;
 }
 
+void AMonsterBase::ForceCleanupAttackState()
+{
+	if (AAIController* AIC = GetController<AAIController>())
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsBool(FName(NAME_IsAttacking), false);
+		}
+	}
+
+	OnNextComboRequested.Unbind();
+	RestoreMovementIfAlive();
+
+	if (UWorld* World = GetWorld())
+	{
+		if (UMonsterEngagementSubsystem* Engagement = World->GetSubsystem<UMonsterEngagementSubsystem>())
+		{
+			Engagement->ReleaseAllSlotsForMonster(this);
+		}
+	}
+}
+
+void AMonsterBase::RestoreMovementIfAlive()
+{
+	if (!bIsDead)
+	{
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	}
+}
+
 void AMonsterBase::BeginPlay()
 {
 	Super::BeginPlay();
@@ -102,11 +132,7 @@ void AMonsterBase::OnDeath()
 
 	bIsDead = true;
 
-	
-	if (UMonsterEngagementSubsystem* Engagement = GetWorld()->GetSubsystem<UMonsterEngagementSubsystem>())
-	{
-		Engagement->ReleaseAllSlotsForMonster(this);
-	}
+	ForceCleanupAttackState();
 
 	AAIController* AIController = GetController<AAIController>();
 	if (AIController && AIController->GetBrainComponent())
@@ -238,16 +264,13 @@ void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
 	
 	MonsterStatComponent->ApplyPoise(DamageAmount);
 
-	
-	GetCharacterMovement()->StopMovementImmediately();
-	GetCharacterMovement()->DisableMovement();
-
-	
 	if (HitReactMontage)
 	{
+		GetCharacterMovement()->StopMovementImmediately();
+		GetCharacterMovement()->DisableMovement();
+
 		Multicast_PlayMontage(HitReactMontage);
 
-		
 		if (HasAuthority())
 		{
 			if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
@@ -255,6 +278,10 @@ void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
 				FOnMontageEnded EndDelegate;
 				EndDelegate.BindUObject(this, &AMonsterBase::OnHitReactMontageEnded);
 				AnimInstance->Montage_SetEndDelegate(EndDelegate, HitReactMontage);
+			}
+			else
+			{
+				RestoreMovementIfAlive();
 			}
 		}
 	}

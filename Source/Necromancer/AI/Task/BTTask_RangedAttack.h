@@ -18,11 +18,19 @@ public:
 
 protected:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+	virtual void OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult) override;
 
-	
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	TObjectPtr<UAnimMontage> RangedAttackMontage;
 
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	float TimeoutBuffer = 2.0f;
+
 private:
 	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp);
+	void OnSafetyTimeout(UBehaviorTreeComponent* OwnerComp);
+	void CleanupAttackState(UBehaviorTreeComponent* OwnerComp);
+
+	FTimerHandle SafetyTimerHandle;
+	bool bTaskActive = false;
 };

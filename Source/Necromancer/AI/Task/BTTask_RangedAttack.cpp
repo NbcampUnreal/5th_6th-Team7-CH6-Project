@@ -9,12 +9,14 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Necromancer.h"
+#include "TimerManager.h"
 
 UBTTask_RangedAttack::UBTTask_RangedAttack()
 {
 	NodeName = "Ranged Attack";
 	bCreateNodeInstance = true;
 	bNotifyTick = false;
+	bNotifyTaskFinished = true;
 }
 
 EBTNodeResult::Type UBTTask_RangedAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -31,7 +33,6 @@ EBTNodeResult::Type UBTTask_RangedAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 		return EBTNodeResult::Failed;
 	}
 
-	// 쿨타임 체크
 	UMonsterStatComponent* StatComp = Character->FindComponentByClass<UMonsterStatComponent>();
 	if (StatComp && !StatComp->CanAttack())
 	{
@@ -50,7 +51,6 @@ EBTNodeResult::Type UBTTask_RangedAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 		return EBTNodeResult::Failed;
 	}
 
-	// 공격 중 이동 정지
 	Character->GetCharacterMovement()->StopMovementImmediately();
 	Character->GetCharacterMovement()->DisableMovement();
 
@@ -63,26 +63,65 @@ EBTNodeResult::Type UBTTask_RangedAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 	float Duration = RangedAttackMontage ? RangedAttackMontage->GetPlayLength() : 0.0f;
 	if (Duration <= 0.0f)
 	{
+		Character->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 		BB->SetValueAsBool(FName(NAME_IsAttacking), false);
 		return EBTNodeResult::Failed;
 	}
 
 	BB->SetValueAsBool(FName(NAME_IsAttacking), true);
+	bTaskActive = true;
 
-	
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindUObject(this, &UBTTask_RangedAttack::OnMontageEnded, &OwnerComp);
 	AnimInstance->Montage_SetEndDelegate(EndDelegate, RangedAttackMontage);
+
+	if (UWorld* World = Character->GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			SafetyTimerHandle,
+			FTimerDelegate::CreateUObject(this, &UBTTask_RangedAttack::OnSafetyTimeout, &OwnerComp),
+			Duration + TimeoutBuffer,
+			false
+		);
+	}
 
 	return EBTNodeResult::InProgress;
 }
 
 void UBTTask_RangedAttack::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp)
 {
-	if (!OwnerComp)
+	if (!OwnerComp || !bTaskActive)
 	{
 		return;
 	}
+
+	if (AAIController* AIC = OwnerComp->GetAIOwner())
+	{
+		if (APawn* Pawn = AIC->GetPawn())
+		{
+			Pawn->GetWorld()->GetTimerManager().ClearTimer(SafetyTimerHandle);
+		}
+	}
+
+	CleanupAttackState(OwnerComp);
+	FinishLatentTask(*OwnerComp, bInterrupted ? EBTNodeResult::Failed : EBTNodeResult::Succeeded);
+}
+
+void UBTTask_RangedAttack::OnSafetyTimeout(UBehaviorTreeComponent* OwnerComp)
+{
+	if (!OwnerComp || !bTaskActive)
+	{
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[BTTask_RangedAttack] Safety timeout - forcing cleanup"));
+	CleanupAttackState(OwnerComp);
+	FinishLatentTask(*OwnerComp, EBTNodeResult::Failed);
+}
+
+void UBTTask_RangedAttack::CleanupAttackState(UBehaviorTreeComponent* OwnerComp)
+{
+	bTaskActive = false;
 
 	UBlackboardComponent* BB = OwnerComp->GetBlackboardComponent();
 	if (BB)
@@ -90,34 +129,55 @@ void UBTTask_RangedAttack::OnMontageEnded(UAnimMontage* Montage, bool bInterrupt
 		BB->SetValueAsBool(FName(NAME_IsAttacking), false);
 	}
 
-	// 공격 완료 시 이동 복구 + 슬롯 반환 + 쿨타임 마킹
 	if (AAIController* AIC = OwnerComp->GetAIOwner())
 	{
 		if (APawn* Pawn = AIC->GetPawn())
 		{
-			if (ACharacter* Char = Cast<ACharacter>(Pawn))
+			if (AMonsterBase* Monster = Cast<AMonsterBase>(Pawn))
+			{
+				Monster->RestoreMovementIfAlive();
+			}
+			else if (ACharacter* Char = Cast<ACharacter>(Pawn))
 			{
 				Char->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 			}
-			// 쿨타임 마킹
+
 			if (UMonsterStatComponent* StatComp = Pawn->FindComponentByClass<UMonsterStatComponent>())
 			{
 				StatComp->MarkAttackUsed();
 			}
 
-			if (UWorld* World = Pawn->GetWorld())
+			if (BB)
 			{
-				if (UMonsterEngagementSubsystem* Engagement = World->GetSubsystem<UMonsterEngagementSubsystem>())
+				if (UWorld* World = Pawn->GetWorld())
 				{
-					AActor* Target = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
-					if (Target)
+					if (UMonsterEngagementSubsystem* Engagement = World->GetSubsystem<UMonsterEngagementSubsystem>())
 					{
-						Engagement->ReleaseAttackSlot(Pawn, Target);
+						AActor* Target = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
+						if (Target)
+						{
+							Engagement->ReleaseAttackSlot(Pawn, Target);
+						}
 					}
 				}
 			}
 		}
 	}
+}
 
-	FinishLatentTask(*OwnerComp, bInterrupted ? EBTNodeResult::Failed : EBTNodeResult::Succeeded);
+void UBTTask_RangedAttack::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult)
+{
+	if (bTaskActive)
+	{
+		if (AAIController* AIC = OwnerComp.GetAIOwner())
+		{
+			if (APawn* Pawn = AIC->GetPawn())
+			{
+				Pawn->GetWorld()->GetTimerManager().ClearTimer(SafetyTimerHandle);
+			}
+		}
+		CleanupAttackState(&OwnerComp);
+	}
+
+	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
 }

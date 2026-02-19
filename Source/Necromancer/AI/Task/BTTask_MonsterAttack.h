@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -11,17 +11,25 @@ UCLASS()
 class NECROMANCER_API UBTTask_MonsterAttack : public UBTTaskNode
 {
 	GENERATED_BODY()
-	
+
 public:
 	UBTTask_MonsterAttack();
-	
+
 protected:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-	
+	virtual void OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult) override;
+
 	UPROPERTY(EditAnywhere,Category="Attack")
 	TObjectPtr<UAnimMontage> AttackMontage;
-	
+
+	UPROPERTY(EditAnywhere, Category="Attack")
+	float TimeoutBuffer = 2.0f;
+
 private:
-	// 몽타주 종료 콜백
 	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp);
+	void OnSafetyTimeout(UBehaviorTreeComponent* OwnerComp);
+	void CleanupAttackState(UBehaviorTreeComponent* OwnerComp);
+
+	FTimerHandle SafetyTimerHandle;
+	bool bTaskActive = false;
 };

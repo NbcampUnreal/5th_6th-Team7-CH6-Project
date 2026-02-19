@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "BTTask_MonsterAttack.h"
@@ -10,32 +10,30 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "TimerManager.h"
 
 UBTTask_MonsterAttack::UBTTask_MonsterAttack()
 {
 	NodeName = "Monster Attack";
 	bCreateNodeInstance = true;
 	bNotifyTick = false;
+	bNotifyTaskFinished = true;
 }
 
 EBTNodeResult::Type UBTTask_MonsterAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	
-	
-	
 	AAIController* AIC = OwnerComp.GetAIOwner();
 	if (!AIC)
 	{
 		return EBTNodeResult::Failed;
 	}
-	
+
 	ACharacter* Character = Cast<ACharacter>(AIC->GetPawn());
 	if (!Character)
 	{
 		return EBTNodeResult::Failed;
 	}
 
-	// 쿨타임 체크
 	UMonsterStatComponent* StatComp = Character->FindComponentByClass<UMonsterStatComponent>();
 	if (StatComp && !StatComp->CanAttack())
 	{
@@ -52,8 +50,7 @@ EBTNodeResult::Type UBTTask_MonsterAttack::ExecuteTask(UBehaviorTreeComponent& O
 	{
 		return EBTNodeResult::Failed;
 	}
-	
-	// 공격 중 이동 정지
+
 	Character->GetCharacterMovement()->StopMovementImmediately();
 	Character->GetCharacterMovement()->DisableMovement();
 
@@ -66,61 +63,120 @@ EBTNodeResult::Type UBTTask_MonsterAttack::ExecuteTask(UBehaviorTreeComponent& O
 	float Duration = AttackMontage ? AttackMontage->GetPlayLength() : 0.0f;
 	if (Duration <= 0.0f)
 	{
-		BB->SetValueAsBool(FName("IsAttacking"), false);
+		Character->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		BB->SetValueAsBool(FName(NAME_IsAttacking), false);
 		return EBTNodeResult::Failed;
 	}
-	BB->SetValueAsBool(FName("IsAttacking"), true);
-	
+	BB->SetValueAsBool(FName(NAME_IsAttacking), true);
+	bTaskActive = true;
+
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindUObject(this,&UBTTask_MonsterAttack::OnMontageEnded,&OwnerComp);
 	AnimInstance->Montage_SetEndDelegate(EndDelegate,AttackMontage);
-	
+
+	if (UWorld* World = Character->GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			SafetyTimerHandle,
+			FTimerDelegate::CreateUObject(this, &UBTTask_MonsterAttack::OnSafetyTimeout, &OwnerComp),
+			Duration + TimeoutBuffer,
+			false
+		);
+	}
+
 	return EBTNodeResult::InProgress;
-	
-	
 }
 
 void UBTTask_MonsterAttack::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp)
 {
-	if (!OwnerComp)
+	if (!OwnerComp || !bTaskActive)
 	{
 		return;
 	}
 
-	UBlackboardComponent* BB = OwnerComp->GetBlackboardComponent();
-	if (BB)
-	{
-		BB->SetValueAsBool(FName("IsAttacking"), false);
-	}
-
-	// 공격 완료 시 이동 복구 + 슬롯 반환 + 쿨타임 마킹
 	if (AAIController* AIC = OwnerComp->GetAIOwner())
 	{
 		if (APawn* Pawn = AIC->GetPawn())
 		{
-			if (ACharacter* Char = Cast<ACharacter>(Pawn))
+			Pawn->GetWorld()->GetTimerManager().ClearTimer(SafetyTimerHandle);
+		}
+	}
+
+	CleanupAttackState(OwnerComp);
+	FinishLatentTask(*OwnerComp, bInterrupted ? EBTNodeResult::Failed : EBTNodeResult::Succeeded);
+}
+
+void UBTTask_MonsterAttack::OnSafetyTimeout(UBehaviorTreeComponent* OwnerComp)
+{
+	if (!OwnerComp || !bTaskActive)
+	{
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[BTTask_MonsterAttack] Safety timeout - forcing cleanup"));
+	CleanupAttackState(OwnerComp);
+	FinishLatentTask(*OwnerComp, EBTNodeResult::Failed);
+}
+
+void UBTTask_MonsterAttack::CleanupAttackState(UBehaviorTreeComponent* OwnerComp)
+{
+	bTaskActive = false;
+
+	UBlackboardComponent* BB = OwnerComp->GetBlackboardComponent();
+	if (BB)
+	{
+		BB->SetValueAsBool(FName(NAME_IsAttacking), false);
+	}
+
+	if (AAIController* AIC = OwnerComp->GetAIOwner())
+	{
+		if (APawn* Pawn = AIC->GetPawn())
+		{
+			if (AMonsterBase* Monster = Cast<AMonsterBase>(Pawn))
+			{
+				Monster->RestoreMovementIfAlive();
+			}
+			else if (ACharacter* Char = Cast<ACharacter>(Pawn))
 			{
 				Char->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 			}
-			// 쿨타임 마킹
+
 			if (UMonsterStatComponent* StatComp = Pawn->FindComponentByClass<UMonsterStatComponent>())
 			{
 				StatComp->MarkAttackUsed();
 			}
 
-			if (UWorld* World = Pawn->GetWorld())
+			if (BB)
 			{
-				if (UMonsterEngagementSubsystem* Engagement = World->GetSubsystem<UMonsterEngagementSubsystem>())
+				if (UWorld* World = Pawn->GetWorld())
 				{
-					AActor* Target = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
-					if (Target)
+					if (UMonsterEngagementSubsystem* Engagement = World->GetSubsystem<UMonsterEngagementSubsystem>())
 					{
-						Engagement->ReleaseAttackSlot(Pawn, Target);
+						AActor* Target = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
+						if (Target)
+						{
+							Engagement->ReleaseAttackSlot(Pawn, Target);
+						}
 					}
 				}
 			}
 		}
 	}
+}
 
-	FinishLatentTask(*OwnerComp, bInterrupted ? EBTNodeResult::Failed : EBTNodeResult::Succeeded);
+void UBTTask_MonsterAttack::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult)
+{
+	if (bTaskActive)
+	{
+		if (AAIController* AIC = OwnerComp.GetAIOwner())
+		{
+			if (APawn* Pawn = AIC->GetPawn())
+			{
+				Pawn->GetWorld()->GetTimerManager().ClearTimer(SafetyTimerHandle);
+			}
+		}
+		CleanupAttackState(&OwnerComp);
+	}
+
+	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
 }

@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "BTTask_MonsterComboAttack.h"
@@ -6,14 +6,17 @@
 #include "AIController.h"
 #include "MonsterBase.h"
 #include "MonsterStatComponent.h"
+#include "Necromancer.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "TimerManager.h"
 
 UBTTask_MonsterComboAttack::UBTTask_MonsterComboAttack()
 {
     NodeName = "Monster Combo Attack";
     bCreateNodeInstance = true;
+    bNotifyTaskFinished = true;
 }
 
 EBTNodeResult::Type UBTTask_MonsterComboAttack::ExecuteTask(
@@ -36,34 +39,57 @@ EBTNodeResult::Type UBTTask_MonsterComboAttack::ExecuteTask(
         return EBTNodeResult::Failed;
     }
 
-    // 쿨타임 체크
     UMonsterStatComponent* StatComp = Character->FindComponentByClass<UMonsterStatComponent>();
     if (StatComp && !StatComp->CanAttack())
     {
         return EBTNodeResult::Failed;
     }
 
-    // 공격 중 이동 정지
     Character->GetCharacterMovement()->StopMovementImmediately();
     Character->GetCharacterMovement()->DisableMovement();
 
     CurrentComboIndex = 0;
     bComboTransitioning = false;
+    bTaskActive = true;
     CachedOwnerComp = &OwnerComp;
     CachedCharacter = Character;
 
     if (UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent())
     {
-        BB->SetValueAsBool(FName("IsAttacking"), true);
+        BB->SetValueAsBool(FName(NAME_IsAttacking), true);
     }
 
-    // 델리게이트 바인딩 — 노티파이가 호출하면 HandleNextCombo 즉시 실행
     if (AMonsterBase* Monster = Cast<AMonsterBase>(Character))
     {
         Monster->OnNextComboRequested.BindUObject(this, &UBTTask_MonsterComboAttack::HandleNextCombo);
     }
 
     PlayNextCombo();
+
+    // 전체 콤보 시간 + 버퍼로 타임아웃 설정
+    float TotalDuration = 0.0f;
+    int32 MaxCombo = ComboData->GetMaxComboCount();
+    for (int32 i = 0; i < MaxCombo; ++i)
+    {
+        if (const FComboAttackData* Data = ComboData->GetComboData(i))
+        {
+            if (Data->AttackMontage)
+            {
+                TotalDuration += Data->AttackMontage->GetPlayLength();
+            }
+        }
+    }
+    TotalDuration += TimeoutBufferPerHit * MaxCombo;
+
+    if (UWorld* World = Character->GetWorld())
+    {
+        World->GetTimerManager().SetTimer(
+            SafetyTimerHandle,
+            FTimerDelegate::CreateUObject(this, &UBTTask_MonsterComboAttack::OnSafetyTimeout),
+            TotalDuration,
+            false
+        );
+    }
 
     return EBTNodeResult::InProgress;
 }
@@ -81,54 +107,71 @@ void UBTTask_MonsterComboAttack::HandleNextCombo()
         return;
     }
 
-    // 콤보 전환 중 표시 — OnMontageEnded에서 해제
     bComboTransitioning = true;
-
     PlayNextCombo();
 }
 
 void UBTTask_MonsterComboAttack::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-    if (!CachedOwnerComp)
+    if (!CachedOwnerComp || !bTaskActive)
     {
         return;
     }
 
-    // 콤보 전환으로 인한 interrupt → 무시 (HandleNextCombo가 이미 다음 몽타주를 재생함)
     if (bInterrupted && bComboTransitioning)
     {
         bComboTransitioning = false;
         return;
     }
 
-    // 외부 중단 (Stagger, Stun 등)
     if (bInterrupted)
     {
         FinishCombo(EBTNodeResult::Failed);
         return;
     }
 
-    // 자연 종료 — 콤보 끝
     FinishCombo(EBTNodeResult::Succeeded);
 }
 
 void UBTTask_MonsterComboAttack::FinishCombo(EBTNodeResult::Type Result)
 {
-    // 델리게이트 언바인드
+    if (!bTaskActive)
+    {
+        return;
+    }
+    bTaskActive = false;
+
+    if (CachedCharacter)
+    {
+        if (UWorld* World = CachedCharacter->GetWorld())
+        {
+            World->GetTimerManager().ClearTimer(SafetyTimerHandle);
+        }
+    }
+
     if (AMonsterBase* Monster = Cast<AMonsterBase>(CachedCharacter))
     {
         Monster->OnNextComboRequested.Unbind();
     }
 
-    if (UBlackboardComponent* BB = CachedOwnerComp->GetBlackboardComponent())
+    if (CachedOwnerComp)
     {
-        BB->SetValueAsBool(FName("IsAttacking"), false);
+        if (UBlackboardComponent* BB = CachedOwnerComp->GetBlackboardComponent())
+        {
+            BB->SetValueAsBool(FName(NAME_IsAttacking), false);
+        }
     }
 
-    // 이동 복구 + 쿨타임 마킹
     if (CachedCharacter)
     {
-        CachedCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+        if (AMonsterBase* Monster = Cast<AMonsterBase>(CachedCharacter))
+        {
+            Monster->RestoreMovementIfAlive();
+        }
+        else
+        {
+            CachedCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+        }
 
         if (UMonsterStatComponent* StatComp = CachedCharacter->FindComponentByClass<UMonsterStatComponent>())
         {
@@ -136,25 +179,31 @@ void UBTTask_MonsterComboAttack::FinishCombo(EBTNodeResult::Type Result)
         }
     }
 
-    FinishLatentTask(*CachedOwnerComp, Result);
+    if (CachedOwnerComp)
+    {
+        FinishLatentTask(*CachedOwnerComp, Result);
+    }
 }
 
 void UBTTask_MonsterComboAttack::PlayNextCombo()
 {
     if (!CachedCharacter || !ComboData)
     {
+        FinishCombo(EBTNodeResult::Failed);
         return;
     }
 
     const FComboAttackData* AttackData = ComboData->GetComboData(CurrentComboIndex);
     if (!AttackData || !AttackData->AttackMontage)
     {
+        FinishCombo(EBTNodeResult::Failed);
         return;
     }
 
     UAnimInstance* AnimInstance = CachedCharacter->GetMesh()->GetAnimInstance();
     if (!AnimInstance)
     {
+        FinishCombo(EBTNodeResult::Failed);
         return;
     }
 
@@ -163,14 +212,31 @@ void UBTTask_MonsterComboAttack::PlayNextCombo()
     {
         Monster->Multicast_PlayMontage(AttackData->AttackMontage);
     }
-    
+
     float Duration = AttackData->AttackMontage->GetPlayLength();
     if (Duration <= 0.0f)
     {
+        FinishCombo(EBTNodeResult::Failed);
         return;
     }
 
     FOnMontageEnded EndDelegate;
     EndDelegate.BindUObject(this, &UBTTask_MonsterComboAttack::OnMontageEnded);
     AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackData->AttackMontage);
+}
+
+void UBTTask_MonsterComboAttack::OnSafetyTimeout()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[BTTask_MonsterComboAttack] Safety timeout - forcing cleanup"));
+    FinishCombo(EBTNodeResult::Failed);
+}
+
+void UBTTask_MonsterComboAttack::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult)
+{
+    if (bTaskActive)
+    {
+        FinishCombo(EBTNodeResult::Failed);
+    }
+
+    Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
 }

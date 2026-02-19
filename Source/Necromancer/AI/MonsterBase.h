@@ -44,6 +44,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool GetIsDead();
 
+	// 공격 상태 강제 정리
+	UFUNCTION(BlueprintCallable, Category = "AI")
+	void ForceCleanupAttackState();
+
+	void RestoreMovementIfAlive();
+
 protected:
 
 	virtual void BeginPlay() override;
