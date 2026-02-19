@@ -7,6 +7,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "GenericTeamAgentInterface.h"
 #include "DrawDebugHelpers.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Necromancer.h"
 
 void UAN_MonsterAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,const FAnimNotifyEventReference& EventReference)
@@ -44,6 +45,19 @@ void UAN_MonsterAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBa
 					continue;
 				}
 				UGameplayStatics::ApplyDamage(HitActor,MonsterStatComponent->GetAttackPower(),OwnerActor->GetInstigatorController(),OwnerActor,nullptr);
+
+				// 히트 이펙트 (사운드 + 파티클)
+				FVector HitLocation = Hit.ImpactPoint;
+
+				if (HitSound)
+				{
+					UGameplayStatics::PlaySoundAtLocation(OwnerActor, HitSound, HitLocation);
+				}
+
+				if (HitParticle)
+				{
+					UNiagaraFunctionLibrary::SpawnSystemAtLocation(OwnerActor, HitParticle, HitLocation, FRotator::ZeroRotator, HitParticleScale);
+				}
 			}
 		}
 	}

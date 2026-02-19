@@ -18,3 +18,7 @@
 #define NAME_IsTooClose "IsTooClose"
 #define NAME_IsAttacking "IsAttacking"
 #define NAME_HasAttackSlot "HasAttackSlot"
+
+// Leash (스폰 귀환)
+#define NAME_SpawnLocation "SpawnLocation"
+#define NAME_ShouldReturnToSpawn "ShouldReturnToSpawn"

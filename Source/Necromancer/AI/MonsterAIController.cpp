@@ -36,9 +36,17 @@ void AMonsterAIController::BeginPlay()
 	if (ensureMsgf(BehaviorTree, TEXT("BehaviorTree is nullptr")))
 	{
 		RunBehaviorTree(BehaviorTree);
+
+		// 스폰 위치 저장
+		if (UBlackboardComponent* BB = GetBlackboardComponent())
+		{
+			if (APawn* MyPawn = GetPawn())
+			{
+				BB->SetValueAsVector(FName(NAME_SpawnLocation), MyPawn->GetActorLocation());
+			}
+		}
 	}
-	
-	
+
 }
 void AMonsterAIController::SetTargetActor(AActor* NewTarget)
 {

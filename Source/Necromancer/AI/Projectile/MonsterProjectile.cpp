@@ -75,5 +75,10 @@ void AMonsterProjectile::OnActorHit(UPrimitiveComponent* HitComponent, AActor* O
 
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ExplosionEffect, GetActorLocation());
 
+	if (HitSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
+	}
+
 	Destroy();
 }

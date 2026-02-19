@@ -30,6 +30,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	TObjectPtr<UNiagaraSystem> ExplosionEffect;
 
+	// 히트 시 재생할 사운드
+	UPROPERTY(EditDefaultsOnly, Category = "Effect")
+	TObjectPtr<USoundBase> HitSound;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	TObjectPtr<USphereComponent> SphereComponent;
 

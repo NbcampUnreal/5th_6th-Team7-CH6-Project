@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "NiagaraFunctionLibrary.h"
 
 void UANS_MonsterAttackTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
@@ -99,6 +100,19 @@ void UANS_MonsterAttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnim
 			HitActors.Add(HitActor);
 
 			UGameplayStatics::ApplyDamage(HitActor,StatComp->GetAttackPower(),OwnerActor->GetInstigatorController(),OwnerActor,nullptr);
+
+			// 히트 이펙트 (사운드 + 파티클)
+			FVector HitLocation = Hit.ImpactPoint;
+
+			if (HitSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(OwnerActor, HitSound, HitLocation);
+			}
+
+			if (HitParticle)
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(OwnerActor, HitParticle, HitLocation, FRotator::ZeroRotator, HitParticleScale);
+			}
 		}
 	}
 

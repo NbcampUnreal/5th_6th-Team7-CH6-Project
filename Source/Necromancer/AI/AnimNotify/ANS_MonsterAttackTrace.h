@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotifyState.h"
+#include "NiagaraSystem.h"
 #include "ANS_MonsterAttackTrace.generated.h"
 
 UCLASS(meta = (DisplayName = "Monster Attack Trace"))
@@ -34,6 +35,18 @@ protected:
 	// 디버그 트레이스 표시
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace")
 	bool bShowDebugTrace = false;
+
+	// 히트 시 재생할 사운드
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hit Effect")
+	USoundBase* HitSound = nullptr;
+
+	// 히트 시 스폰할 나이아가라 파티클
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hit Effect")
+	UNiagaraSystem* HitParticle = nullptr;
+
+	// 파티클 스케일
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hit Effect")
+	FVector HitParticleScale = FVector(1.0f);
 
 private:
 	FVector LastCenterLocation;
