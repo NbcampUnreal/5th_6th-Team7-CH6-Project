@@ -111,7 +111,7 @@ void AInteractableActor::OnSphereOverlap(UPrimitiveComponent* OverlappedComp,
 	{
 		ANecPlayerCharacter* Player = Cast<ANecPlayerCharacter>(OtherActor);
 		//부탁
-		//Player->SetInteractTarget(this);
+		Player->SetInteractTarget(this);
 	}
 }
 
@@ -126,7 +126,7 @@ void AInteractableActor::OnSphereEnd(UPrimitiveComponent* OverlappedComp,
 	{
 		ANecPlayerCharacter* Player = Cast<ANecPlayerCharacter>(OtherActor);
 		//부탁
-		//Player->ClearInteractTarget(this);
+		Player->ClearInteractTarget(this);
 	}
 }
 

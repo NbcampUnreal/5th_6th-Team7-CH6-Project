@@ -420,7 +420,7 @@ void UGridInventoryComponent::Implement_AddRootItem(UItemInstance*& NewItem)
         Items.Add(NewItem);
     }
     NewItem->OwnerItemGuid = FGuid();
-
+   
    //RebuildItemOwnerMap();
    //OnInventoryUpdated.Broadcast();
 }

@@ -11,6 +11,7 @@
 ADropItemBase::ADropItemBase()
 {
     ItemInstanceComponent = CreateDefaultSubobject<UItemInstanceComponent>(TEXT("ItemInstanceComponent"));
+    bReplicates = true;
 }
 
 inline void ADropItemBase::BeginPlay()
@@ -50,8 +51,13 @@ void ADropItemBase::Interact_Implementation(AActor* Interactor)
     {
         return;
     }
-
-    Server_Interact(Inventory);
+    if (!HasAuthority())
+    {
+        Server_Interact(Inventory);
+    }
+    else {
+        Interact_Internal(Inventory);
+    }
 }
 
 void ADropItemBase::Server_Interact_Implementation(UNecInventoryComponent* Inventory)
@@ -62,9 +68,9 @@ void ADropItemBase::Server_Interact_Implementation(UNecInventoryComponent* Inven
 void ADropItemBase::Interact_Internal(UNecInventoryComponent* Inventory)
 {
     // 아이템 추가
-    Inventory->AddItemToInventory(ItemInstanceComponent->GetItemInstance());
-
-    Destroy();
+    if (Inventory->AddItemToInventory(ItemInstanceComponent->GetItemInstance())) {
+        Destroy();
+    }    
 }
 
 

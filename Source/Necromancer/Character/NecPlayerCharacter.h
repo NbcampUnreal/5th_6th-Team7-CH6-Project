@@ -120,4 +120,17 @@ protected:
 	TObjectPtr<UNecInventoryComponent> InventoryComponent;
 public:
 	AActor* GetCurrentEquipmentActor(EEquipmentSlot Slot);
+
+private:
+	AActor* InteractTarget = nullptr;
+public:
+	void SetInteractTarget(AActor* Target) {
+		InteractTarget = Target;
+	}
+	void ClearInteractTarget(AActor* Target) {
+		if (InteractTarget == Target)
+		{
+			InteractTarget = nullptr;
+		}
+	}
 };

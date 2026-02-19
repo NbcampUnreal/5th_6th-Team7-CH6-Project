@@ -10,6 +10,7 @@
 /**
  * 
  */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnItemUpdated);
 
 UCLASS(BlueprintType)
 class NECROMANCER_API UItemInstance : public UObject
@@ -18,13 +19,22 @@ class NECROMANCER_API UItemInstance : public UObject
 public:
     UItemInstance();
 
+    UPROPERTY(BlueprintAssignable)
+    FOnItemUpdated OnItemUpdated;
+
     virtual bool IsSupportedForNetworking() const override
     {
         return true;
     }
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
+private:
+    UFUNCTION()
+    void OnRep_ItemChanged()
+    {
+        OnItemUpdated.Broadcast();
+    }
+public:
 #pragma region Identity
     UPROPERTY(Replicated, BlueprintReadOnly)
     FGuid InstanceID;
@@ -39,10 +49,10 @@ public:
 #pragma endregion
 
 #pragma region State
-    UPROPERTY(Replicated, BlueprintReadWrite)
+    UPROPERTY(ReplicatedUsing = OnRep_ItemChanged, BlueprintReadWrite)
     float CurrentDurability;
 
-    UPROPERTY(Replicated, BlueprintReadWrite)
+    UPROPERTY(ReplicatedUsing = OnRep_ItemChanged, BlueprintReadWrite)
     bool bRotated;
 
     void SetDurability(float NewDurability);
@@ -56,19 +66,19 @@ public:
 #pragma endregion
 
 #pragma region InventoryPlacement
-    UPROPERTY(Replicated, BlueprintReadOnly)
+    UPROPERTY(ReplicatedUsing = OnRep_ItemChanged, BlueprintReadOnly)
     FGuid OwnerItemGuid;
 
-    UPROPERTY(Replicated, BlueprintReadOnly)
+    UPROPERTY(ReplicatedUsing = OnRep_ItemChanged, BlueprintReadOnly)
     int32 RowIndex;
 
-    UPROPERTY(Replicated, BlueprintReadOnly)
+    UPROPERTY(ReplicatedUsing = OnRep_ItemChanged, BlueprintReadOnly)
     int32 SectionIndex;
 
-    UPROPERTY(Replicated, BlueprintReadOnly)
+    UPROPERTY(ReplicatedUsing = OnRep_ItemChanged, BlueprintReadOnly)
     int32 PosX;
 
-    UPROPERTY(Replicated, BlueprintReadOnly)
+    UPROPERTY(ReplicatedUsing = OnRep_ItemChanged, BlueprintReadOnly)
     int32 PosY;
 
     void SetInventoryPlacement(
