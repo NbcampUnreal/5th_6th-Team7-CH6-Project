@@ -18,12 +18,18 @@ class NECROMANCER_API UReadyWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
+<<<<<<< HEAD
 
 protected:
 	virtual void NativeConstruct() override;
 
 
 protected:
+=======
+protected:
+	virtual void NativeConstruct() override;
+
+>>>>>>> parent of bb740b21 (Merge branch 'dev' into csm)
 	UFUNCTION()
 	void OnStartGameButtonClicked();
 
@@ -38,6 +44,7 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> InviteFriendButton;
+<<<<<<< HEAD
 
 protected:
 	UFUNCTION()
@@ -45,4 +52,6 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> PlayerCountText;
+=======
+>>>>>>> parent of bb740b21 (Merge branch 'dev' into csm)
 };

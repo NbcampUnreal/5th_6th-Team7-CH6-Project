@@ -19,7 +19,10 @@ AWorldActorSpawnManager::AWorldActorSpawnManager()
 void AWorldActorSpawnManager::BeginPlay()
 {
 	Super::BeginPlay();
-	GetWorld()->GetTimerManager().SetTimer(CheckTimerHandle, this, &AWorldActorSpawnManager::CheckDungeonComplete, CheckInterval, true);
+	if (HasAuthority())
+	{
+		GetWorld()->GetTimerManager().SetTimer(CheckTimerHandle, this, &AWorldActorSpawnManager::CheckDungeonComplete, CheckInterval, true);
+	}
 }
 
 void AWorldActorSpawnManager::CheckDungeonComplete()
