@@ -118,8 +118,8 @@ void AWeapon_Item_Base::PerformTrace()
     );
 
     FColor DrawColor = bHit ? FColor::Green : FColor::Red;
-    DrawDebugBox(GetWorld(), LastCenterLocation, BoxHalfExtent, BoxRotation, DrawColor, false, 1.0f);
-    DrawDebugLine(GetWorld(), LastCenterLocation, CurrentCenterLocation, FColor::Yellow, false, 1.0f);
+    //DrawDebugBox(GetWorld(), LastCenterLocation, BoxHalfExtent, BoxRotation, DrawColor, false, 1.0f);
+    //DrawDebugLine(GetWorld(), LastCenterLocation, CurrentCenterLocation, FColor::Yellow, false, 1.0f);
 
     if (bHit)
     {
