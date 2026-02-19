@@ -156,6 +156,13 @@ void AWeapon_Item_Base::PerformTrace()
                     this,
                     UDamageType::StaticClass()
                 );
+
+                FVector HitLocation = Hit.ImpactPoint;
+
+                if (HitSound)
+                {
+                    UGameplayStatics::PlaySoundAtLocation(this, HitSound, HitLocation);
+                }
             }
         }
     }

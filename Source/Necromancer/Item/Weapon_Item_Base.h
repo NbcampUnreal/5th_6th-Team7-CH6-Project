@@ -72,6 +72,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Sound")
 	TObjectPtr<USoundBase> AttackSound;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Sound")
+	TObjectPtr<USoundBase> HitSound;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float Damage = 10.0f;
 
