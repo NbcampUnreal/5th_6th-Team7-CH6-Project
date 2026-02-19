@@ -36,6 +36,7 @@ void UNecAnimInstanceBase::NativeUpdateAnimation(float DeltaSeconds)
 		Direction = 0.0f;
 	}
 
-	bShouldMove = (!OwnerCharacterMovementComponent->GetCurrentAcceleration().IsNearlyZero()) && (5.0f < GroundSpeed);
+	//bShouldMove = (!OwnerCharacterMovementComponent->GetCurrentAcceleration().IsNearlyZero()) && (5.0f < GroundSpeed);
+	bShouldMove = GroundSpeed > 5.0f;
 	bIsFalling = OwnerCharacterMovementComponent->IsFalling();
 }
