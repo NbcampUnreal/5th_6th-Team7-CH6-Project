@@ -104,4 +104,7 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
     int32 Cost;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
+    int32 Rare;
 };
