@@ -32,9 +32,12 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_SessionState)
 	ESessionState SessionState = ESessionState::Waiting;
 
+public:
+	UFUNCTION()
+	void OnRep_SessionState();
 
 public:
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerControllerCount)

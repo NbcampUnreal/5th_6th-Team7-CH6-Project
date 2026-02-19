@@ -13,6 +13,11 @@ void ANecGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(ThisClass, PlayerControllerCount);
 }
 
+void ANecGameState::OnRep_SessionState()
+{
+
+}
+
 void ANecGameState::OnRep_PlayerControllerCount()
 {
 	OnPlayerControllerCountChanged.Broadcast(PlayerControllerCount);

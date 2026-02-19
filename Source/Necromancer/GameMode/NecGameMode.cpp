@@ -28,3 +28,14 @@ void ANecGameMode::PostLogin(APlayerController* NewPlayer)
 		}
 	}
 }
+
+void ANecGameMode::StartGame()
+{
+	ANecGameState* NecGameState = GetGameState<ANecGameState>();
+	if (NecGameState)
+	{
+		
+		NecGameState->SessionState = ESessionState::Playing;
+		NecGameState->OnRep_SessionState();
+	}
+}

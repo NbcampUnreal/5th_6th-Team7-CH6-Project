@@ -22,4 +22,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<TObjectPtr<ANecPlayerController>> PlayerControllers;
+
+public:
+	void StartGame();
 };
