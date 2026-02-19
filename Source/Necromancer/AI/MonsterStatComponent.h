@@ -20,6 +20,7 @@ class NECROMANCER_API UMonsterStatComponent : public UStatComponent
 public:
 	UMonsterStatComponent();
 
+	// 강인도 누적 (경직/기절 판정)
 	UFUNCTION(BlueprintCallable)
 	void ApplyPoise(float Amount);
 
@@ -44,10 +45,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool GetIsRanged() const;
 
-	// 공격 쿨타임
+	// 공격 쿨타임 확인
 	UFUNCTION(BlueprintCallable)
 	bool CanAttack() const;
 
+	// 공격 사용 기록 (쿨타임 시작)
 	UFUNCTION(BlueprintCallable)
 	void MarkAttackUsed();
 

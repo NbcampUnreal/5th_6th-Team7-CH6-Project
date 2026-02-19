@@ -6,9 +6,7 @@
 #include "Animation/AnimNotifies/AnimNotify.h"
 #include "AN_MonsterNextAttack.generated.h"
 
-/**
- * 
- */
+// 다음 콤보 공격 트리거 (거리 체크 후 델리게이트 호출)
 UCLASS()
 class NECROMANCER_API UAN_MonsterNextAttack : public UAnimNotify
 {

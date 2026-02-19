@@ -7,9 +7,7 @@
 #include "BTTask_MonsterComboAttack.generated.h"
 
 class UMonsterComboDataAsset;
-/**
- * 
- */
+// 콤보 공격 (DataAsset 기반 연속 몽타주)
 UCLASS()
 class NECROMANCER_API UBTTask_MonsterComboAttack : public UBTTaskNode
 {
@@ -37,7 +35,10 @@ private:
 	bool bComboTransitioning = false;
 
 	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	// 다음 콤보 몽타주 재생
 	void PlayNextCombo();
+	// 콤보 연결 처리 (거리/조건 체크)
 	void HandleNextCombo();
+	// 콤보 종료 및 BT 결과 반환
 	void FinishCombo(EBTNodeResult::Type Result);
 };

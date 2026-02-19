@@ -7,6 +7,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "GenericTeamAgentInterface.h"
 #include "DrawDebugHelpers.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Necromancer.h"
 
 void UAN_MonsterAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,const FAnimNotifyEventReference& EventReference)
@@ -30,20 +31,35 @@ void UAN_MonsterAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBa
 	Params.AddIgnoredActor(OwnerActor);
     
 	bool bHit = OwnerActor->GetWorld()->SweepMultiByChannel(HitResults,AttackStart,AttackEnd,FQuat::Identity,ECC_Pawn,FCollisionShape::MakeSphere(AttackRadius),Params);
-	if (OwnerActor->HasAuthority())  
+
+	for (const FHitResult& Hit : HitResults)
 	{
-		for (const FHitResult& Hit : HitResults)
+		AActor* HitActor = Hit.GetActor();
+
+		if (HitActor)
 		{
-			AActor* HitActor = Hit.GetActor();
-		
-			if (HitActor)
+			IGenericTeamAgentInterface* GenericTeamAgentInterface = Cast<IGenericTeamAgentInterface>(HitActor);
+			if (GenericTeamAgentInterface && GenericTeamAgentInterface -> GetGenericTeamId() == FGenericTeamId(TEAM_ID_MONSTER))
 			{
-				IGenericTeamAgentInterface* GenericTeamAgentInterface = Cast<IGenericTeamAgentInterface>(HitActor);
-				if (GenericTeamAgentInterface && GenericTeamAgentInterface -> GetGenericTeamId() == FGenericTeamId(TEAM_ID_MONSTER))
-				{
-					continue;
-				}
+				continue;
+			}
+
+			// Server Only
+			if (OwnerActor->HasAuthority())
+			{
 				UGameplayStatics::ApplyDamage(HitActor,MonsterStatComponent->GetAttackPower(),OwnerActor->GetInstigatorController(),OwnerActor,nullptr);
+			}
+
+			FVector HitLocation = Hit.ImpactPoint;
+
+			if (HitSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(OwnerActor, HitSound, HitLocation);
+			}
+
+			if (HitParticle)
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(OwnerActor, HitParticle, HitLocation, FRotator::ZeroRotator, HitParticleScale);
 			}
 		}
 	}

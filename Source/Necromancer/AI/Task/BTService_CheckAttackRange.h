@@ -6,9 +6,7 @@
 #include "BehaviorTree/BTService.h"
 #include "BTService_CheckAttackRange.generated.h"
 
-/**
- * 
- */
+// 타겟과의 거리를 체크하여 공격 범위 BB키 갱신
 UCLASS()
 class NECROMANCER_API UBTService_CheckAttackRange : public UBTService
 {
