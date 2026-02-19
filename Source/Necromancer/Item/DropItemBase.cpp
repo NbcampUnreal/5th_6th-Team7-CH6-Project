@@ -38,7 +38,22 @@ void ADropItemBase::Interact_Implementation(AActor* Interactor)
     {
         return;
     }
+    if (!HasAuthority())
+    {
+        Server_Interact(Interactor);
+    }
+    else {
+        Interact_Internal(Interactor);
+    }
+}
 
+void ADropItemBase::Server_Interact_Implementation(AActor* Interactor)
+{
+    Interact_Internal(Interactor);
+}
+
+void ADropItemBase::Interact_Internal(AActor* Interactor)
+{
     ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(Interactor);
     if (!PlayerCharacter)
     {
@@ -51,22 +66,6 @@ void ADropItemBase::Interact_Implementation(AActor* Interactor)
     {
         return;
     }
-    if (!HasAuthority())
-    {
-        Server_Interact(Inventory);
-    }
-    else {
-        Interact_Internal(Inventory);
-    }
-}
-
-void ADropItemBase::Server_Interact_Implementation(UNecInventoryComponent* Inventory)
-{
-    Interact_Internal(Inventory);
-}
-
-void ADropItemBase::Interact_Internal(UNecInventoryComponent* Inventory)
-{
     // 아이템 추가
     if (Inventory->AddItemToInventory(ItemInstanceComponent->GetItemInstance())) {
         Destroy();
