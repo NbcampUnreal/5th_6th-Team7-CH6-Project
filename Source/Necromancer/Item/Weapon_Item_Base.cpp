@@ -106,13 +106,16 @@ void AWeapon_Item_Base::PerformTrace()
     QueryParams.bTraceComplex = false;
     QueryParams.bReturnPhysicalMaterial = false;
 
+    FCollisionObjectQueryParams ObjectQueryParams;
+    ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+
     TArray<FHitResult> HitResults;
-    bool bHit = GetWorld()->SweepMultiByChannel(
+    bool bHit = GetWorld()->SweepMultiByObjectType(
         HitResults,
         LastCenterLocation,
         CurrentCenterLocation,
         BoxRotation,
-        ECC_Pawn,
+        ObjectQueryParams,
         BoxShape,
         QueryParams
     );
@@ -137,6 +140,11 @@ void AWeapon_Item_Base::PerformTrace()
             if (HitActor && !HitActors.Contains(HitActor))
             {
                 IGenericTeamAgentInterface* VictimTeam = Cast<IGenericTeamAgentInterface>(HitActor);
+                if (!VictimTeam)
+                {
+                    continue;
+                }
+
                 if (AttackerTeam && VictimTeam)
                 {
                     if (AttackerTeam->GetGenericTeamId() == VictimTeam->GetGenericTeamId())
