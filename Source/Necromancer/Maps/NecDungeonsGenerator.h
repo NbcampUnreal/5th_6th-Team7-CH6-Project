@@ -21,7 +21,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Reliable, Server, Category = "Room")
 	void SpawnStartRoom();
 
-	// 다음 방 생성 함수
+	// 다음 방 생성 함수 
 	UFUNCTION(BlueprintCallable, Reliable, Server, Category = "Room")
 	void SpawnNextRoom();
 
