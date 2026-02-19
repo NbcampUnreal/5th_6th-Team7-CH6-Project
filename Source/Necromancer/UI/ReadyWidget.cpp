@@ -7,10 +7,7 @@
 #include "Components/TextBlock.h"
 
 #include "GameInstance/NecAFGameInstance.h"
-<<<<<<< HEAD
 #include "Game/NecGameState.h"
-=======
->>>>>>> parent of bb740b21 (Merge branch 'dev' into csm)
 #include "Controller/NecPlayerController.h"
 
 void UReadyWidget::NativeConstruct()
@@ -19,15 +16,12 @@ void UReadyWidget::NativeConstruct()
 
 	StartGameButton->OnClicked.AddDynamic(this, &UReadyWidget::OnStartGameButtonClicked);
 	InviteFriendButton->OnClicked.AddDynamic(this, &UReadyWidget::OnInviteFriendButtonClicked);
-<<<<<<< HEAD
 
 	if (ANecGameState* NecGameState = GetWorld()->GetGameState<ANecGameState>())
 	{
 		NecGameState->OnPlayerControllerCountChanged.AddDynamic(this, &UReadyWidget::UpdatePlayerControllerCount);
 		UpdatePlayerControllerCount(NecGameState->PlayerControllerCount);
 	}
-=======
->>>>>>> parent of bb740b21 (Merge branch 'dev' into csm)
 }
 
 void UReadyWidget::OnStartGameButtonClicked()
@@ -47,7 +41,6 @@ void UReadyWidget::OnInviteFriendButtonClicked()
 		NecAFGameInstance->InviteFriend();
 	}
 }
-<<<<<<< HEAD
 
 void UReadyWidget::UpdatePlayerControllerCount(int32 PlayerCount)
 {
@@ -57,5 +50,3 @@ void UReadyWidget::UpdatePlayerControllerCount(int32 PlayerCount)
 		PlayerCountText->SetText(FText::FromString(PlayerCountString));
 	}
 }
-=======
->>>>>>> parent of bb740b21 (Merge branch 'dev' into csm)

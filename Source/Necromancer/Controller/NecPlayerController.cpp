@@ -2,12 +2,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "UI/InGameHUDWidget.h"
 #include "UI/ReadyWidget.h"
-<<<<<<< HEAD
 
 #include "Kismet/GameplayStatics.h"
 #include "GameMode/NecGameMode.h"
-=======
->>>>>>> parent of bb740b21 (Merge branch 'dev' into csm)
 
 void ANecPlayerController::BeginPlay()
 {
@@ -89,27 +86,20 @@ void ANecPlayerController::OnRep_PlayerState()
 	}
 }
 
-<<<<<<< HEAD
 /// <summary>
 /// Only Host Can call this Function(Using ReadyWidet)
 /// </summary>
-=======
->>>>>>> parent of bb740b21 (Merge branch 'dev' into csm)
 void ANecPlayerController::OnStartGame()
 {
 	if (ReadyWidgetInstance)
 	{
 		ReadyWidgetInstance->RemoveFromParent();
-<<<<<<< HEAD
 	}
 
 	ANecGameMode* NecGameMode = Cast<ANecGameMode>(UGameplayStatics::GetGameMode(this));
 	if (NecGameMode)
 	{
 		NecGameMode->StartGame();
-=======
-
->>>>>>> parent of bb740b21 (Merge branch 'dev' into csm)
 		CreateInGameHUD();
 	}
 }
