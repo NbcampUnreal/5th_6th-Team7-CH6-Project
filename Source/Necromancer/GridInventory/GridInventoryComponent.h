@@ -65,6 +65,9 @@ public:
 
     UFUNCTION(BlueprintCallable)
     bool FindInventoryContainer(FGuid ContainerId, TArray<UItemInstance*>& OutItems);
+
+    UFUNCTION(Client, Reliable)
+    void Client_UpdateItem();
 #pragma region AddItem
 public:
     UFUNCTION(BlueprintCallable)

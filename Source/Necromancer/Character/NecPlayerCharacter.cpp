@@ -21,6 +21,7 @@
 
 
 #include "WorldActor/Interactable.h"
+#include "WorldActor/InteractableActor.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
@@ -319,6 +320,11 @@ void ANecPlayerCharacter::Interact()
 			IInteractable::Execute_Interact(InteractTarget, this);
 		}
 	}
+}
+
+void ANecPlayerCharacter::Server_Interact_Implementation(AActor* Target)
+{
+	Cast<AInteractableActor>(Target)->Interact_Internal(this);
 }
 
 void ANecPlayerCharacter::HandleDeath()

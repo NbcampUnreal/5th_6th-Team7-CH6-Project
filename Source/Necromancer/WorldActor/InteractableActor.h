@@ -104,6 +104,7 @@ public:
 		class AController* EventInstigator, AActor* DamageCauser) override;
 
 	virtual void Interact_Implementation(AActor* Interactor) override;
+	virtual void Interact_Internal(AActor* Interactor) {};
 	virtual void TakeDamage_Implementation(float Damage, AActor* DamageCauser) override;
 
 	virtual void ShowInteractWidget(bool bVisible);

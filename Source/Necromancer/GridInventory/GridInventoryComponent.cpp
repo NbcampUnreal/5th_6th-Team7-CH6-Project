@@ -121,7 +121,7 @@ void UGridInventoryComponent::LoadItemsFromSaveData(const TArray<FItemInstanceSa
 
 void UGridInventoryComponent::OnRep_Items()
 {
-    if (bInventoryActive)
+   // if (bInventoryActive)
     {
         RebuildItemOwnerMap();
         OnInventoryUpdated.Broadcast();
@@ -157,6 +157,12 @@ bool UGridInventoryComponent::FindInventoryContainer(
         return true;
     }
     return false;
+}
+
+void UGridInventoryComponent::Client_UpdateItem_Implementation()
+{
+    RebuildItemOwnerMap();
+    OnInventoryUpdated.Broadcast();
 }
 
 void UGridInventoryComponent::AddRootItem(UItemInstance* NewItem)
@@ -459,17 +465,30 @@ void UGridInventoryComponent::Implement_AddItemToPos(
         return;
     }
 
-    if (Items.Contains(NewItem))
-    {
-        Items.Remove(NewItem);
-    }
-    Items.Add(NewItem);
-    NewItem->OwnerItemGuid = ContainerGuid;
-    NewItem->SectionIndex = InSectionIndex;
-    NewItem->RowIndex = InRowIndex;
-    NewItem->PosX = InPosX;
-    NewItem->PosY = InPosY;
+    Items.RemoveAll([NewItem](UItemInstance* Item)
+        {
+            return Item && NewItem && Item->InstanceID == NewItem->InstanceID;
+        });
 
+    UItemInstance* NewItemInstance = NewObject<UItemInstance>(this);
+    Items.Add(NewItemInstance);
+
+    NewItemInstance->InstanceID = NewItem->InstanceID;
+    NewItemInstance->ItemID = NewItem->ItemID;
+
+    // 상태(State) 직접 설정
+    NewItemInstance->CurrentDurability = NewItem->CurrentDurability;
+    NewItemInstance->bRotated = NewItem->bRotated;
+
+    // 인벤토리 위치 직접 설정
+    NewItemInstance->OwnerItemGuid = ContainerGuid;
+    NewItemInstance->RowIndex = InRowIndex;
+    NewItemInstance->SectionIndex = InSectionIndex;
+    NewItemInstance->PosX = InPosX;
+    NewItemInstance->PosY = InPosY;
+
+    TArray<UItemInstance*> TempItems = Items;
+    Items = TempItems;
     //RebuildItemOwnerMap();
     //OnInventoryUpdated.Broadcast();
 }

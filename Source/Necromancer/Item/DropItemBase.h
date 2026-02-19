@@ -27,8 +27,8 @@ public:
 
 private:
 	UFUNCTION(Server, Reliable)
-	void Server_Interact(UNecInventoryComponent* Inventory);
-	void Interact_Internal(UNecInventoryComponent* Inventory);
+	void Server_Interact(AActor* Interactor);
+	virtual void Interact_Internal(AActor* Interactor)override;
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
 	UItemInstanceComponent* ItemInstanceComponent;

@@ -61,6 +61,7 @@ protected:
 
 	UFUNCTION()
 	void Interact();
+	
 
 	UFUNCTION()
 	void HandleDeath();
@@ -82,6 +83,9 @@ public:
 	UNecInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 
 	void SetLockOn(bool bEnable);
+
+	UFUNCTION(Server, Reliable)
+	void Server_Interact(AActor* Target);
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
