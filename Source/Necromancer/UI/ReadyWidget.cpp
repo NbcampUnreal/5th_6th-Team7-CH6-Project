@@ -7,6 +7,7 @@
 #include "Components/TextBlock.h"
 
 #include "GameInstance/NecAFGameInstance.h"
+#include "Game/NecGameState.h"
 #include "Controller/NecPlayerController.h"
 
 void UReadyWidget::NativeConstruct()
@@ -15,6 +16,12 @@ void UReadyWidget::NativeConstruct()
 
 	StartGameButton->OnClicked.AddDynamic(this, &UReadyWidget::OnStartGameButtonClicked);
 	InviteFriendButton->OnClicked.AddDynamic(this, &UReadyWidget::OnInviteFriendButtonClicked);
+
+	if (ANecGameState* NecGameState = GetWorld()->GetGameState<ANecGameState>())
+	{
+		NecGameState->OnPlayerControllerCountChanged.AddDynamic(this, &UReadyWidget::UpdatePlayerControllerCount);
+		UpdatePlayerControllerCount(NecGameState->PlayerControllerCount);
+	}
 }
 
 void UReadyWidget::OnStartGameButtonClicked()
@@ -32,5 +39,14 @@ void UReadyWidget::OnInviteFriendButtonClicked()
 	if (NecAFGameInstance)
 	{
 		NecAFGameInstance->InviteFriend();
+	}
+}
+
+void UReadyWidget::UpdatePlayerControllerCount(int32 PlayerCount)
+{
+	if (PlayerCountText)
+	{
+		FString PlayerCountString = FString::Printf(TEXT("Player: %d"), PlayerCount);
+		PlayerCountText->SetText(FText::FromString(PlayerCountString));
 	}
 }

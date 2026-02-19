@@ -3,6 +3,9 @@
 #include "UI/InGameHUDWidget.h"
 #include "UI/ReadyWidget.h"
 
+#include "Kismet/GameplayStatics.h"
+#include "GameMode/NecGameMode.h"
+
 void ANecPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -83,12 +86,20 @@ void ANecPlayerController::OnRep_PlayerState()
 	}
 }
 
+/// <summary>
+/// Only Host Can call this Function(Using ReadyWidet)
+/// </summary>
 void ANecPlayerController::OnStartGame()
 {
 	if (ReadyWidgetInstance)
 	{
 		ReadyWidgetInstance->RemoveFromParent();
+	}
 
+	ANecGameMode* NecGameMode = Cast<ANecGameMode>(UGameplayStatics::GetGameMode(this));
+	if (NecGameMode)
+	{
+		NecGameMode->StartGame();
 		CreateInGameHUD();
 	}
 }
