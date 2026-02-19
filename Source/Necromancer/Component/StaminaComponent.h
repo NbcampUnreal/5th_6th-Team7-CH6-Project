@@ -59,7 +59,7 @@ protected:
 	float MaxStamina = 100.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Stamina")
-	float StaminaRecoveryRate;
+	float StaminaRecoveryRate = 40.0f;
 
 	float CurrentDrainRate;
 

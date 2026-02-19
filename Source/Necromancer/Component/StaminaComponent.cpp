@@ -7,8 +7,7 @@
 #include "Game/NecPlayerState.h"
 
 UStaminaComponent::UStaminaComponent()
-	: CurrentStamina(0.0f)
-	, StaminaRecoveryRate(20.0f)
+	: CurrentStamina(0.0f)	
 	, CurrentDrainRate(0.0f)
 {
 	SetIsReplicatedByDefault(true);
