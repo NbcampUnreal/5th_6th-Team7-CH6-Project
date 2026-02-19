@@ -36,15 +36,6 @@ void AMonsterAIController::BeginPlay()
 	if (ensureMsgf(BehaviorTree, TEXT("BehaviorTree is nullptr")))
 	{
 		RunBehaviorTree(BehaviorTree);
-
-		// 스폰 위치 저장
-		if (UBlackboardComponent* BB = GetBlackboardComponent())
-		{
-			if (APawn* MyPawn = GetPawn())
-			{
-				BB->SetValueAsVector(FName(NAME_SpawnLocation), MyPawn->GetActorLocation());
-			}
-		}
 	}
 
 }
@@ -97,6 +88,12 @@ void AMonsterAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 		if (GenericTeamAgentInterface && GenericTeamAgentInterface->GetGenericTeamId() == FGenericTeamId(TEAM_ID_PLAYER))
 		{
 			SetTargetActor(Actor);
+
+			// 귀환 취소
+			if (UBlackboardComponent* BB = GetBlackboardComponent())
+			{
+				BB->SetValueAsBool(FName(NAME_ShouldReturnToSpawn), false);
+			}
 		}
 	}
 	else

@@ -6,9 +6,7 @@
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "BTTask_RotateToTarget.generated.h"
 
-/**
- * 
- */
+// 타겟 방향으로 보간 회전
 UCLASS()
 class NECROMANCER_API UBTTask_RotateToTarget : public UBTTask_BlackboardBase
 {

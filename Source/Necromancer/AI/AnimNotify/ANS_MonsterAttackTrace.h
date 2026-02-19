@@ -7,6 +7,7 @@
 #include "NiagaraSystem.h"
 #include "ANS_MonsterAttackTrace.generated.h"
 
+// 소켓 기반 BoxTrace 공격 판정 (무기 궤적 추적)
 UCLASS(meta = (DisplayName = "Monster Attack Trace"))
 class NECROMANCER_API UANS_MonsterAttackTrace : public UAnimNotifyState
 {

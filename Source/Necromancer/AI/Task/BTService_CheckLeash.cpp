@@ -10,6 +10,7 @@ UBTService_CheckLeash::UBTService_CheckLeash()
 	NodeName = "Check Leash Distance";
 	Interval = 0.5f;
 	RandomDeviation = 0.1f;
+	bCreateNodeInstance = true;
 }
 
 void UBTService_CheckLeash::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
@@ -34,6 +35,15 @@ void UBTService_CheckLeash::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* N
 		return;
 	}
 
+	if (!bSpawnLocationSaved)
+	{
+		FVector PawnLocation = Pawn->GetActorLocation();
+		BB->SetValueAsVector(FName(NAME_SpawnLocation), PawnLocation);
+		bSpawnLocationSaved = true;
+		UE_LOG(LogTemp, Log, TEXT("[CheckLeash] SpawnLocation Saved: %s"), *PawnLocation.ToString());
+		return;
+	}
+
 	FVector SpawnLocation = BB->GetValueAsVector(FName(NAME_SpawnLocation));
 	FVector CurrentLocation = Pawn->GetActorLocation();
 	float DistanceFromSpawn = FVector::Dist(CurrentLocation, SpawnLocation);
@@ -42,7 +52,6 @@ void UBTService_CheckLeash::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* N
 
 	if (!bShouldReturn)
 	{
-		// 스폰 위치에서 너무 멀어졌으면 귀환 시작
 		if (DistanceFromSpawn > LeashDistance)
 		{
 			BB->SetValueAsBool(FName(NAME_ShouldReturnToSpawn), true);
@@ -51,7 +60,6 @@ void UBTService_CheckLeash::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* N
 	}
 	else
 	{
-		// 귀환 중 - 스폰 위치에 도착했으면 귀환 종료
 		if (DistanceFromSpawn <= ReturnAcceptanceRadius)
 		{
 			BB->SetValueAsBool(FName(NAME_ShouldReturnToSpawn), false);

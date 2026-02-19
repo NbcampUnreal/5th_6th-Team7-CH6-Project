@@ -7,6 +7,7 @@
 #include "BTTask_RangedAttack.generated.h"
 
 
+// 원거리 공격 (몽타주 재생, 투사체는 AnimNotify에서 발사)
 UCLASS()
 class NECROMANCER_API UBTTask_RangedAttack : public UBTTaskNode
 {

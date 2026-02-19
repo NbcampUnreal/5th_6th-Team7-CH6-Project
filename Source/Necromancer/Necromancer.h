@@ -11,7 +11,6 @@
 #define NAME_LastLocation "LastLocation"
 #define NAME_IsStaggered "IsStaggered"
 
-// EQS & Ranged Combat
 #define NAME_MoveToLocation "MoveToLocation"
 #define NAME_InAttackRange "IsInAttackRange"
 #define NAME_IsRangedMonster "IsRangedMonster"
@@ -19,6 +18,5 @@
 #define NAME_IsAttacking "IsAttacking"
 #define NAME_HasAttackSlot "HasAttackSlot"
 
-// Leash (스폰 귀환)
-#define NAME_SpawnLocation "SpawnLocation"
+#define NAME_SpawnLocation "MonsterSpawnLocation"
 #define NAME_ShouldReturnToSpawn "ShouldReturnToSpawn"

@@ -6,11 +6,7 @@
 #include "BehaviorTree/BTService.h"
 #include "BTService_RequestAttackSlot.generated.h"
 
-/**
- * 공격 슬롯 관리 BT Service
- * 공격 범위 진입 시 슬롯 요청, 노드 비활성화 시 자동 반환
- * MonsterEngagementSubsystem과 연동
- */
+// 공격 슬롯 요청/반환 (MonsterEngagementSubsystem 연동)
 UCLASS()
 class NECROMANCER_API UBTService_RequestAttackSlot : public UBTService
 {

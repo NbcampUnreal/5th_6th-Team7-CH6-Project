@@ -32,18 +32,7 @@ void UANS_MonsterAttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnim
 	}
 
 	AActor* OwnerActor = MeshComp->GetOwner();
-	if (!OwnerActor) 
-	{
-		return;
-	}
-
-	if (!OwnerActor->HasAuthority()) 
-	{
-		return;
-	}
-
-	UMonsterStatComponent* StatComp = OwnerActor->FindComponentByClass<UMonsterStatComponent>();
-	if (!StatComp) 
+	if (!OwnerActor)
 	{
 		return;
 	}
@@ -53,7 +42,7 @@ void UANS_MonsterAttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnim
 	FVector CurrentCenterLocation = (StartSocket + EndSocket) * 0.5f;
 
 	FVector Direction = EndSocket - StartSocket;
-	
+
 	FRotator BoxRotation = UKismetMathLibrary::MakeRotFromX(Direction);
 	float TraceLength = Direction.Size();
 	FVector BoxHalfSize = FVector(TraceLength * 0.5f, TraceExtent.Y, TraceExtent.Z);
@@ -75,7 +64,7 @@ void UANS_MonsterAttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnim
 				continue;
 			}
 
-			// 이미 이번 공격에서 맞은 액터 스킵
+			// 중복 히트 방지
 			bool bAlreadyHit = false;
 			for (const TWeakObjectPtr<AActor>& Prev : HitActors)
 			{
@@ -85,12 +74,12 @@ void UANS_MonsterAttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnim
 					break;
 				}
 			}
-			if (bAlreadyHit) 
+			if (bAlreadyHit)
 			{
 				continue;
 			}
 
-			// 같은 몬스터 스킵
+			// 아군 필터
 			IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(HitActor);
 			if (TeamAgent && TeamAgent->GetGenericTeamId() == FGenericTeamId(TEAM_ID_MONSTER))
 			{
@@ -99,9 +88,16 @@ void UANS_MonsterAttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnim
 
 			HitActors.Add(HitActor);
 
-			UGameplayStatics::ApplyDamage(HitActor,StatComp->GetAttackPower(),OwnerActor->GetInstigatorController(),OwnerActor,nullptr);
+			// Server Only
+			if (OwnerActor->HasAuthority())
+			{
+				UMonsterStatComponent* StatComp = OwnerActor->FindComponentByClass<UMonsterStatComponent>();
+				if (StatComp)
+				{
+					UGameplayStatics::ApplyDamage(HitActor,StatComp->GetAttackPower(),OwnerActor->GetInstigatorController(),OwnerActor,nullptr);
+				}
+			}
 
-			// 히트 이펙트 (사운드 + 파티클)
 			FVector HitLocation = Hit.ImpactPoint;
 
 			if (HitSound)

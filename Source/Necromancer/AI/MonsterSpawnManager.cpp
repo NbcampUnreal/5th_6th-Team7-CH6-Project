@@ -15,6 +15,12 @@ void AMonsterSpawnManager::BeginPlay()
 {
 	Super::BeginPlay();
 
+	
+	if (!HasAuthority())
+	{
+		return;
+	}
+
 	GetWorld()->GetTimerManager().SetTimer(CheckTimerHandle,this,&AMonsterSpawnManager::CheckDungeonComplete,CheckInterval,true);
 }
 

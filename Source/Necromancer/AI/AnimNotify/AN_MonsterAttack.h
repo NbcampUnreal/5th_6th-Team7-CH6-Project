@@ -7,9 +7,7 @@
 #include "NiagaraSystem.h"
 #include "AN_MonsterAttack.generated.h"
 
-/**
- * 
- */
+// 근접 공격 판정 (Sphere Sweep + 데미지/이펙트)
 UCLASS()
 class NECROMANCER_API UAN_MonsterAttack : public UAnimNotify
 {
