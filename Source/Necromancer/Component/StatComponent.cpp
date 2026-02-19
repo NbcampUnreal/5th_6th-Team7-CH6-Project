@@ -17,7 +17,10 @@ void UStatComponent::BeginPlay()
 
     if (GetOwner()->HasAuthority())
     {
-        CurrentHealth = MaxHealth;
+        if (CurrentHealth <= 0.0f)
+        {
+            CurrentHealth = MaxHealth;
+        }
 
         OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
     }

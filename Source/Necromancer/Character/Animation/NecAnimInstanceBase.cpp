@@ -24,6 +24,19 @@ void UNecAnimInstanceBase::NativeUpdateAnimation(float DeltaSeconds)
 
 	Velocity = OwnerCharacterMovementComponent->Velocity;
 	GroundSpeed = FVector(Velocity.X, Velocity.Y, 0.f).Size();
-	bShouldMove = (!OwnerCharacterMovementComponent->GetCurrentAcceleration().IsNearlyZero()) && (5.0f < GroundSpeed);
+
+	if (GroundSpeed > 3.0f)
+	{
+		FRotator ActorRotation = OwnerCharacter->GetActorRotation();
+		FVector LocalVelocity = ActorRotation.UnrotateVector(Velocity);
+		Direction = LocalVelocity.Rotation().Yaw;
+	}
+	else
+	{
+		Direction = 0.0f;
+	}
+
+	//bShouldMove = (!OwnerCharacterMovementComponent->GetCurrentAcceleration().IsNearlyZero()) && (5.0f < GroundSpeed);
+	bShouldMove = GroundSpeed > 5.0f;
 	bIsFalling = OwnerCharacterMovementComponent->IsFalling();
 }

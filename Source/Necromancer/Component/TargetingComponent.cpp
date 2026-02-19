@@ -205,6 +205,15 @@ void UTargetingComponent::Server_SwitchTarget_Implementation(bool bIsRight)
             continue;
         }
 
+        IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(Candidate);
+        if (TeamAgent)
+        {
+            if (TeamAgent->GetGenericTeamId() == OwnerCharacter->GetGenericTeamId())
+            {
+                continue;
+            }
+        }
+
         FVector DirToCandidate = (Candidate->GetActorLocation() - CamLoc).GetSafeNormal();
         FVector DirToCurrent = (CurrentTarget->GetActorLocation() - CamLoc).GetSafeNormal();
 
@@ -308,6 +317,15 @@ void UTargetingComponent::FindTarget()
             if (!Actor)
             {
                 continue;
+            }
+
+            IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(Actor);
+            if (TeamAgent)
+            {
+                if (TeamAgent->GetGenericTeamId() == OwnerCharacter->GetGenericTeamId())
+                {
+                    continue;
+                }
             }
 
             FHitResult HitResult;

@@ -8,6 +8,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Sword_Item.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Character/NecPlayerCharacter.h"
 
 AWeapon_Item_Base::AWeapon_Item_Base()
 {
@@ -105,20 +106,23 @@ void AWeapon_Item_Base::PerformTrace()
     QueryParams.bTraceComplex = false;
     QueryParams.bReturnPhysicalMaterial = false;
 
+    FCollisionObjectQueryParams ObjectQueryParams;
+    ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+
     TArray<FHitResult> HitResults;
-    bool bHit = GetWorld()->SweepMultiByChannel(
+    bool bHit = GetWorld()->SweepMultiByObjectType(
         HitResults,
         LastCenterLocation,
         CurrentCenterLocation,
         BoxRotation,
-        ECC_Pawn,
+        ObjectQueryParams,
         BoxShape,
         QueryParams
     );
 
     FColor DrawColor = bHit ? FColor::Green : FColor::Red;
-    DrawDebugBox(GetWorld(), LastCenterLocation, BoxHalfExtent, BoxRotation, DrawColor, false, 1.0f);
-    DrawDebugLine(GetWorld(), LastCenterLocation, CurrentCenterLocation, FColor::Yellow, false, 1.0f);
+    //DrawDebugBox(GetWorld(), LastCenterLocation, BoxHalfExtent, BoxRotation, DrawColor, false, 1.0f);
+    //DrawDebugLine(GetWorld(), LastCenterLocation, CurrentCenterLocation, FColor::Yellow, false, 1.0f);
 
     if (bHit)
     {
@@ -128,11 +132,27 @@ void AWeapon_Item_Base::PerformTrace()
             return;
         }
 
+        IGenericTeamAgentInterface* AttackerTeam = Cast<IGenericTeamAgentInterface>(OwnerPawn);
+
         for (const FHitResult& Hit : HitResults)
         {
             AActor* HitActor = Hit.GetActor();
             if (HitActor && !HitActors.Contains(HitActor))
             {
+                IGenericTeamAgentInterface* VictimTeam = Cast<IGenericTeamAgentInterface>(HitActor);
+                if (!VictimTeam)
+                {
+                    continue;
+                }
+
+                if (AttackerTeam && VictimTeam)
+                {
+                    if (AttackerTeam->GetGenericTeamId() == VictimTeam->GetGenericTeamId())
+                    {
+                        continue;
+                    }
+                }
+
                 HitActors.Add(HitActor);
 
                 float FinalDamage = Damage * CurrentDamageMultiplier;
@@ -144,6 +164,13 @@ void AWeapon_Item_Base::PerformTrace()
                     this,
                     UDamageType::StaticClass()
                 );
+
+                FVector HitLocation = Hit.ImpactPoint;
+
+                if (HitSound)
+                {
+                    UGameplayStatics::PlaySoundAtLocation(this, HitSound, HitLocation);
+                }
             }
         }
     }
