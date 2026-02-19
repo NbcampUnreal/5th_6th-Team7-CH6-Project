@@ -24,7 +24,7 @@ void ANecGameMode::PostLogin(APlayerController* NewPlayer)
 		if (NecGameState)
 		{
 			NecGameState->PlayerControllerCount = PlayerControllers.Num();
-			UE_LOG(LogTemp, Error, TEXT("plaer count : %d %d"), PlayerControllers.Num(), NecGameState->PlayerControllerCount);
+			NecGameState->OnRep_PlayerControllerCount();
 		}
 	}
 }

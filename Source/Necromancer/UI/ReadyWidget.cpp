@@ -19,7 +19,7 @@ void UReadyWidget::NativeConstruct()
 
 	if (ANecGameState* NecGameState = GetWorld()->GetGameState<ANecGameState>())
 	{
-		NecGameState->OnPlayerControllerCountChanged.AddDynamic(this, &ThisClass::UpdatePlayerControllerCount);
+		NecGameState->OnPlayerControllerCountChanged.AddDynamic(this, &UReadyWidget::UpdatePlayerControllerCount);
 		UpdatePlayerControllerCount(NecGameState->PlayerControllerCount);
 	}
 }

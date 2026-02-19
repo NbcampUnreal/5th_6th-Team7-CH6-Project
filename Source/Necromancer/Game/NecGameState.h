@@ -41,7 +41,7 @@ public:
 	int32 PlayerControllerCount = 0;
 	
 	FOnPlayerControllerCountChanged OnPlayerControllerCountChanged;
-protected:
+public:
 	UFUNCTION()
 	void OnRep_PlayerControllerCount();
 };

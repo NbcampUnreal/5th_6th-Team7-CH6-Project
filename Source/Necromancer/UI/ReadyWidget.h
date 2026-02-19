@@ -40,6 +40,7 @@ protected:
 	TObjectPtr<UButton> InviteFriendButton;
 
 protected:
+	UFUNCTION()
 	void UpdatePlayerControllerCount(int32 PlayerCount);
 
 	UPROPERTY(meta = (BindWidget))
