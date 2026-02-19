@@ -17,7 +17,7 @@ ANecDungeonsGenerator::ANecDungeonsGenerator()
 
 }
 
-// Called when the game starts or when spawned 
+// Called when the game starts or when spawned
 void ANecDungeonsGenerator::BeginPlay()
 {
 	Super::BeginPlay();

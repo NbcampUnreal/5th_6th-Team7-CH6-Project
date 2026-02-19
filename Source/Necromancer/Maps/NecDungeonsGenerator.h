@@ -17,7 +17,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	// 시작 방 생성 함수 
+	// 시작 방 생성 함수
 	UFUNCTION(BlueprintCallable, Reliable, Server, Category = "Room")
 	void SpawnStartRoom();
 
