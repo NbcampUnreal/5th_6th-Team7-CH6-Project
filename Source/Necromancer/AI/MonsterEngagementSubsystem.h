@@ -13,31 +13,29 @@ class NECROMANCER_API UMonsterEngagementSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 
 public:
-	
+	// 공격 슬롯 요청 (근접/원거리 자동 판별)
 	UFUNCTION(BlueprintCallable, Category = "Engagement")
 	bool RequestAttackSlot(AActor* Monster, AActor* Target);
 
-	
+	// 공격 슬롯 반환
 	UFUNCTION(BlueprintCallable, Category = "Engagement")
 	void ReleaseAttackSlot(AActor* Monster, AActor* Target);
 
-	
+	// 슬롯 보유 여부 확인
 	UFUNCTION(BlueprintPure, Category = "Engagement")
 	bool HasAttackSlot(AActor* Monster, AActor* Target) const;
 
-	
+	// 타겟에 대한 현재 공격자 수
 	UFUNCTION(BlueprintPure, Category = "Engagement")
 	int32 GetActiveAttackerCount(AActor* Target) const;
 
-	
+	// 몬스터의 모든 슬롯 일괄 반환 (사망 등)
 	UFUNCTION(BlueprintCallable, Category = "Engagement")
 	void ReleaseAllSlotsForMonster(AActor* Monster);
 
-	
 	UPROPERTY(EditAnywhere, Category = "Engagement")
 	int32 MaxMeleeAttackers = 2;
 
-	
 	UPROPERTY(EditAnywhere, Category = "Engagement")
 	int32 MaxRangedAttackers = 2;
 
@@ -77,11 +75,11 @@ private:
 	TMap<TWeakObjectPtr<AActor>, TSet<FSlotInfo>> MeleeAttackSlots;
 	TMap<TWeakObjectPtr<AActor>, TSet<FSlotInfo>> RangedAttackSlots;
 
+	// 유효하지 않은 슬롯 정리
 	void CleanupStaleEntries();
+	// 만료된 슬롯 자동 반환
 	void CleanupExpiredSlots();
 
 	bool IsRangedMonster(AActor* Monster) const;
-
-	// 거리 기반 슬롯 우선순위를 위한 헬퍼
 	float GetDistanceToTarget(AActor* Monster, AActor* Target) const;
 };

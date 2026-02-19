@@ -12,6 +12,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GridInventory/ItemData/ItemDataSubsystem.h"
 
 
 AMonsterBase::AMonsterBase()
@@ -60,7 +61,7 @@ void AMonsterBase::BeginPlay()
 	
 	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
 	{
-		MoveComp->bOrientRotationToMovement = false;
+		MoveComp->bOrientRotationToMovement = true;
 		MoveComp->bUseControllerDesiredRotation = false;
 
 		
@@ -117,7 +118,54 @@ void AMonsterBase::OnDeath()
 	GetCharacterMovement()->StopMovementImmediately();
 	GetCharacterMovement()->DisableMovement();
 
+	SpawnDropItems();
+
 	Multicast_PlayDeathMontage();
+}
+
+void AMonsterBase::SpawnDropItems()
+{
+	if (DropItemIDs.Num() == 0)
+	{
+		return;
+	}
+
+	UGameInstance* GI = GetGameInstance();
+	if (!GI)
+	{
+		return;
+	}
+
+	UItemDataSubsystem* ItemSubsystem = GI->GetSubsystem<UItemDataSubsystem>();
+	if (!ItemSubsystem)
+	{
+		return;
+	}
+
+	FVector DeathLocation = GetActorLocation();
+
+	for (const FName& ItemID : DropItemIDs)
+	{
+		const FItemData* Data = ItemSubsystem->GetItemData(ItemID);
+		if (!Data || !Data->DropItemActorClass)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[MonsterBase] DropItem failed: ItemID=%s - Data or DropItemActorClass is null"), *ItemID.ToString());
+			continue;
+		}
+
+		FVector Offset = FVector(
+			FMath::FRandRange(-DropSpreadRadius, DropSpreadRadius),
+			FMath::FRandRange(-DropSpreadRadius, DropSpreadRadius),
+			0.0f
+		);
+		FVector SpawnLocation = DeathLocation + Offset;
+
+		GetWorld()->SpawnActor<AActor>(
+			Data->DropItemActorClass,
+			SpawnLocation,
+			FRotator::ZeroRotator
+		);
+	}
 }
 
 void AMonsterBase::StartRagdoll()
@@ -214,7 +262,6 @@ void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
 
 void AMonsterBase::OnHitReactMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	// 이동 복구
 	if (!bIsDead)
 	{
 		GetCharacterMovement()->SetMovementMode(MOVE_Walking);

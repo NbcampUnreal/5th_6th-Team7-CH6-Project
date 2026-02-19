@@ -6,9 +6,7 @@
 #include "BehaviorTree/BTTaskNode.h"
 #include "BTTask_MonsterAttack.generated.h"
 
-/**
- * 
- */
+// 근접 단일 공격 (몽타주 재생 후 완료)
 UCLASS()
 class NECROMANCER_API UBTTask_MonsterAttack : public UBTTaskNode
 {
@@ -24,5 +22,6 @@ protected:
 	TObjectPtr<UAnimMontage> AttackMontage;
 	
 private:
+	// 몽타주 종료 콜백
 	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted, UBehaviorTreeComponent* OwnerComp);
 };

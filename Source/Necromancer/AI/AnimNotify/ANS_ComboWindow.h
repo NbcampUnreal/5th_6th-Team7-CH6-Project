@@ -6,9 +6,7 @@
 #include "Animation/AnimNotifies/AnimNotifyState.h"
 #include "ANS_ComboWindow.generated.h"
 
-/**
- * 
- */
+// 콤보 입력 허용 구간 (이 구간 내 다음 콤보 요청 가능)
 UCLASS()
 class NECROMANCER_API UANS_ComboWindow : public UAnimNotifyState
 {

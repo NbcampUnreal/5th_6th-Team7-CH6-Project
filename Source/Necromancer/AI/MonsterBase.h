@@ -10,6 +10,7 @@
 
 class UMonsterStatComponent;
 class UBehaviorTree;
+struct FItemData;
 
 DECLARE_DELEGATE(FOnNextComboRequested);
 
@@ -27,71 +28,84 @@ public:
 	virtual FGenericTeamId GetGenericTeamId() const override;
 	
 	
+	// 콤보 공격 시 다음 콤보 요청 델리게이트
 	FOnNextComboRequested OnNextComboRequested;
-	
+
 	UFUNCTION(BlueprintCallable,Category="RVO")
 	void SetRVOAvoidanceEnabled(bool bEnable);
-	
+
+	// 몽타주를 전 클라이언트에서 재생
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayMontage(UAnimMontage* Montage);
-	
+
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayDeathMontage();
-	
+
 	UFUNCTION(BlueprintCallable)
 	bool GetIsDead();
 
 protected:
-	
+
 	virtual void BeginPlay() override;
-	
+
 	UPROPERTY(ReplicatedUsing = OnRep_IsDead)
 	bool bIsDead = false;
-	
+
 	UFUNCTION()
 	void OnRep_IsDead();
-	
+
 	UPROPERTY()
 	FTimerHandle DeathTimerHandle;
-	
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	TObjectPtr<UMonsterStatComponent> MonsterStatComponent;
-	
+
+	// 경직 처리
 	UFUNCTION()
 	void OnStagger();
 
+	// 기절 처리
 	UFUNCTION()
 	void OnStun();
-	
+
+	// 사망 처리 (Server Only)
 	UFUNCTION()
 	void OnDeath();
-	
+
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> DeathMontage;
-	
+
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> HitReactMontage;
-	
+
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> StunMontage;
-	
+
+	// 물리 래그돌 전환
 	void StartRagdoll();
-	
-	
+
+	// 사망 시 아이템 스폰 (Server Only)
+	void SpawnDropItems();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Drop")
+	TArray<FName> DropItemIDs;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Drop")
+	float DropSpreadRadius = 100.0f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RVO")
 	float AvoidanceRadius = 100.0f;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RVO")
 	float AvoidanceWeight = 0.5f;
 
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float MovementAcceleration = 300.0f;
 
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float MovementDeceleration = 300.0f;
-	
+
+	// 피격 리액션 처리
 	UFUNCTION()
 	void OnDamageReceived(float DamageAmount, FVector HitLocation);
 

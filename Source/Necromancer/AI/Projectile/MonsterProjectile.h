@@ -23,12 +23,16 @@ public:
 	virtual void PostInitializeComponents() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	
+	// 발사 시 데미지/속도/중력 초기화
 	void InitProjectile(float InDamage, float InSpeed, float InGravityScale);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	TObjectPtr<UNiagaraSystem> ExplosionEffect;
+
+	// 히트 시 재생할 사운드
+	UPROPERTY(EditDefaultsOnly, Category = "Effect")
+	TObjectPtr<USoundBase> HitSound;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	TObjectPtr<USphereComponent> SphereComponent;
@@ -42,6 +46,7 @@ protected:
 	UPROPERTY(Replicated)
 	float ProjectileDamage = 10.0f;
 
+	// 충돌 시 데미지 + 이펙트 처리
 	UFUNCTION()
 	void OnActorHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 };

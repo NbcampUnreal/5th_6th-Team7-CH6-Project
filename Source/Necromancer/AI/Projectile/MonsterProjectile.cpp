@@ -44,7 +44,6 @@ void AMonsterProjectile::InitProjectile(float InDamage, float InSpeed, float InG
 {
 	ProjectileDamage = InDamage;
 
-	// Owner와 Instigator 콜리전 무시
 	if (GetOwner())
 	{
 		SphereComponent->IgnoreActorWhenMoving(GetOwner(), true);
@@ -65,15 +64,26 @@ void AMonsterProjectile::InitProjectile(float InDamage, float InSpeed, float InG
 
 void AMonsterProjectile::OnActorHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// 자기 자신 무시
 	if (OtherActor == GetOwner() || OtherActor == GetInstigator())
 	{
 		return;
 	}
 
-	UGameplayStatics::ApplyDamage(OtherActor, ProjectileDamage, GetInstigatorController(), this, UDamageType::StaticClass());
+	// Server Only
+	if (HasAuthority())
+	{
+		UGameplayStatics::ApplyDamage(OtherActor, ProjectileDamage, GetInstigatorController(), this, UDamageType::StaticClass());
+	}
 
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ExplosionEffect, GetActorLocation());
 
-	Destroy();
+	if (HitSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
+	}
+
+	if (HasAuthority())
+	{
+		Destroy();
+	}
 }

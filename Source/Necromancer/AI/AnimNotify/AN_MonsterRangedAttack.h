@@ -9,6 +9,7 @@
 class AMonsterProjectile;
 
 
+// 투사체 발사 (소켓 위치에서 스폰, 예측 조준 지원)
 UCLASS()
 class NECROMANCER_API UAN_MonsterRangedAttack : public UAnimNotify
 {

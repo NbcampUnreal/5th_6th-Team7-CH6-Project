@@ -18,6 +18,7 @@ public:
 	AMonsterSpawnManager();
 	virtual void BeginPlay() override;
 
+	// 스폰 큐 기반 몬스터 순차 스폰 시작
 	UFUNCTION(BlueprintCallable, Category = "SpawnManager")
 	void StartSpawning();
 
@@ -39,7 +40,10 @@ private:
 	TArray<FMonsterSpawnData> SpawnQueue;
 	int32 CurrentSpawnIndex = 0;
 
+	// 던전 생성 완료 여부 폴링
 	void CheckDungeonComplete();
+	// 월드의 모든 MonsterSpawner에서 스폰 데이터 수집
 	void CollectAllSpawnEntries();
+	// 큐에서 다음 몬스터 스폰
 	void SpawnNextInQueue();
 };

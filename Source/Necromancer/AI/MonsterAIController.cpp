@@ -37,8 +37,7 @@ void AMonsterAIController::BeginPlay()
 	{
 		RunBehaviorTree(BehaviorTree);
 	}
-	
-	
+
 }
 void AMonsterAIController::SetTargetActor(AActor* NewTarget)
 {
@@ -89,6 +88,12 @@ void AMonsterAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 		if (GenericTeamAgentInterface && GenericTeamAgentInterface->GetGenericTeamId() == FGenericTeamId(TEAM_ID_PLAYER))
 		{
 			SetTargetActor(Actor);
+
+			// 귀환 취소
+			if (UBlackboardComponent* BB = GetBlackboardComponent())
+			{
+				BB->SetValueAsBool(FName(NAME_ShouldReturnToSpawn), false);
+			}
 		}
 	}
 	else

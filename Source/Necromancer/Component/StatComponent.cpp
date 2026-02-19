@@ -3,6 +3,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AISense_Damage.h"
+#include "GenericTeamAgentInterface.h"
 
 UStatComponent::UStatComponent()
 	: CurrentHealth(0.0f)
@@ -51,11 +52,25 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
 
     SetCurrentHealth(NewHealth);
     OnDamageReceived.Broadcast(ActualDamage, GetOwner()->GetActorLocation());
-
-    // AI Perception에 데미지 이벤트 보고 CSM
+    
     if (DamageCauser)
     {
-        UAISense_Damage::ReportDamageEvent(GetWorld(),DamagedActor,DamageCauser,ActualDamage,DamageCauser->GetActorLocation(),DamagedActor->GetActorLocation());
+        bool bFriendlyFire = false;
+        if (InstigatedBy)
+        {
+            IGenericTeamAgentInterface* InstigatorTeam = Cast<IGenericTeamAgentInterface>(InstigatedBy);
+            IGenericTeamAgentInterface* VictimTeam = Cast<IGenericTeamAgentInterface>(DamagedActor);
+            if (InstigatorTeam && VictimTeam &&
+                InstigatorTeam->GetGenericTeamId() == VictimTeam->GetGenericTeamId())
+            {
+                bFriendlyFire = true;
+            }
+        }
+
+        if (!bFriendlyFire)
+        {
+            UAISense_Damage::ReportDamageEvent(GetWorld(),DamagedActor,DamageCauser,ActualDamage,DamageCauser->GetActorLocation(),DamagedActor->GetActorLocation());
+        }
     }
 
     UE_LOG(LogTemp, Warning, TEXT("CurrentHealth: %f"), NewHealth);
