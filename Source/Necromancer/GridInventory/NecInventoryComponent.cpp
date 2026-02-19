@@ -6,7 +6,6 @@
 #include "GridInventory/ItemInstance/ItemInstance.h"
 #include "GridInventory/ItemInstance/ItemInstanceComponent.h"
 #include "GridInventory/BucketInventoryComponent.h"
-#include "Item/DropItemBase.h"
 #include "UI/InventoryHub.h"
 #include "UI/SubmitWidgetHub.h"
 
@@ -198,9 +197,9 @@ UItemInstance* UNecInventoryComponent::GetDefaultContainer() const
 	return DefaultContainer;
 }
 
-void UNecInventoryComponent::DropItemInWorld(UItemInstance* DropItem)
+void UNecInventoryComponent::DropItemInWorld(TSubclassOf<AActor> SpawnActor)
 {
-	Server_DropItemInWorld(DropItem);
+	Server_DropItemInWorld(SpawnActor);
 }
 
 void UNecInventoryComponent::RebuildItemOwnerMap()
@@ -243,7 +242,7 @@ void UNecInventoryComponent::AddNecInventory_Internal(AActor* NewItemActor)
 	}
 }
 
-void UNecInventoryComponent::DropItemInWorld_Internal(UItemInstance* DropItem)
+void UNecInventoryComponent::DropItemInWorld_Internal(TSubclassOf<AActor> SpawnActor)
 {
 	APlayerState* PS = Cast<APlayerState>(GetOwner());
 	if (!PS) return;
@@ -252,21 +251,6 @@ void UNecInventoryComponent::DropItemInWorld_Internal(UItemInstance* DropItem)
 	{
 		return;
 	}
-
-	UItemDataSubsystem* Subsystem =
-		GetWorld()->GetGameInstance()->GetSubsystem<UItemDataSubsystem>();
-
-	if (!Subsystem)
-	{
-		return;
-	}
-
-	const FItemData* Data = Subsystem->GetItemData(DropItem->ItemID);
-	if (!Data)
-	{
-		return;
-	}
-
 
 	UWorld* World = OwnerActor->GetWorld();
 	if (!World)
@@ -324,12 +308,12 @@ void UNecInventoryComponent::DropItemInWorld_Internal(UItemInstance* DropItem)
 	SpawnParams.Instigator = nullptr;
 
 	AActor* SpawnedItem = World->SpawnActor<AActor>(
-		Data->DropItemActorClass,
+		SpawnActor,
 		SpawnLocation,
 		SpawnRotation,
 		SpawnParams
 	);
-	Cast<ADropItemBase>(SpawnedItem)->GetItemInstanceComponent()->Initialize(DropItem);
+
 	return;
 }
 
@@ -375,9 +359,9 @@ inline void UNecInventoryComponent::ValidateEquipmentSlot(UItemInstance*& SlotIt
 	}
 }
 
-void UNecInventoryComponent::Server_DropItemInWorld_Implementation(UItemInstance* DropItem)
+void UNecInventoryComponent::Server_DropItemInWorld_Implementation(TSubclassOf<AActor> SpawnActor)
 {
-	DropItemInWorld_Internal(DropItem);
+	DropItemInWorld_Internal(SpawnActor);
 }
 
 UItemInstance* UNecInventoryComponent::GetEquipmentItem(EEquipmentSlot Slot) const
