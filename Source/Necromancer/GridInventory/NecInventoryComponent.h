@@ -75,17 +75,17 @@ public:
 	UItemInstance* GetDefaultContainer() const;
 
 	UFUNCTION(BlueprintCallable)
-	void DropItemInWorld(UItemInstance* DropItem);
+	void DropItemInWorld(TSubclassOf<AActor> SpawnActor);
 
 	virtual void RebuildItemOwnerMap() override;
 protected:
 	UFUNCTION(Server, Reliable)
 	void Server_AddNecInventory(AActor* NewItemActor);
 	UFUNCTION(Server, Reliable)
-	void Server_DropItemInWorld(UItemInstance* DropItem);
+	void Server_DropItemInWorld(TSubclassOf<AActor> SpawnActor);
 private:
 	void AddNecInventory_Internal(AActor* NewItemActor);
-	void DropItemInWorld_Internal(UItemInstance* DropItem);
+	void DropItemInWorld_Internal(TSubclassOf<AActor> SpawnActor);
 
 	
 #pragma region Equipment

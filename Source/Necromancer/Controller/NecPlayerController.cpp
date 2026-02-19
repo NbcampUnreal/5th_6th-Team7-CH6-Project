@@ -1,7 +1,6 @@
 #include "Controller/NecPlayerController.h"
 #include "EnhancedInputSubsystems.h"
 #include "UI/InGameHUDWidget.h"
-#include "UI/ReadyWidget.h"
 
 void ANecPlayerController::BeginPlay()
 {
@@ -12,40 +11,8 @@ void ANecPlayerController::BeginPlay()
 		return;
 	}
 
-	if (GetWorld()->GetNetMode() == NM_ListenServer)
-	{
-		CreateReadyWidgetForHost();
-	}
-	else
-	{
-		CreateInGameHUD();
-	}
-
-}
-
-void ANecPlayerController::CreateReadyWidgetForHost()
-{
-	if (IsValid(ReadyWidgetClass))
-	{
-		ReadyWidgetInstance = CreateWidget<UReadyWidget>(this, ReadyWidgetClass);
-		if (IsValid(ReadyWidgetInstance))
-		{
-			ReadyWidgetInstance->AddToViewport();
-
-			FInputModeUIOnly Mode;
-			Mode.SetWidgetToFocus(ReadyWidgetInstance->GetCachedWidget());
-			SetInputMode(Mode);
-
-			bShowMouseCursor = true;
-		}
-	}
-}
-
-void ANecPlayerController::CreateInGameHUD()
-{
 	FInputModeGameOnly GameOnly;
 	SetInputMode(GameOnly);
-	bShowMouseCursor = false;
 
 	if (IsValid(InGameHUDWidgetClass))
 	{
@@ -80,15 +47,5 @@ void ANecPlayerController::OnRep_PlayerState()
 	if (IsValid(InGameHUDWidgetInstance))
 	{
 		InGameHUDWidgetInstance->InitHUD();
-	}
-}
-
-void ANecPlayerController::OnStartGame()
-{
-	if (ReadyWidgetInstance)
-	{
-		ReadyWidgetInstance->RemoveFromParent();
-
-		CreateInGameHUD();
 	}
 }

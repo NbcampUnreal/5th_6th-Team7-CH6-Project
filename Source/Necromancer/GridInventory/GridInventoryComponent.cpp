@@ -390,7 +390,7 @@ bool UGridInventoryComponent::CanAddItemToPos(UItemInstance* NewItem,
         if (ExistingItem->InstanceID == NewItem->InstanceID)
             continue;
 
-        const FItemData* ExistingItemData = Subsystem->GetItemData(ExistingItem->ItemID);
+        const FItemData* ExistingItemData = Subsystem->GetItemData(NewItem->ItemID);
         int32 ExWidth = ExistingItem->bRotated ? /*Height*/ ExistingItemData->Height : /*Width*/ ExistingItemData->Width;
         int32 ExHeight = ExistingItem->bRotated ? /*Width*/ ExistingItemData->Width : /*Height*/ ExistingItemData->Height;
 

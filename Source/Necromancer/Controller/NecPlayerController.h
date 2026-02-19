@@ -7,7 +7,6 @@
 class UInputMappingContext;
 class UInputAction;
 class UInGameHUDWidget;
-class UReadyWidget;
 
 UCLASS()
 class NECROMANCER_API ANecPlayerController : public APlayerController
@@ -16,12 +15,6 @@ class NECROMANCER_API ANecPlayerController : public APlayerController
 
 protected:
 	virtual void BeginPlay() override;
-
-	void CreateReadyWidgetForHost();
-
-	void CreateInGameHUD();
-	
-
 	virtual void SetupInputComponent() override;
 	virtual void OnRep_PlayerState() override;
 
@@ -59,14 +52,4 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UInGameHUDWidget> InGameHUDWidgetInstance;
-
-protected:
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UReadyWidget> ReadyWidgetClass;
-
-	UPROPERTY()
-	TObjectPtr<UReadyWidget> ReadyWidgetInstance;
-
-public:
-	void OnStartGame();
 };
