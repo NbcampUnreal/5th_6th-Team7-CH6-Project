@@ -18,6 +18,7 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/StaticMeshActor.h"
 #include "Item/Weapon_Item_Base.h"
+#include "Components/CapsuleComponent.h"
 
 
 #include "WorldActor/Interactable.h"
@@ -338,8 +339,37 @@ void ANecPlayerCharacter::HandleDeath()
 			CurrentController->UnPossess();			
 		}
 
-		GetMesh()->SetSimulatePhysics(true);
+		Multicast_HandleDeath();
+
+		GetWorldTimerManager().SetTimer(
+			DeathTimerHandle,
+			this,
+			&ANecPlayerCharacter::EndGame,
+			5.0f,
+			false
+		);
+	}
+}
+
+void ANecPlayerCharacter::Multicast_HandleDeath_Implementation()
+{
+	if (GetCapsuleComponent())
+	{
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	if (GetMesh())
+	{
 		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+		GetMesh()->SetSimulatePhysics(true);
+	}
+}
+
+void ANecPlayerCharacter::EndGame()
+{
+	if (HasAuthority())
+	{
+		UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
 	}
 }
 

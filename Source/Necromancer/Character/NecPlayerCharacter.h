@@ -66,6 +66,11 @@ protected:
 	UFUNCTION()
 	void HandleDeath();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_HandleDeath();
+
+	void EndGame();
+
 	void LinkPlayerStateComponents();
 
 	UFUNCTION(Server, Reliable)
@@ -117,6 +122,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Test")
 	float InteractRange = 200.0f;
+
+	FTimerHandle DeathTimerHandle;
 	
 protected:
 	//인벤토리
