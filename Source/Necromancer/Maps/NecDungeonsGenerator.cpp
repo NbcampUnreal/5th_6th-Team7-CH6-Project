@@ -21,11 +21,18 @@ ANecDungeonsGenerator::ANecDungeonsGenerator()
 void ANecDungeonsGenerator::BeginPlay()
 {
 	Super::BeginPlay();
-	RoomList = RoomListBase;
-	RoomCount = 0;
-	SpawnStartRoom();
-	StartDungeonTimer();
-	SpawnNextRoom();
+	if (HasAuthority())
+	{
+		RoomList = RoomListBase;
+		RoomCount = 0;
+		SpawnStartRoom();
+		StartDungeonTimer();
+		SpawnNextRoom();
+	}
+	else
+	{
+		return;
+	}
 }
 
 TSubclassOf<AActor> ANecDungeonsGenerator::RandomArrayItemFromRoom(const TArray<TSubclassOf<AActor>>& Array)
@@ -50,120 +57,21 @@ USceneComponent* ANecDungeonsGenerator::RandomArrayItemFromArrow(const TArray<US
 	return Array[OutIndex];
 }
 
-void ANecDungeonsGenerator::SpawnStartRoom_Implementation()
+void ANecDungeonsGenerator::SpawnStartRoom()
 {
-	FVector SpawnLocation = GetActorLocation();
-	FRotator SpawnRotation = FRotator::ZeroRotator;
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	LatestRoom = GetWorld()->SpawnActor<AActor>(StartRoom, SpawnLocation, SpawnRotation, SpawnParams);
-
-	if (LatestRoom)
+	if (HasAuthority())
 	{
-		// 생성한 방의 컴포넌트 담기
-		TArray<USceneComponent*> Components;
-		LatestRoom->GetComponents<USceneComponent>(Components);
+		FVector SpawnLocation = GetActorLocation();
+		FRotator SpawnRotation = FRotator::ZeroRotator;
 
-		// 컴포넌트들  탐색
-		for (USceneComponent* comp : Components)
-		{
-			// 그중에 출구 들어있는 씬 컴포넌트
-			if (comp && comp->ComponentHasTag(FName("Exits Folder")))
-			{
-				// 신 컴포넌트 아래 컴포넌트들 배열에 저장
-				const TArray<USceneComponent*>ChildCom = comp->GetAttachChildren();
-				for (USceneComponent* Child : ChildCom)
-				{
-					// 출구 추가
-					ExitsList.Add(Child);
-				}
-				break;
-			}
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		}
-	}
-}
+		LatestRoom = GetWorld()->SpawnActor<AActor>(StartRoom, SpawnLocation, SpawnRotation, SpawnParams);
 
-void ANecDungeonsGenerator::SpawnNextRoom_Implementation()
-{
-	// 랜덤 출구
-	if (ExitsList.Num() == 0)
-	{
-		return;
-	}
-	SelectedExitPoint = RandomArrayItemFromArrow(ExitsList);
-	// 랜덤방
-	TSubclassOf<AActor>NextRoom = RandomArrayItemFromRoom(RoomList);
-	// 스폰 위치 
-	FTransform SpawnTransform = SelectedExitPoint->GetComponentTransform();
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	// 액터 생성하고 변수에 저장
-	LatestRoom = GetWorld()->SpawnActor<AActor>(NextRoom, SpawnTransform, SpawnParams);
-
-	//딜레이
-	StartDelay();
-}
-
-void ANecDungeonsGenerator::AddOverlappingRoomToList()
-{
-	if (LatestRoom)
-	{
-		TArray<USceneComponent*> Components;
-		LatestRoom->GetComponents<USceneComponent>(Components);
-
-		for (USceneComponent* Comp : Components)
-		{
-			if (Comp && Comp->ComponentHasTag(FName("Overlap Folder")))
-			{
-				const TArray<USceneComponent*> ChildCom = Comp->GetAttachChildren();
-				for (USceneComponent* Child : ChildCom)
-				{
-					// 자식들 중에 박스 콜리전이면
-					if (UPrimitiveComponent* PrimitiveChild = Cast<UPrimitiveComponent>(Child))
-					{
-						// 추가
-						TArray<UPrimitiveComponent*> OverlappingComponents;
-						PrimitiveChild->GetOverlappingComponents(OverlappingComponents);
-						if (!OverlappingComponents.IsEmpty())
-						{
-							OverlappedList.Append(OverlappingComponents);
-						}
-					}
-				}
-				break;
-			}
-		}
-	}
-}
-
-void ANecDungeonsGenerator::CheckForOverlap()
-{
-	AddOverlappingRoomToList();
-
-	// 오버랩 리스트가 비어있지 않다면 방금 생성한 방이 다른 방과 겹침 
-	if (!OverlappedList.IsEmpty())
-	{
-		// 오버랩 리스트 지워주고, 방 지워주고 다시 생성
-		OverlappedList.Empty();
-		LatestRoom->Destroy();
-		SpawnNextRoom();
-
-		return;
-	}
-	// 방금 생성한 방 겹치지 않음
-	else
-	{
-		OverlappedList.Empty();		
-		RoomCount += 1;
-		ExitsList.Remove(SelectedExitPoint);
-		//SelectedExitPoint = nullptr;
 		if (LatestRoom)
 		{
+			// 생성한 방의 컴포넌트 담기
 			TArray<USceneComponent*> Components;
 			LatestRoom->GetComponents<USceneComponent>(Components);
 
@@ -182,40 +90,167 @@ void ANecDungeonsGenerator::CheckForOverlap()
 					}
 					break;
 				}
+
 			}
 		}
-
-		// 문 설치할 곳 리스트에 담기
-		DoorList.Add(SelectedExitPoint);
-	}
-
-	// 아직 방 설치 가능하면 방설치
-	if (RoomCount < RoomAmount)
-	{
-		// 특수한 방 추가
-		if (RoomCount % (RoomAmount - 1) == 0)
-		{
-			RoomList = SpecialRoomList;
-		}
-		else
-		{
-			RoomList = RoomListBase;
-		}
-		SpawnNextRoom();
 	}
 	else
 	{
-		// 구멍 막기
-		CloseHoles();
-		// 문 생성
-		SpawnDoor();
-		// 타이머 종료
-		GetWorld()->GetTimerManager().ClearTimer(DungeonTimerHandle);
+		return;
+	}
+}
+
+void ANecDungeonsGenerator::SpawnNextRoom()
+{
+	if (HasAuthority())
+	{
+		// 랜덤 출구
+		if (ExitsList.Num() == 0)
+		{
+			return;
+		}
+		SelectedExitPoint = RandomArrayItemFromArrow(ExitsList);
+		// 랜덤방
+		TSubclassOf<AActor>NextRoom = RandomArrayItemFromRoom(RoomList);
+		// 스폰 위치 
+		FTransform SpawnTransform = SelectedExitPoint->GetComponentTransform();
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		// 액터 생성하고 변수에 저장
+		LatestRoom = GetWorld()->SpawnActor<AActor>(NextRoom, SpawnTransform, SpawnParams);
+
+		//딜레이
+		StartDelay();
+	}
+	else
+	{
+		return;
+	}
+}
+
+void ANecDungeonsGenerator::AddOverlappingRoomToList()
+{
+	if (HasAuthority())
+	{
+		if (LatestRoom)
+		{
+			TArray<USceneComponent*> Components;
+			LatestRoom->GetComponents<USceneComponent>(Components);
+
+			for (USceneComponent* Comp : Components)
+			{
+				if (Comp && Comp->ComponentHasTag(FName("Overlap Folder")))
+				{
+					const TArray<USceneComponent*> ChildCom = Comp->GetAttachChildren();
+					for (USceneComponent* Child : ChildCom)
+					{
+						// 자식들 중에 박스 콜리전이면
+						if (UPrimitiveComponent* PrimitiveChild = Cast<UPrimitiveComponent>(Child))
+						{
+							// 추가
+							TArray<UPrimitiveComponent*> OverlappingComponents;
+							PrimitiveChild->GetOverlappingComponents(OverlappingComponents);
+							if (!OverlappingComponents.IsEmpty())
+							{
+								OverlappedList.Append(OverlappingComponents);
+							}
+						}
+					}
+					break;
+				}
+			}
+		}
+	}
+	else
+	{
+		return;
+	}
+}
+
+void ANecDungeonsGenerator::CheckForOverlap()
+{
+	if (HasAuthority())
+	{
+		AddOverlappingRoomToList();
+
+		// 오버랩 리스트가 비어있지 않다면 방금 생성한 방이 다른 방과 겹침 
+		if (!OverlappedList.IsEmpty())
+		{
+			// 오버랩 리스트 지워주고, 방 지워주고 다시 생성
+			OverlappedList.Empty();
+			LatestRoom->Destroy();
+			SpawnNextRoom();
+
+			return;
+		}
+		// 방금 생성한 방 겹치지 않음
+		else
+		{
+			OverlappedList.Empty();
+			RoomCount += 1;
+			ExitsList.Remove(SelectedExitPoint);
+			//SelectedExitPoint = nullptr;
+			if (LatestRoom)
+			{
+				TArray<USceneComponent*> Components;
+				LatestRoom->GetComponents<USceneComponent>(Components);
+
+				// 컴포넌트들  탐색
+				for (USceneComponent* comp : Components)
+				{
+					// 그중에 출구 들어있는 씬 컴포넌트
+					if (comp && comp->ComponentHasTag(FName("Exits Folder")))
+					{
+						// 신 컴포넌트 아래 컴포넌트들 배열에 저장
+						const TArray<USceneComponent*>ChildCom = comp->GetAttachChildren();
+						for (USceneComponent* Child : ChildCom)
+						{
+							// 출구 추가
+							ExitsList.Add(Child);
+						}
+						break;
+					}
+				}
+			}
+
+			// 문 설치할 곳 리스트에 담기
+			DoorList.Add(SelectedExitPoint);
+		}
+
+		// 아직 방 설치 가능하면 방설치
+		if (RoomCount < RoomAmount)
+		{
+			// 특수한 방 추가
+			if (RoomCount % (RoomAmount - 1) == 0)
+			{
+				RoomList = SpecialRoomList;
+			}
+			else
+			{
+				RoomList = RoomListBase;
+			}
+			SpawnNextRoom();
+		}
+		else
+		{
+			// 구멍 막기
+			CloseHoles();
+			// 문 생성
+			SpawnDoor();
+			// 타이머 종료
+			GetWorld()->GetTimerManager().ClearTimer(DungeonTimerHandle);
 
 
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Blue, TEXT("Dungeon Complete"));
-		// 던전 생성 완료
-		bIsDungeonComplete = true;
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Blue, TEXT("Dungeon Complete"));
+			// 던전 생성 완료
+			bIsDungeonComplete = true;
+		}
+	}
+	else
+	{
+		return;
 	}
 }
 

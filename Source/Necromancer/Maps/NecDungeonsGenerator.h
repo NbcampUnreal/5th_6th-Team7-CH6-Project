@@ -18,11 +18,11 @@ protected:
 	virtual void BeginPlay() override;
 
 	// 시작 방 생성 함수
-	UFUNCTION(BlueprintCallable, Reliable, Server, Category = "Room")
+	UFUNCTION(BlueprintCallable, Category = "Room")
 	void SpawnStartRoom();
 
 	// 다음 방 생성 함수 
-	UFUNCTION(BlueprintCallable, Reliable, Server, Category = "Room")
+	UFUNCTION(BlueprintCallable, Category = "Room")
 	void SpawnNextRoom();
 
 	// 겹치는 방 배열에 담기
