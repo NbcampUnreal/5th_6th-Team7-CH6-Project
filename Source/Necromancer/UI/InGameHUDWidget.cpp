@@ -30,38 +30,37 @@ void UInGameHUDWidget::UpdateStamina(float CurrentStamina, float MaxStamina)
 
 void UInGameHUDWidget::InitHUD()
 {
-	if (PlayerStatComponent && PlayerStaminaComponent)
-	{
-		return;
-	}
-
 	ANecPlayerState* PS = GetOwningPlayerState<ANecPlayerState>();
-	if (!PS)
+	if (!IsValid(PS))
 	{
 		return;
 	}
 
-	PlayerStatComponent = PS->GetStatComponent();
-	if (IsValid(PlayerStatComponent))
+	if (!IsValid(PlayerStatComponent))
 	{
-		PlayerStatComponent->OnHealthChanged.AddDynamic(this, &UInGameHUDWidget::UpdateHealth);
-		UpdateHealth(PlayerStatComponent->GetCurrentHealth(), PlayerStatComponent->GetMaxHealth());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("InGameHUD: Could not found StatComponent."));
-		return;
+		PlayerStatComponent = PS->GetStatComponent();
+		if (IsValid(PlayerStatComponent))
+		{
+			PlayerStatComponent->OnHealthChanged.AddDynamic(this, &UInGameHUDWidget::UpdateHealth);
+			UpdateHealth(PlayerStatComponent->GetCurrentHealth(), PlayerStatComponent->GetMaxHealth());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("InGameHUD: Could not find StatComponent."));
+		}
 	}
 
-	PlayerStaminaComponent = PS->GetStaminaComponent();
-	if (IsValid(PlayerStaminaComponent))
+	if (!IsValid(PlayerStaminaComponent))
 	{
-		PlayerStaminaComponent->OnStaminaChanged.AddDynamic(this, &UInGameHUDWidget::UpdateStamina);
-		UpdateStamina(PlayerStaminaComponent->GetCurrentStamina(), PlayerStaminaComponent->GetMaxStamina());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("InGameHUD: Could not found StaminaComponent."));
-		return;
+		PlayerStaminaComponent = PS->GetStaminaComponent();
+		if (IsValid(PlayerStaminaComponent))
+		{
+			PlayerStaminaComponent->OnStaminaChanged.AddDynamic(this, &UInGameHUDWidget::UpdateStamina);
+			UpdateStamina(PlayerStaminaComponent->GetCurrentStamina(), PlayerStaminaComponent->GetMaxStamina());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("InGameHUD: Could not find StaminaComponent."));
+		}
 	}
 }
