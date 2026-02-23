@@ -46,8 +46,8 @@ public:
 	TArray<FComboActionInfo> ComboActions;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
-	TObjectPtr<USoundBase> AttackSound;
+	TObjectPtr<USoundBase> SwingSound;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
-	TObjectPtr<USoundBase> HitSound;
+	TObjectPtr<USoundBase> AttackSound;
 };

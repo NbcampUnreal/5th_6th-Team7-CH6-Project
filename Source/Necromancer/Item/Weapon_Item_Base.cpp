@@ -75,9 +75,9 @@ void AWeapon_Item_Base::StartAttack()
 
     SetActorTickEnabled(true);
 
-    if (WeaponData && WeaponData->AttackSound)
+    if (WeaponData && WeaponData->SwingSound)
     {
-        UGameplayStatics::PlaySoundAtLocation(this, WeaponData->AttackSound, GetActorLocation());
+        UGameplayStatics::PlaySoundAtLocation(this, WeaponData->SwingSound, GetActorLocation());
     }
 }
 
@@ -170,9 +170,9 @@ void AWeapon_Item_Base::PerformTrace()
 
                 FVector HitLocation = Hit.ImpactPoint;
 
-                if (WeaponData && WeaponData->HitSound)
+                if (WeaponData && WeaponData->AttackSound)
                 {
-                    UGameplayStatics::PlaySoundAtLocation(this, WeaponData->HitSound, HitLocation);
+                    UGameplayStatics::PlaySoundAtLocation(this, WeaponData->AttackSound, HitLocation);
                 }
             }
         }
