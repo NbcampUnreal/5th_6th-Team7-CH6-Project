@@ -75,9 +75,9 @@ void AWeapon_Item_Base::StartAttack()
 
     SetActorTickEnabled(true);
 
-    if (AttackSound)
+    if (WeaponData && WeaponData->SwingSound)
     {
-        UGameplayStatics::PlaySoundAtLocation(this, AttackSound, GetActorLocation());
+        UGameplayStatics::PlaySoundAtLocation(this, WeaponData->SwingSound, GetActorLocation());
     }
 }
 
@@ -120,9 +120,12 @@ void AWeapon_Item_Base::PerformTrace()
         QueryParams
     );
 
-    FColor DrawColor = bHit ? FColor::Green : FColor::Red;
-    //DrawDebugBox(GetWorld(), LastCenterLocation, BoxHalfExtent, BoxRotation, DrawColor, false, 1.0f);
-    //DrawDebugLine(GetWorld(), LastCenterLocation, CurrentCenterLocation, FColor::Yellow, false, 1.0f);
+    if (bDrawDebug)
+    {
+        FColor DrawColor = bHit ? FColor::Green : FColor::Red;
+        DrawDebugBox(GetWorld(), LastCenterLocation, BoxHalfExtent, BoxRotation, DrawColor, false, 1.0f);
+        DrawDebugLine(GetWorld(), LastCenterLocation, CurrentCenterLocation, FColor::Yellow, false, 1.0f);
+    }
 
     if (bHit)
     {
@@ -155,7 +158,7 @@ void AWeapon_Item_Base::PerformTrace()
 
                 HitActors.Add(HitActor);
 
-                float FinalDamage = Damage * CurrentDamageMultiplier;
+                float FinalDamage = WeaponData ? WeaponData->BaseDamage * CurrentDamageMultiplier : 0;
 
                 UGameplayStatics::ApplyDamage(
                     HitActor,
@@ -167,9 +170,9 @@ void AWeapon_Item_Base::PerformTrace()
 
                 FVector HitLocation = Hit.ImpactPoint;
 
-                if (HitSound)
+                if (WeaponData && WeaponData->AttackSound)
                 {
-                    UGameplayStatics::PlaySoundAtLocation(this, HitSound, HitLocation);
+                    UGameplayStatics::PlaySoundAtLocation(this, WeaponData->AttackSound, HitLocation);
                 }
             }
         }

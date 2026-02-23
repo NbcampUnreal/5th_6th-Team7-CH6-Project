@@ -122,15 +122,15 @@ void UCombatComponent::CheckComboTransition()
 
 void UCombatComponent::SetGuard(bool bInGuarding)
 {
-    if (bIsGuarding == bInGuarding)
+    if (OwnerCharacter && OwnerCharacter->HasAuthority())
     {
-        return;
+        bIsGuarding = bInGuarding;
+        UpdateGuardVisuals();
     }
-
-    bIsGuarding = bInGuarding;
-    UpdateGuardVisuals();
-
-    Server_SetGuard(bInGuarding);
+    else
+    {
+        Server_SetGuard(bInGuarding);
+    }
 }
 
 void UCombatComponent::OnRep_bIsGuarding()
@@ -140,7 +140,13 @@ void UCombatComponent::OnRep_bIsGuarding()
 
 void UCombatComponent::UpdateGuardVisuals()
 {
-    if (!OwnerCharacter || !GuardMontage)
+    if (!OwnerCharacter || !CurrentWeapon)
+    {
+        return;
+    }
+
+    UAnimMontage* GuardMontage = CurrentWeapon->GetGuardMontage();
+    if (!GuardMontage)
     {
         return;
     }
@@ -153,7 +159,10 @@ void UCombatComponent::UpdateGuardVisuals()
 
     if (bIsGuarding)
     {
-        OwnerCharacter->PlayAnimMontage(GuardMontage, 1.0f, TEXT("StartGuard"));
+        if (!AnimInstance->Montage_IsPlaying(GuardMontage))
+        {
+            OwnerCharacter->PlayAnimMontage(GuardMontage, 1.0f, TEXT("StartGuard"));
+        }
     }
     else
     {
