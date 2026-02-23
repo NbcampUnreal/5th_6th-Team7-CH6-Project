@@ -1,4 +1,4 @@
-//ItemBass.h
+// ItemBass.h
 
 #pragma once
 
@@ -16,8 +16,8 @@ struct FItemInstanceData
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     FName ItemID;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    int32 Count = 1;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    int32 CurrentDurability = 0;
 };
 
 UCLASS()
@@ -38,9 +38,8 @@ public:
     UFUNCTION(Server, Reliable)
     void Server_Drop(const FVector& DropLocation);
 
-    bool AddCount(int32 Amount);
-    bool RemoveCount(int32 Amount);
-    bool IsEmpty() const { return ItemData.Count <= 0; }
+    bool ReduceDurability(int32 Amount);
+    bool IsBroken() const { return ItemData.CurrentDurability <= 0; }
 
 protected:
     virtual void ExecuteUse(class ACharacter* User);
