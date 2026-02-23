@@ -21,3 +21,5 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Recovery")
 	float HealAmount = 50.f;
 };
+
+

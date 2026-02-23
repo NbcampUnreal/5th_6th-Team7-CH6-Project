@@ -6,6 +6,7 @@
 
 ARecovery_Potion::ARecovery_Potion()
 {
+	//ItemData.CurrentDurability = 1;
 }
 
 void ARecovery_Potion::ExecuteUse(ACharacter* User)
@@ -21,4 +22,6 @@ void ARecovery_Potion::ExecuteUse(ACharacter* User)
 	}
 
 	Super::ExecuteUse(User);
+
+	UE_LOG(LogTemp, Log, TEXT("Recovery Potion Used. Heal: %f"), HealAmount);
 }
