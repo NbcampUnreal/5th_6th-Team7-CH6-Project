@@ -4,6 +4,10 @@
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AISense_Damage.h"
 #include "GenericTeamAgentInterface.h"
+#include "Character/NecPlayerCharacter.h"
+#include "Component/CombatComponent.h"
+#include "Component/StaminaComponent.h"
+#include "Item/Weapon_Item_Base.h"
 
 UStatComponent::UStatComponent()
 	: CurrentHealth(0.0f)
@@ -47,7 +51,25 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
         return;
     }
 
-    float ActualDamage = FMath::Max(Damage - Armor, 0.0f);
+    float ActualDamage = Damage;
+
+    ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(DamagedActor);
+    if (PlayerCharacter)
+    {
+        UCombatComponent* CombatComp = PlayerCharacter->FindComponentByClass<UCombatComponent>();
+        if (CombatComp && CombatComp->IsGuarding())
+        {
+            ActualDamage *= CombatComp->GetCurrentWeapon()->GetGuardRate();
+
+            UStaminaComponent* StaminaComp = PlayerCharacter->GetStaminaComponent();
+            if (StaminaComp)
+            {
+                StaminaComp->ConsumeStamina(30.0f);
+            }
+        }
+    }
+
+    ActualDamage = FMath::Max(ActualDamage - Armor, 0.0f);
     float NewHealth = FMath::Clamp(CurrentHealth - ActualDamage, 0.0f, MaxHealth);
 
     SetCurrentHealth(NewHealth);

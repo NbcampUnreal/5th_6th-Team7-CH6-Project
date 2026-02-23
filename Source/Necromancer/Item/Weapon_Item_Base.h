@@ -31,7 +31,11 @@ public:
 	EWeaponType GetWeaponType() const { return WeaponData ? WeaponData->WeaponType : EWeaponType::Unarmed; }
 
 	UAnimMontage* GetAttackMontage() const { return WeaponData ? WeaponData->AttackMontage : nullptr; }
+	UAnimMontage* GetGuardMontage() const { return WeaponData ? WeaponData->GuardMontage : nullptr; }
+
 	float GetDamage() const { return WeaponData ? WeaponData->BaseDamage : 0.0f; }
+	float GetGuardRate() const { return WeaponData ? WeaponData->BaseGuardRate : 0.0f; }
+	
 	const TArray<FComboActionInfo>& GetComboActions() const { return WeaponData ? WeaponData->ComboActions : EmptyComboActions; }
 	int32 GetMaxComboCount() const { return WeaponData ? WeaponData->ComboActions.Num() : 0; }
 	

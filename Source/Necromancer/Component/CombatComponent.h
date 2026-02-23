@@ -67,9 +67,6 @@ protected:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<AWeapon_Item_Base> CurrentWeapon;
 
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	TObjectPtr<UAnimMontage> GuardMontage;
-
 	UPROPERTY(ReplicatedUsing = OnRep_bIsGuarding, BlueprintReadOnly, Category = "Combat")
 	bool bIsGuarding = false;
 
