@@ -4,26 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Item/ItemBass.h"
+#include "DataAsset/WeaponDataAsset.h"
 #include "Weapon_Item_Base.generated.h"
 
 class USkeletalMeshComponent;
 class UBoxComponent;
 class USoundBase;
-
-USTRUCT(BlueprintType)
-struct FComboActionInfo
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FName MontageSectionName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float StaminaCost;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DamageMultiplier = 1.0f;
-};
 
 UCLASS(Abstract)
 class NECROMANCER_API AWeapon_Item_Base : public AItemBass
@@ -41,12 +27,13 @@ public:
 	virtual void StartAttack();
 	virtual void EndAttack();
 
-	UAnimMontage* GetAttackMontage() const { return AttackMontage; }
-	float GetDamage() const { return Damage; }
-	float GetStaminaCost() const { return StaminaCost; }
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	EWeaponType GetWeaponType() const { return WeaponData ? WeaponData->WeaponType : EWeaponType::Unarmed; }
 
-	const TArray<FComboActionInfo>& GetComboActions() const { return ComboActions; }
-	int32 GetMaxComboCount() const { return ComboActions.Num(); }
+	UAnimMontage* GetAttackMontage() const { return WeaponData ? WeaponData->AttackMontage : nullptr; }
+	float GetDamage() const { return WeaponData ? WeaponData->BaseDamage : 0.0f; }
+	const TArray<FComboActionInfo>& GetComboActions() const { return WeaponData ? WeaponData->ComboActions : EmptyComboActions; }
+	int32 GetMaxComboCount() const { return WeaponData ? WeaponData->ComboActions.Num() : 0; }
 	
 	void SetDamageMultiplier(float NewMultiplier) { CurrentDamageMultiplier = NewMultiplier; }
 
@@ -69,22 +56,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
 	FName EndSocketName = FName("TraceEnd");
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Sound")
-	TObjectPtr<USoundBase> AttackSound;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TObjectPtr<UWeaponDataAsset> WeaponData;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Sound")
-	TObjectPtr<USoundBase> HitSound;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	float Damage = 10.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
+	bool bDrawDebug = false;
 
 	float CurrentDamageMultiplier = 1.0f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	TObjectPtr<UAnimMontage> AttackMontage;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	float StaminaCost = 20.0f;
 
 	bool bIsAttacking = false;
 
@@ -92,6 +70,6 @@ protected:
 
 	FVector LastCenterLocation = FVector::ZeroVector;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Combat|Combo")
-	TArray<FComboActionInfo> ComboActions;
+private:
+	TArray<FComboActionInfo> EmptyComboActions;
 };

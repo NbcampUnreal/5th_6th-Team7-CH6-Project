@@ -7,7 +7,7 @@
 
 ASword_Item::ASword_Item()
 {
-	Damage = 20.f;
+	//Damage = 20.f;
 
 	////¸Å½¬
 	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> SwordMeshAsset(	TEXT(""));
