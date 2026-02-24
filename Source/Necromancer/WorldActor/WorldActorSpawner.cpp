@@ -20,7 +20,7 @@ void UWorldActorSpawner::BeginPlay()
 
 void UWorldActorSpawner::CollectSpawnPoints()
 {
-	SubmitSpawnDataList.Empty();
+	SpawnDataList.Empty();
 
 	AActor* Owner = GetOwner();
 	if (!Owner) return;
@@ -35,40 +35,21 @@ void UWorldActorSpawner::CollectSpawnPoints()
 	{
 		USceneComponent* SceneComp = Cast<USceneComponent>(Comp);
 		if (SceneComp){
+			FActorSpawnData Data;
 			if (SceneComp->ComponentHasTag(FName("SubmitSpawnPoint")))
 			{
-				SubmitSpawnPoints.Add(SceneComp);
+				Data.SpawnCategory = ESpawnCategory::Submit;
+				Data.SpawnPoint = SceneComp;
+				SpawnDataList.Add(Data);
 			}
-			if (SceneComp->ComponentHasTag(FName("ItemSpawnPoint")))
-			{
-				ItemSpawnPoints.Add(SceneComp);
+			else if (SceneComp->ComponentHasTag(FName("ItemSpawnPoint")))
+			{				
+				Data.SpawnCategory = ESpawnCategory::Item;
+				Data.SpawnPoint = SceneComp;
+				SpawnDataList.Add(Data);
 			}
+			
 		}
 	}
-
-
-	int32 Count = FMath::Min(SubmmitActorClasses.Num(), SubmitSpawnPoints.Num());
-	for (int32 i = 0; i < Count; i++)
-	{
-		if (SubmmitActorClasses[i])
-		{
-			FActorSpawnData Data;
-			Data.WorldActorClass = SubmmitActorClasses[i];
-			Data.SpawnPoint = SubmitSpawnPoints[i];
-			SubmitSpawnDataList.Add(Data);
-		}
-	}
-	Count = FMath::Min(ItemActorClasses.Num(), ItemSpawnPoints.Num());
-	for (int32 i = 0; i < Count; i++)
-	{
-		if (ItemActorClasses[i])
-		{
-			FActorSpawnData Data;
-			Data.WorldActorClass = ItemActorClasses[i];
-			Data.SpawnPoint = ItemSpawnPoints[i];
-			ItemSpawnDataList.Add(Data);
-		}
-	}
-	UE_LOG(LogTemp, Log, TEXT("MonsterSpawner [%s]: Found %d SpawnPoints, %d MonsterClasses, %d matched"), *Owner->GetName(), SubmitSpawnPoints.Num(), SubmmitActorClasses.Num(), SubmitSpawnDataList.Num());
 }
 

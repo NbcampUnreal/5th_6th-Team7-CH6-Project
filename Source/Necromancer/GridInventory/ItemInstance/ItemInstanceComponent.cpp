@@ -58,7 +58,7 @@ void UItemInstanceComponent::CreateInventoryIfNeeded()
 	{
 		return;
 	}
-	UItemDataSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UItemDataSubsystem>();
+	UDataTableSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
 	const FItemData* Data = Subsystem->GetItemData(ItemInstance->ItemID);
 	if (!Data) {
 		return;

@@ -8,6 +8,7 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 
+#include "GridInventory/ItemData/ItemDataSubsystem.h"
 // Sets default values
 AWorldActorSpawnManager::AWorldActorSpawnManager()
 {
@@ -38,65 +39,146 @@ void AWorldActorSpawnManager::StartSpawning()
 {
 	CollectAllSpawnEntries();
 
-	if (SubmitSpawnQueue.Num() == 0&& ItemSpawnQueue.Num() == 0)
+	if (SpawnQueue.Num() == 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SpawnManager: No Submit spawn entries found"));
 		return;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("SpawnManager: %d monsters queued"), SubmitSpawnQueue.Num());
-	CurrentSubmitSpawnIndex = 0;
-	CurrentItemSpawnIndex = 0;
+	UE_LOG(LogTemp, Log, TEXT("SpawnManager: %d monsters queued"), SpawnQueue.Num());
+	CurrentSpawnIndex = 0;
 
 	if (SpawnDelay <= 0.0f)
 	{
-		for (int32 i = 0; i < SubmitSpawnQueue.Num(); i++)
+		for (int32 i = 0; i < SpawnQueue.Num(); i++)
 		{
-			CurrentSubmitSpawnIndex = i;
-			SubmitSpawnNextInQueue();
+			const FActorSpawnData& Entry = SpawnQueue[i];
+
+			if (Entry.SpawnPoint)
+			{
+				FVector Location = Entry.SpawnPoint->GetComponentLocation();
+				FRotator Rotation = Entry.SpawnPoint->GetComponentRotation();
+
+				FActorSpawnParameters Params;
+				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+				UWorld* World = GetWorld();
+				if (!World) {
+					UE_LOG(LogTemp, Warning, TEXT("Spawn failed: World is null"));
+					CurrentSpawnIndex++;
+					return;
+				}
+				UGameInstance* GI = World->GetGameInstance();
+				if (!GI) {
+					UE_LOG(LogTemp, Warning, TEXT("Spawn failed: GameInstance is null"));
+					CurrentSpawnIndex++;
+					return;
+				}
+				UDataTableSubsystem* Subsystem = GI->GetSubsystem<UDataTableSubsystem>();
+				if (!Subsystem) {
+					UE_LOG(LogTemp, Warning, TEXT("Spawn failed: ItemDataSubsystem is null"));
+					CurrentSpawnIndex++;
+					return;
+				}
+
+				AActor* SubmitActor = nullptr;
+
+				switch (Entry.SpawnCategory)
+				{
+				case ESpawnCategory::Submit:
+				{
+					// Submit 전용 로직
+					const  FworldActorInfo* WorldActorInfo = Subsystem->GetworldActorInfo("Bucket");
+					if (!WorldActorInfo)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Spawn failed: WorldActorInfo is null"));
+						break;
+					}
+
+					if (!WorldActorInfo->WorldActorClass)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Spawn failed: WorldActorClass is null"));
+						break;
+					}
+
+					SubmitActor = World->SpawnActor<AActor>(
+						WorldActorInfo->WorldActorClass,
+						Location,
+						Rotation,
+						Params
+					);
+					break;
+				}
+				case ESpawnCategory::Item:
+				{
+					// Item 전용 로직
+					const FItemData* ItemData = Subsystem->GetRandomItemData();
+					if (!ItemData)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Spawn failed: ItemData is null"));
+						break;
+					}
+
+					if (!ItemData->DropItemActorClass)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Spawn failed: DropItemActorClass is null"));
+						break;
+					}
+
+					SubmitActor = World->SpawnActor<AActor>(
+						ItemData->DropItemActorClass,
+						Location,
+						Rotation,
+						Params
+					);
+					break;
+				}
+				default:
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Unknown SpawnCategory"));
+					break;
+				}
+				}
+			}
 		}
-		for (int32 i = 0; i < ItemSpawnQueue.Num(); i++)
+		for (int32 i = 0; i < SpawnQueue.Num(); i++)
 		{
-			CurrentItemSpawnIndex = i;
-			ItemSpawnNextInQueue();
+			CurrentSpawnIndex = i;
 		}
 	}
 	else
 	{
-		GetWorld()->GetTimerManager().SetTimer(SpawnTimerHandle, this, &AWorldActorSpawnManager::SubmitSpawnNextInQueue, SpawnDelay, true);
-		GetWorld()->GetTimerManager().SetTimer(SpawnTimerHandle, this, &AWorldActorSpawnManager::ItemSpawnNextInQueue, SpawnDelay, true);
+		GetWorld()->GetTimerManager().SetTimer(SpawnTimerHandle, this, &AWorldActorSpawnManager::SpawnNextInQueue, SpawnDelay, true);
 	}
 }
 
 void AWorldActorSpawnManager::CollectAllSpawnEntries()
 {
-	SubmitSpawnQueue.Empty();
+	SpawnQueue.Empty();
 
-	// 월드의 모든 액터에서 UMonsterSpawner 컴포넌트를 찾기
 	for (TActorIterator<AActor> It(GetWorld()); It; ++It)
 	{
 		UWorldActorSpawner* Spawner = It->FindComponentByClass<UWorldActorSpawner>();
 		if (Spawner && !Spawner->bHasSpawned)
 		{
-			SubmitSpawnQueue.Append(Spawner->SubmitSpawnDataList);
-			ItemSpawnQueue.Append(Spawner->ItemSpawnDataList);
+			SpawnQueue.Append(Spawner->SpawnDataList);
 			Spawner->bHasSpawned = true;
 		}
 	}
 }
 
-void AWorldActorSpawnManager::SubmitSpawnNextInQueue()
+void AWorldActorSpawnManager::SpawnNextInQueue()
 {
-	if (CurrentSubmitSpawnIndex >= SubmitSpawnQueue.Num())
+	if (CurrentSpawnIndex >= SpawnQueue.Num())
 	{
 		GetWorld()->GetTimerManager().ClearTimer(SpawnTimerHandle);
-		UE_LOG(LogTemp, Log, TEXT("SpawnManager: All %d submitActor spawned"), SubmitSpawnQueue.Num());
+		UE_LOG(LogTemp, Log, TEXT("SpawnManager: All %d submitActor spawned"), SpawnQueue.Num());
 		return;
 	}
 
-	const FActorSpawnData& Entry = SubmitSpawnQueue[CurrentSubmitSpawnIndex];
+	const FActorSpawnData& Entry = SpawnQueue[CurrentSpawnIndex];
 
-	if (Entry.WorldActorClass && Entry.SpawnPoint)
+	if (Entry.SpawnPoint)
 	{
 		FVector Location = Entry.SpawnPoint->GetComponentLocation();
 		FRotator Rotation = Entry.SpawnPoint->GetComponentRotation();
@@ -104,45 +186,92 @@ void AWorldActorSpawnManager::SubmitSpawnNextInQueue()
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-		AActor* SubmitActor = GetWorld()->SpawnActor<AActor>(Entry.WorldActorClass, Location, Rotation, Params);
+		UWorld* World = GetWorld();
+		if (!World)	{
+			UE_LOG(LogTemp, Warning, TEXT("Spawn failed: World is null"));
+			CurrentSpawnIndex++;
+			return;
+		}
+		UGameInstance* GI = World->GetGameInstance();
+		if (!GI){
+			UE_LOG(LogTemp, Warning, TEXT("Spawn failed: GameInstance is null"));
+			CurrentSpawnIndex++;
+			return;
+		}
+		UDataTableSubsystem* Subsystem = GI->GetSubsystem<UDataTableSubsystem>();
+		if (!Subsystem){
+			UE_LOG(LogTemp, Warning, TEXT("Spawn failed: ItemDataSubsystem is null"));
+			CurrentSpawnIndex++;
+			return;
+		}
 
+		AActor* SubmitActor = nullptr;
+
+		switch (Entry.SpawnCategory)
+		{
+		case ESpawnCategory::Submit:
+		{
+			// Submit 전용 로직
+			const  FworldActorInfo* WorldActorInfo = Subsystem->GetworldActorInfo("Bucket");
+			if (!WorldActorInfo)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Spawn failed: WorldActorInfo is null"));
+				break;
+			}
+
+			if (!WorldActorInfo->WorldActorClass)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Spawn failed: WorldActorClass is null"));
+				break;
+			}
+
+			SubmitActor = World->SpawnActor<AActor>(
+				WorldActorInfo->WorldActorClass,
+				Location,
+				Rotation,
+				Params
+			);
+			break;
+		}
+		case ESpawnCategory::Item:
+		{
+			// Item 전용 로직
+			const FItemData* ItemData = Subsystem->GetRandomItemData();
+			if (!ItemData)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Spawn failed: ItemData is null"));
+				break;
+			}
+
+			if (!ItemData->DropItemActorClass)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Spawn failed: DropItemActorClass is null"));
+				break;
+			}
+
+			SubmitActor = World->SpawnActor<AActor>(
+				ItemData->DropItemActorClass,
+				Location,
+				Rotation,
+				Params
+			);
+			break;
+		}
+		default:
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Unknown SpawnCategory"));
+			break;
+			}
+		}		
+
+		
 		if (SubmitActor)
 		{
-			UE_LOG(LogTemp, Log, TEXT("Spawned [%d/%d]: %s"), CurrentSubmitSpawnIndex + 1, SubmitSpawnQueue.Num(), *Entry.WorldActorClass->GetName());
+			UE_LOG(LogTemp, Log, TEXT("Spawned [%d/%d]"), CurrentSpawnIndex + 1, SpawnQueue.Num());
 		}
 	}
 
-	CurrentSubmitSpawnIndex++;
-}
-
-void AWorldActorSpawnManager::ItemSpawnNextInQueue()
-{
-	if (CurrentItemSpawnIndex >= ItemSpawnQueue.Num())
-	{
-		GetWorld()->GetTimerManager().ClearTimer(SpawnTimerHandle);
-		UE_LOG(LogTemp, Log, TEXT("SpawnManager: All %d submitActor spawned"), ItemSpawnQueue.Num());
-		return;
-	}
-
-	const FActorSpawnData& Entry = ItemSpawnQueue[CurrentItemSpawnIndex];
-
-	if (Entry.WorldActorClass && Entry.SpawnPoint)
-	{
-		FVector Location = Entry.SpawnPoint->GetComponentLocation();
-		FRotator Rotation = Entry.SpawnPoint->GetComponentRotation();
-
-		FActorSpawnParameters Params;
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-		AActor* SubmitActor = GetWorld()->SpawnActor<AActor>(Entry.WorldActorClass, Location, Rotation, Params);
-
-		if (SubmitActor)
-		{
-			UE_LOG(LogTemp, Log, TEXT("Spawned [%d/%d]: %s"), CurrentItemSpawnIndex + 1, ItemSpawnQueue.Num(), *Entry.WorldActorClass->GetName());
-		}
-	}
-
-	CurrentItemSpawnIndex++;
+	CurrentSpawnIndex++;
 }
 
 

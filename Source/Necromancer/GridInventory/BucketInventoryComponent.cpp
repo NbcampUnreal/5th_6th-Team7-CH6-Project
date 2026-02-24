@@ -63,8 +63,8 @@ int32 UBucketInventoryComponent::GetBucketTotalCost() const
     if (!DefaultContainer)
         return 0;
 
-    UItemDataSubsystem* Subsystem =
-        GetWorld()->GetGameInstance()->GetSubsystem<UItemDataSubsystem>();
+    UDataTableSubsystem* Subsystem =
+        GetWorld()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
 
     if (!Subsystem)
         return 0;
