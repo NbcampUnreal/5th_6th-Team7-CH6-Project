@@ -3,12 +3,14 @@
 
 #include "UI/ReadyWidget.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 
 #include "GameInstance/NecAFGameInstance.h"
+#include "GameMode/NecWaitingGameMode.h"
 #include "Game/NecGameState.h"
-#include "Controller/NecPlayerController.h"
+#include "Controller/NecWaitingPlayerController.h"
 
 void UReadyWidget::NativeConstruct()
 {
@@ -26,11 +28,17 @@ void UReadyWidget::NativeConstruct()
 
 void UReadyWidget::OnStartGameButtonClicked()
 {
-	ANecPlayerController* PC = Cast<ANecPlayerController>(GetOwningPlayer());
-	if (PC)
+	ANecWaitingGameMode* NecWaitingGM = Cast<ANecWaitingGameMode>(GetWorld()->GetAuthGameMode());
+	if (NecWaitingGM)
 	{
-		PC->OnStartGame();
+		NecWaitingGM->StartGame();
 	}
+
+	//ANecWaitingPlayerController* NecWaitingPC = Cast<ANecWaitingPlayerController>(GetOwningPlayer());
+	//if (NecWaitingPC)
+	//{
+	//	NecWaitingPC->StartGame();
+	//}
 }
 
 void UReadyWidget::OnInviteFriendButtonClicked()

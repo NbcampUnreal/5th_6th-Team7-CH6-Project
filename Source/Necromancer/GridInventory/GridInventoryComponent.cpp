@@ -337,7 +337,7 @@ bool UGridInventoryComponent::CanAddItemToPos(UItemInstance* NewItem,
     }
 
     /* 2. 컨테이너 여부 */
-    UItemDataSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UItemDataSubsystem>();
+    UDataTableSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
     const FItemData* ItemData = Subsystem->GetItemData(NewItem->ItemID);
     const FItemData* ContainerData = Subsystem->GetItemData(ContainerItem->ItemID);
     if (!ItemData||!ContainerData) {
@@ -529,7 +529,7 @@ bool UGridInventoryComponent::CanAddToConatiner(UItemInstance* NewItem, const FG
         return false;
     }
 
-    UItemDataSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UItemDataSubsystem>();
+    UDataTableSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
     const FItemData* Data = Subsystem->GetItemData(NewItem->ItemID);
     const FItemData* ContainerData = Subsystem->GetItemData(ContainerItem->ItemID);
     if (!Data || !ContainerData) {
