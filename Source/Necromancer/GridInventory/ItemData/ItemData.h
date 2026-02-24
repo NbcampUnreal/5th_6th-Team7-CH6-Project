@@ -105,6 +105,39 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
     int32 Cost;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
-    int32 Rare;
+};
+
+
+USTRUCT(BlueprintType)
+struct FDropInfo : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere)
+    FName ItemID;
+
+    UPROPERTY(EditAnywhere)
+    int32 DropWeight;
+
+    UPROPERTY(EditAnywhere)
+    int32 MinLevel;
+
+    UPROPERTY(EditAnywhere)
+    int32 MaxLevel;
+};
+
+
+USTRUCT(BlueprintType)
+struct FworldActorInfo : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere)
+    FName ActorID;
+
+    UPROPERTY(EditAnywhere)
+    TSubclassOf<AActor> WorldActorClass;
+
+    UPROPERTY(EditAnywhere)
+    int32 Level;
 };

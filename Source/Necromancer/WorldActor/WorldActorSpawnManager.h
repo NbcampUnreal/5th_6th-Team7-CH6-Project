@@ -37,14 +37,11 @@ private:
 	FTimerHandle CheckTimerHandle;
 	FTimerHandle SpawnTimerHandle;
 
-	TArray<FActorSpawnData> SubmitSpawnQueue;
-	TArray<FActorSpawnData> ItemSpawnQueue;
+	TArray<FActorSpawnData> SpawnQueue;
 
-	int32 CurrentSubmitSpawnIndex = 0;
-	int32 CurrentItemSpawnIndex = 0;
+	int32 CurrentSpawnIndex = 0;
 
 	void CheckDungeonComplete();
 	void CollectAllSpawnEntries();
-	void SubmitSpawnNextInQueue();
-	void ItemSpawnNextInQueue();
+	void SpawnNextInQueue();
 };

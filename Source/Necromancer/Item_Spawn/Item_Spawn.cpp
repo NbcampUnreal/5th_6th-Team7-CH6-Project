@@ -46,7 +46,7 @@ void AItem_Spawn::SpawnItem(FName ItemID)
 
 void AItem_Spawn::Internal_SpawnItem(FName ItemID)
 {
-	UItemDataSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UItemDataSubsystem>();
+	UDataTableSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
 	const FItemData* Data = Subsystem->GetItemData(ItemID);
 
 	GetWorld()->SpawnActor<AActor>(
