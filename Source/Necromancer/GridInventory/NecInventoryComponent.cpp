@@ -253,8 +253,8 @@ void UNecInventoryComponent::DropItemInWorld_Internal(UItemInstance* DropItem)
 		return;
 	}
 
-	UItemDataSubsystem* Subsystem =
-		GetWorld()->GetGameInstance()->GetSubsystem<UItemDataSubsystem>();
+	UDataTableSubsystem* Subsystem =
+		GetWorld()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
 
 	if (!Subsystem)
 	{
@@ -486,8 +486,8 @@ void UNecInventoryComponent::EquipItem_Internal(UItemInstance* EquipItem)
 		return;
 	}
 
-	UItemDataSubsystem* Subsystem =
-		GetWorld()->GetGameInstance()->GetSubsystem<UItemDataSubsystem>();
+	UDataTableSubsystem* Subsystem =
+		GetWorld()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
 
 	if (!Subsystem)
 	{
