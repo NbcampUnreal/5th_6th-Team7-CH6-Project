@@ -10,6 +10,7 @@
 class USkeletalMeshComponent;
 class UBoxComponent;
 class USoundBase;
+class UNiagaraSystem;
 
 UCLASS(Abstract)
 class NECROMANCER_API AWeapon_Item_Base : public AItemBass
@@ -44,6 +45,8 @@ public:
 protected:
 	void PerformTrace();
 
+	void PlayHitEffect(const FVector& Location);
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
@@ -65,6 +68,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
 	bool bDrawDebug = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|FX")
+	TObjectPtr<UNiagaraSystem> HitEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|FX")
+	TObjectPtr<USoundBase> HitSound;
 
 	float CurrentDamageMultiplier = 1.0f;
 

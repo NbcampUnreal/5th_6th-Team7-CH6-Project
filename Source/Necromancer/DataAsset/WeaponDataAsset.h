@@ -2,6 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Sound/SoundBase.h"
+#include "NiagaraSystem.h"
+#include "Animation/AnimMontage.h"
 #include "WeaponDataAsset.generated.h"
 
 UENUM(BlueprintType)
@@ -59,4 +62,10 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<USoundBase> AttackSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Effect")
+	TObjectPtr<UNiagaraSystem> HitEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Effect")
+	TObjectPtr<USoundBase> HitSound;
 };

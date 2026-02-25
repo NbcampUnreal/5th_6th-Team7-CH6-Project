@@ -7,37 +7,37 @@
 #include "Game/NecPlayerState.h"
 
 UStaminaComponent::UStaminaComponent()
-	: CurrentStamina(0.0f)	
-	, CurrentDrainRate(0.0f)
+    : CurrentStamina(0.0f)
+    , CurrentDrainRate(0.0f)
 {
-	SetIsReplicatedByDefault(true);
+    SetIsReplicatedByDefault(true);
 
-	PrimaryComponentTick.bCanEverTick = true;
+    PrimaryComponentTick.bCanEverTick = true;
 }
 
 void UStaminaComponent::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-	if (GetOwner()->HasAuthority())
-	{
-		CurrentStamina = MaxStamina;
+    if (GetOwner()->HasAuthority())
+    {
+        CurrentStamina = MaxStamina;
 
-		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
-	}
+        OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+    }
 }
 
 void UStaminaComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UStaminaComponent, CurrentStamina);
-	DOREPLIFETIME(UStaminaComponent, bIsExhausted);
+    DOREPLIFETIME(UStaminaComponent, CurrentStamina);
+    DOREPLIFETIME(UStaminaComponent, bIsExhausted);
 }
 
 void UStaminaComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
     bool bIsDraining = CurrentDrainRate > 0.0f;
     bool bIsMoving = false;
@@ -102,7 +102,7 @@ void UStaminaComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 void UStaminaComponent::OnRep_CurrentStamina()
 {
-	OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+    OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
 }
 
 void UStaminaComponent::OnRep_IsExhausted()
@@ -115,19 +115,19 @@ void UStaminaComponent::OnRep_IsExhausted()
 
 bool UStaminaComponent::ConsumeStamina(float Amount)
 {
-	if (!GetOwner()->HasAuthority())
-	{
-		return false;
-	}
+    if (!GetOwner()->HasAuthority())
+    {
+        return false;
+    }
 
-	if (CurrentStamina >= Amount)
-	{
-		SetStamina(CurrentStamina - Amount);
+    if (CurrentStamina >= Amount)
+    {
+        SetStamina(CurrentStamina - Amount);
 
-		return true;
-	}
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 void UStaminaComponent::StartStaminaDrain(float DrainRate)
@@ -138,11 +138,11 @@ void UStaminaComponent::StartStaminaDrain(float DrainRate)
 void UStaminaComponent::StopStaminaDrain(bool bResetExhaustion)
 {
     CurrentDrainRate = 0.0f;
-    
+
     if (GetOwner()->HasAuthority() && bResetExhaustion)
-	{
-		bIsExhausted = false;
-	}
+    {
+        bIsExhausted = false;
+    }
 }
 
 void UStaminaComponent::ConsumeStamina_Predictive(float Amount)
@@ -162,12 +162,12 @@ void UStaminaComponent::ConsumeStamina_Predictive(float Amount)
 
 void UStaminaComponent::SetStamina(float NewStamina)
 {
-	if (!GetOwner()->HasAuthority())
-	{
-		return;
-	}
+    if (!GetOwner()->HasAuthority())
+    {
+        return;
+    }
 
-	CurrentStamina = NewStamina;
+    CurrentStamina = NewStamina;
 
-	OnRep_CurrentStamina();
+    OnRep_CurrentStamina();
 }

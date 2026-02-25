@@ -9,6 +9,8 @@
 #include "Sword_Item.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Character/NecPlayerCharacter.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 
 AWeapon_Item_Base::AWeapon_Item_Base()
 {
@@ -173,6 +175,20 @@ void AWeapon_Item_Base::PerformTrace()
                 if (WeaponData && WeaponData->AttackSound)
                 {
                     UGameplayStatics::PlaySoundAtLocation(this, WeaponData->AttackSound, HitLocation);
+                }
+
+                if (WeaponData && WeaponData->HitEffect)
+                {
+                    UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+                        GetWorld(),
+                        WeaponData->HitEffect,
+                        HitLocation
+                    );
+                }
+
+                if (WeaponData && WeaponData->HitSound)
+                {
+                    UGameplayStatics::PlaySoundAtLocation(this, WeaponData->HitSound, HitLocation);
                 }
             }
         }
