@@ -76,6 +76,7 @@ void UCombatComponent::EquipWeapon(AWeapon_Item_Base* NewWeapon)
 
     if (CurrentWeapon)
     {
+        CurrentWeapon->PreloadWeaponAssets();
         CurrentWeapon->SetOwner(OwnerCharacter);
 
         CurrentWeapon->AttachToComponent(

@@ -9,6 +9,7 @@
 #include "Sword_Item.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Character/NecPlayerCharacter.h"
+#include "Engine/AssetManager.h"
 
 AWeapon_Item_Base::AWeapon_Item_Base()
 {
@@ -75,9 +76,18 @@ void AWeapon_Item_Base::StartAttack()
 
     SetActorTickEnabled(true);
 
-    if (WeaponData && WeaponData->SwingSound)
+    if (WeaponData && !WeaponData->SwingSound.IsNull())
     {
-        UGameplayStatics::PlaySoundAtLocation(this, WeaponData->SwingSound, GetActorLocation());
+        USoundBase* SoundToPlay = WeaponData->SwingSound.Get();
+        if (!SoundToPlay && WeaponData->SwingSound.IsPending())
+        {
+            SoundToPlay = WeaponData->SwingSound.LoadSynchronous();
+        }
+
+        if (SoundToPlay)
+        {
+            UGameplayStatics::PlaySoundAtLocation(this, SoundToPlay, GetActorLocation());
+        }
     }
 }
 
@@ -85,6 +95,65 @@ void AWeapon_Item_Base::EndAttack()
 {
     bIsAttacking = false;
     SetActorTickEnabled(false);
+}
+
+UAnimMontage* AWeapon_Item_Base::GetAttackMontage() const
+{
+    if (WeaponData && WeaponData->AttackMontage.IsValid())
+    {
+        return WeaponData->AttackMontage.Get();
+    }
+
+    return WeaponData ? WeaponData->AttackMontage.LoadSynchronous() : nullptr;
+}
+
+UAnimMontage* AWeapon_Item_Base::GetGuardMontage() const
+{
+    if (WeaponData && WeaponData->GuardMontage.IsValid())
+    {
+        return WeaponData->GuardMontage.Get();
+    }
+
+    return WeaponData ? WeaponData->GuardMontage.LoadSynchronous() : nullptr;
+}
+
+void AWeapon_Item_Base::PreloadWeaponAssets()
+{
+    if (!WeaponData)
+    {
+        return;
+    }
+
+    TArray<FSoftObjectPath> AssetsToLoad;
+
+    if (!WeaponData->AttackMontage.IsNull())
+    {
+        AssetsToLoad.AddUnique(WeaponData->AttackMontage.ToSoftObjectPath());
+    }
+
+    if (!WeaponData->GuardMontage.IsNull())
+    {
+        AssetsToLoad.AddUnique(WeaponData->GuardMontage.ToSoftObjectPath());
+    }
+
+    if (!WeaponData->SwingSound.IsNull())
+    {
+        AssetsToLoad.AddUnique(WeaponData->SwingSound.ToSoftObjectPath());
+    }
+
+    if (!WeaponData->AttackSound.IsNull())
+    {
+        AssetsToLoad.AddUnique(WeaponData->AttackSound.ToSoftObjectPath());
+    }
+
+    if (AssetsToLoad.Num() > 0)
+    {
+        FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
+        AssetLoadHandle = StreamableManager.RequestAsyncLoad(
+            AssetsToLoad,
+            FStreamableDelegate::CreateUObject(this, &AWeapon_Item_Base::OnWeaponAssetsLoaded)
+        );
+    }
 }
 
 void AWeapon_Item_Base::PerformTrace()
@@ -170,13 +239,33 @@ void AWeapon_Item_Base::PerformTrace()
 
                 FVector HitLocation = Hit.ImpactPoint;
 
-                if (WeaponData && WeaponData->AttackSound)
+                if (WeaponData && !WeaponData->AttackSound.IsNull())
                 {
-                    UGameplayStatics::PlaySoundAtLocation(this, WeaponData->AttackSound, HitLocation);
+                    USoundBase* SoundToPlay = WeaponData->AttackSound.Get();
+                    if (!SoundToPlay && WeaponData->AttackSound.IsPending())
+                    {
+                        SoundToPlay = WeaponData->AttackSound.LoadSynchronous();
+                    }
+
+                    if (SoundToPlay)
+                    {
+                        UGameplayStatics::PlaySoundAtLocation(this, SoundToPlay, GetActorLocation());
+                    }
                 }
             }
         }
     }
 
     LastCenterLocation = CurrentCenterLocation;
+}
+
+void AWeapon_Item_Base::OnWeaponAssetsLoaded()
+{
+    UE_LOG(LogTemp, Log, TEXT("Weapon assets loaded successfully."));
+
+    if (AssetLoadHandle.IsValid())
+    {
+        AssetLoadHandle->ReleaseHandle();
+        AssetLoadHandle.Reset();
+    }
 }

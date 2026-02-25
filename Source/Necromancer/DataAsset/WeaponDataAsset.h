@@ -37,10 +37,10 @@ public:
 	EWeaponType WeaponType = EWeaponType::Unarmed;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
-	TObjectPtr<UAnimMontage> AttackMontage;
+	TSoftObjectPtr<UAnimMontage> AttackMontage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
-	TObjectPtr<UAnimMontage> GuardMontage;
+	TSoftObjectPtr<UAnimMontage> GuardMontage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
 	float BaseDamage = 10.0f;
@@ -55,8 +55,8 @@ public:
 	TArray<FComboActionInfo> ComboActions;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
-	TObjectPtr<USoundBase> SwingSound;
+	TSoftObjectPtr<USoundBase> SwingSound;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
-	TObjectPtr<USoundBase> AttackSound;
+	TSoftObjectPtr<USoundBase> AttackSound;
 };
