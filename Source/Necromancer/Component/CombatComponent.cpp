@@ -9,16 +9,16 @@
 
 UCombatComponent::UCombatComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+    PrimaryComponentTick.bCanEverTick = false;
 
-	SetIsReplicatedByDefault(true);
+    SetIsReplicatedByDefault(true);
 }
 
 void UCombatComponent::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-	OwnerCharacter = Cast<ANecPlayerCharacter>(GetOwner());
+    OwnerCharacter = Cast<ANecPlayerCharacter>(GetOwner());
 }
 
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -36,20 +36,25 @@ void UCombatComponent::Attack()
         return;
     }
 
-    UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
-    if (!AnimInstance)
+    if (bIsAttacking)
     {
-        return;
-    }
-
-    if (AnimInstance->Montage_IsPlaying(CurrentWeapon->GetAttackMontage()))
-    {
-        bHasInputBuffer = true;
+        if (bComboWindowOpen)
+        {
+            bSaveAttackInput = true;
+        }
     }
     else
     {
+        UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+        if (AnimInstance && AnimInstance->Montage_IsPlaying(CurrentWeapon->GetAttackMontage()))
+        {
+            return;
+        }
+
+        bIsAttacking = true;
+        bSaveAttackInput = false;
+        bComboWindowOpen = false;
         CurrentComboIndex = 0;
-        bHasInputBuffer = false;
 
         PlayComboAttack();
     }
@@ -109,12 +114,28 @@ void UCombatComponent::DisableWeaponCollision()
     }
 }
 
+void UCombatComponent::OpenComboWindow()
+{
+    bComboWindowOpen = true;
+}
+
+void UCombatComponent::CloseComboWindow()
+{
+    bComboWindowOpen = false;
+}
+
 void UCombatComponent::CheckComboTransition()
 {
-    if (bHasInputBuffer)
+    if (!CurrentWeapon)
     {
-        bHasInputBuffer = false;
-        ++CurrentComboIndex;
+        return;
+    }
+
+    const TArray<FComboActionInfo>& ComboList = CurrentWeapon->GetComboActions();
+    if (bSaveAttackInput && ComboList.IsValidIndex(CurrentComboIndex + 1))
+    {
+        bSaveAttackInput = false;
+        CurrentComboIndex++;
 
         PlayComboAttack();
     }
@@ -130,6 +151,28 @@ void UCombatComponent::SetGuard(bool bInGuarding)
     else
     {
         Server_SetGuard(bInGuarding);
+    }
+}
+
+void UCombatComponent::ResetCombatState()
+{
+    bIsAttacking = false;
+    bSaveAttackInput = false;
+    bComboWindowOpen = false;
+    CurrentComboIndex = 0;
+}
+
+void UCombatComponent::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+    if (CurrentWeapon && Montage == CurrentWeapon->GetAttackMontage())
+    {
+        UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+        if (AnimInstance && AnimInstance->Montage_IsPlaying(Montage))
+        {
+            return;
+        }
+
+        ResetCombatState();
     }
 }
 
@@ -194,12 +237,29 @@ void UCombatComponent::PlayComboAttack()
         UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
         FName MontageSectionName = ComboList[CurrentComboIndex].MontageSectionName;
 
-        if (AttackMontage)
+        UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+        if (AttackMontage && AnimInstance)
         {
-            OwnerCharacter->PlayAnimMontage(AttackMontage, 1.0f, MontageSectionName);
+            if (!AnimInstance->OnMontageEnded.IsAlreadyBound(this, &UCombatComponent::OnAttackMontageEnded))
+            {
+                AnimInstance->OnMontageEnded.AddDynamic(this, &UCombatComponent::OnAttackMontageEnded);
+            }
+
+            if (AnimInstance->Montage_IsPlaying(AttackMontage))
+            {
+                AnimInstance->Montage_JumpToSection(MontageSectionName, AttackMontage);
+            }
+            else
+            {
+                OwnerCharacter->PlayAnimMontage(AttackMontage, 1.0f, MontageSectionName);
+            }
         }
 
         Server_Attack(CurrentComboIndex);
+    }
+    else
+    {
+        ResetCombatState();
     }
 }
 
@@ -221,17 +281,25 @@ void UCombatComponent::Multicast_Attack_Implementation(int32 ComboIndex)
         return;
     }
 
+    UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
     UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
-    FName MontageSectionName = ComboList[CurrentComboIndex].MontageSectionName;
+    FName MontageSectionName = ComboList[ComboIndex].MontageSectionName;
 
-    if (AttackMontage)
+    if (AttackMontage && AnimInstance)
     {
-        OwnerCharacter->PlayAnimMontage(AttackMontage, 1.0f, MontageSectionName);
+        if (AnimInstance->Montage_IsPlaying(AttackMontage))
+        {
+            AnimInstance->Montage_JumpToSection(MontageSectionName, AttackMontage);
+        }
+        else
+        {
+            OwnerCharacter->PlayAnimMontage(AttackMontage, 1.0f, MontageSectionName);
+        }
     }
 }
 
 void UCombatComponent::Server_SetGuard_Implementation(bool bInGuarding)
-{    
+{
     bIsGuarding = bInGuarding;
 
     UpdateGuardVisuals();
@@ -250,7 +318,7 @@ void UCombatComponent::Server_Attack_Implementation(int32 ComboIndex)
         return;
     }
 
-    float StaminaCost = ComboList[CurrentComboIndex].StaminaCost;
+    float StaminaCost = ComboList[ComboIndex].StaminaCost;
     UStaminaComponent* StaminaComp = OwnerCharacter->GetStaminaComponent();
 
     if (StaminaComp && StaminaComp->GetCurrentStamina() >= StaminaCost)

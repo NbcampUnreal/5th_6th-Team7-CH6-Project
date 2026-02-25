@@ -34,6 +34,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void DisableWeaponCollision();
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void OpenComboWindow();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void CloseComboWindow();
+
 	AWeapon_Item_Base* GetCurrentWeapon() const { return CurrentWeapon; }
 
 	void CheckComboTransition();
@@ -43,7 +49,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat")
 	bool IsGuarding() const { return bIsGuarding; }
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void ResetCombatState();
+
 protected:	
+	UFUNCTION()
+	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
 	UFUNCTION()
 	void OnRep_bIsGuarding();
 		
@@ -69,6 +81,15 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_bIsGuarding, BlueprintReadOnly, Category = "Combat")
 	bool bIsGuarding = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	bool bIsAttacking = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	bool bSaveAttackInput = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	bool bComboWindowOpen = false;
 
 	int32 CurrentComboIndex = 0;
 
