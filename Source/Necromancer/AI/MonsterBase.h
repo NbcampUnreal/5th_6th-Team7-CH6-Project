@@ -74,15 +74,15 @@ protected:
 
 	// 경직 처리
 	UFUNCTION()
-	void OnStagger();
+	virtual void OnStagger();
 
 	// 기절 처리
 	UFUNCTION()
-	void OnStun();
+	virtual void OnStun();
 
 	// 사망 처리 (Server Only)
 	UFUNCTION()
-	void OnDeath();
+	virtual void OnDeath();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> DeathMontage;
@@ -119,7 +119,10 @@ protected:
 
 	// 피격 리액션 처리
 	UFUNCTION()
-	void OnDamageReceived(float DamageAmount, FVector HitLocation);
+	virtual void OnDamageReceived(float DamageAmount, FVector HitLocation);
 
 	void OnHitReactMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	// 피격 시 공격 슬롯 없으면 임시 부여
+	void TryGrantTemporarySlot();
 };

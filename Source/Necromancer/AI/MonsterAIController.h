@@ -5,9 +5,11 @@
 #include "CoreMinimal.h"
 #include "AIController.h"
 #include "Perception/AIPerceptionTypes.h"
+#include "Perception/AISenseConfig_Hearing.h"
 #include "MonsterAIController.generated.h"
 
 class UAIPerceptionComponent;
+class UAISenseConfig_Hearing;
 class UBehaviorTree;
 
 UCLASS()
@@ -40,13 +42,25 @@ protected:
 	virtual void BeginPlay() override;
 	
 	FTimerHandle LoseTargetTimerHandle;
+	FTimerHandle AggroResetTimerHandle;
 
 	// 타겟 감지 해제 후 대기 시간
 	UPROPERTY(EditDefaultsOnly)
 	float ClearTime = 3.0f;
+
+	// 어그로 전파 재사용 대기 시간 (타겟 해제 후)
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Aggro")
+	float AggroResetTime = 30.0f;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	TObjectPtr<UAIPerceptionComponent> AIPerceptionComp;
+
+	UPROPERTY(VisibleAnywhere, Category = "AI")
+	TObjectPtr<UAISenseConfig_Hearing> HearingConfig;
+
+	// Hearing 감지 범위 (어그로 전파 수신 범위)
+	UPROPERTY(EditDefaultsOnly, Category = "AI|Hearing")
+	float HearingRange = 1500.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	TObjectPtr<UBehaviorTree> BehaviorTree;
@@ -57,4 +71,6 @@ protected:
 	UFUNCTION()
 	void OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
 
+	// 어그로 전파 BB키 리셋
+	void ResetAggroPropagation();
 };

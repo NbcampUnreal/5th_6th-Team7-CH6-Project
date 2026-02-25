@@ -3,6 +3,7 @@
 
 #include "BTTask_MonsterAttack.h"
 #include "AIController.h"
+#include "MonsterAttackSetData.h"
 #include "MonsterBase.h"
 #include "MonsterEngagementSubsystem.h"
 #include "MonsterStatComponent.h"
@@ -45,10 +46,33 @@ EBTNodeResult::Type UBTTask_MonsterAttack::ExecuteTask(UBehaviorTreeComponent& O
 	{
 		return EBTNodeResult::Failed;
 	}
-	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+
+	USkeletalMeshComponent* Mesh = Character->GetMesh();
+	if (!Mesh)
+	{
+		return EBTNodeResult::Failed;
+	}
+
+	UAnimInstance* AnimInstance = Mesh->GetAnimInstance();
 	if (!AnimInstance)
 	{
 		return EBTNodeResult::Failed;
+	}
+
+	// 공격 몽타주 결정: AttackSet이 있으면 거리 기반 랜덤, 없으면 단일 몽타주
+	UAnimMontage* SelectedMontage = AttackMontage;
+	if (AttackSet)
+	{
+		AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
+		if (TargetActor)
+		{
+			float Distance = FVector::Dist(Character->GetActorLocation(), TargetActor->GetActorLocation());
+			UAnimMontage* SetMontage = AttackSet->SelectAttackByDistance(Distance);
+			if (SetMontage)
+			{
+				SelectedMontage = SetMontage;
+			}
+		}
 	}
 
 	Character->GetCharacterMovement()->StopMovementImmediately();
@@ -57,22 +81,22 @@ EBTNodeResult::Type UBTTask_MonsterAttack::ExecuteTask(UBehaviorTreeComponent& O
 	AMonsterBase* Monster = Cast<AMonsterBase>(Character);
 	if (Monster)
 	{
-		Monster->Multicast_PlayMontage(AttackMontage);
+		Monster->Multicast_PlayMontage(SelectedMontage);
 	}
 
-	float Duration = AttackMontage ? AttackMontage->GetPlayLength() : 0.0f;
+	float Duration = SelectedMontage ? SelectedMontage->GetPlayLength() : 0.0f;
 	if (Duration <= 0.0f)
 	{
 		Character->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-		BB->SetValueAsBool(FName(NAME_IsAttacking), false);
+		BB->SetValueAsBool(NAME_IsAttacking, false);
 		return EBTNodeResult::Failed;
 	}
-	BB->SetValueAsBool(FName(NAME_IsAttacking), true);
+	BB->SetValueAsBool(NAME_IsAttacking, true);
 	bTaskActive = true;
 
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindUObject(this,&UBTTask_MonsterAttack::OnMontageEnded,&OwnerComp);
-	AnimInstance->Montage_SetEndDelegate(EndDelegate,AttackMontage);
+	AnimInstance->Montage_SetEndDelegate(EndDelegate,SelectedMontage);
 
 	if (UWorld* World = Character->GetWorld())
 	{
@@ -92,14 +116,6 @@ void UBTTask_MonsterAttack::OnMontageEnded(UAnimMontage* Montage, bool bInterrup
 	if (!OwnerComp || !bTaskActive)
 	{
 		return;
-	}
-
-	if (AAIController* AIC = OwnerComp->GetAIOwner())
-	{
-		if (APawn* Pawn = AIC->GetPawn())
-		{
-			Pawn->GetWorld()->GetTimerManager().ClearTimer(SafetyTimerHandle);
-		}
 	}
 
 	CleanupAttackState(OwnerComp);
@@ -122,10 +138,19 @@ void UBTTask_MonsterAttack::CleanupAttackState(UBehaviorTreeComponent* OwnerComp
 {
 	bTaskActive = false;
 
+	// Safety timer 정리 (어디서 호출되든 항상 정리)
+	if (AAIController* TimerAIC = OwnerComp->GetAIOwner())
+	{
+		if (APawn* TimerPawn = TimerAIC->GetPawn())
+		{
+			TimerPawn->GetWorld()->GetTimerManager().ClearTimer(SafetyTimerHandle);
+		}
+	}
+
 	UBlackboardComponent* BB = OwnerComp->GetBlackboardComponent();
 	if (BB)
 	{
-		BB->SetValueAsBool(FName(NAME_IsAttacking), false);
+		BB->SetValueAsBool(NAME_IsAttacking, false);
 	}
 
 	if (AAIController* AIC = OwnerComp->GetAIOwner())
@@ -155,7 +180,7 @@ void UBTTask_MonsterAttack::CleanupAttackState(UBehaviorTreeComponent* OwnerComp
 						AActor* Target = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
 						if (Target)
 						{
-							Engagement->ReleaseAttackSlot(Pawn, Target);
+							Engagement->RefreshSlotAfterAttack(Pawn, Target);
 						}
 					}
 				}
@@ -168,13 +193,6 @@ void UBTTask_MonsterAttack::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, ui
 {
 	if (bTaskActive)
 	{
-		if (AAIController* AIC = OwnerComp.GetAIOwner())
-		{
-			if (APawn* Pawn = AIC->GetPawn())
-			{
-				Pawn->GetWorld()->GetTimerManager().ClearTimer(SafetyTimerHandle);
-			}
-		}
 		CleanupAttackState(&OwnerComp);
 	}
 

@@ -22,3 +22,5 @@
 #define NAME_ShouldReturnToSpawn "ShouldReturnToSpawn"
 
 #define NAME_PatrolLocation "PatrolLocation"
+
+#define NAME_CanPropagateAggro "CanPropagateAggro"

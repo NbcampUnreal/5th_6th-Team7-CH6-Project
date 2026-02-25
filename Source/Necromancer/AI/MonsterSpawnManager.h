@@ -33,6 +33,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpawnManager")
 	float SpawnDelay = 0.3f;
 
+	// TODO: 임시 FloorLevel - 추후 GameMode 또는 던전 시스템에서 가져올 것
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpawnManager")
+	int32 FloorLevel = 1;
+
 private:
 	FTimerHandle CheckTimerHandle;
 	FTimerHandle SpawnTimerHandle;

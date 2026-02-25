@@ -9,7 +9,7 @@
 
 UBTTask_RendomPatrol::UBTTask_RendomPatrol()
 {
-	NodeName = TEXT("Rendom Patrol");
+	NodeName = TEXT("Random Patrol");
 }
 
 EBTNodeResult::Type UBTTask_RendomPatrol::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

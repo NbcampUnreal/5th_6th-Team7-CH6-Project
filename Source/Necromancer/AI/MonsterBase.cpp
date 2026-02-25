@@ -22,8 +22,8 @@ AMonsterBase::AMonsterBase()
 
 	bReplicates = true;
 	SetReplicatingMovement(true);
-	NetUpdateFrequency = 10.0f;
-	MinNetUpdateFrequency = 2.0f;
+	SetNetUpdateFrequency(10.0f);
+	SetMinNetUpdateFrequency(2.0f);
 
 	
 	bUseControllerRotationYaw = false;
@@ -54,7 +54,7 @@ void AMonsterBase::ForceCleanupAttackState()
 	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
 		{
-			BB->SetValueAsBool(FName(NAME_IsAttacking), false);
+			BB->SetValueAsBool(NAME_IsAttacking, false);
 		}
 	}
 
@@ -128,7 +128,7 @@ void AMonsterBase::OnStagger()
 	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
 		{
-			BB->SetValueAsBool(FName(NAME_IsStaggered), true);
+			BB->SetValueAsBool(NAME_IsStaggered, true);
 		}
 	}
 }
@@ -141,7 +141,7 @@ void AMonsterBase::OnStun()
 	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
 		{
-			BB->SetValueAsBool(FName(NAME_IsStaggered), true);
+			BB->SetValueAsBool(NAME_IsStaggered, true);
 		}
 	}
 }
@@ -246,7 +246,8 @@ void AMonsterBase::Multicast_PlayDeathMontage_Implementation()
 	if (DeathMontage)
 	{
 		float Duration = PlayAnimMontage(DeathMontage);
-		GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &AMonsterBase::StartRagdoll, Duration-0.5, false);
+		float RagdollDelay = FMath::Max(0.1f, Duration - 0.5f);
+		GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &AMonsterBase::StartRagdoll, RagdollDelay, false);
 	}
 	else
 	{
@@ -277,11 +278,13 @@ void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
 	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
 		{
-			BB->SetValueAsBool(FName(NAME_IsAttacking), false);
+			BB->SetValueAsBool(NAME_IsAttacking, false);
 		}
 	}
 
-	
+	// 피격 시 공격 슬롯이 없으면 임시 부여
+	TryGrantTemporarySlot();
+
 	MonsterStatComponent->ApplyPoise(DamageAmount);
 
 	if (HitReactMontage)
@@ -289,10 +292,10 @@ void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
 		GetCharacterMovement()->StopMovementImmediately();
 		GetCharacterMovement()->DisableMovement();
 
-		Multicast_PlayMontage(HitReactMontage);
-
 		if (HasAuthority())
 		{
+			Multicast_PlayMontage(HitReactMontage);
+
 			if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 			{
 				FOnMontageEnded EndDelegate;
@@ -307,6 +310,43 @@ void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
 	}
 }
 
+void AMonsterBase::TryGrantTemporarySlot()
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	AAIController* AIC = GetController<AAIController>();
+	if (!AIC)
+	{
+		return;
+	}
+
+	UBlackboardComponent* BB = AIC->GetBlackboardComponent();
+	if (!BB)
+	{
+		return;
+	}
+
+	AActor* Target = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
+	if (!Target)
+	{
+		return;
+	}
+
+	UMonsterEngagementSubsystem* Engagement = GetWorld()->GetSubsystem<UMonsterEngagementSubsystem>();
+	if (!Engagement)
+	{
+		return;
+	}
+
+	if (!Engagement->HasAttackSlot(this, Target))
+	{
+		Engagement->GrantTemporarySlot(this, Target);
+	}
+}
+
 void AMonsterBase::OnHitReactMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (!bIsDead)
@@ -318,7 +358,7 @@ void AMonsterBase::OnHitReactMontageEnded(UAnimMontage* Montage, bool bInterrupt
 	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
 		{
-			BB->SetValueAsBool(FName(NAME_IsStaggered), false);
+			BB->SetValueAsBool(NAME_IsStaggered, false);
 		}
 	}
 }

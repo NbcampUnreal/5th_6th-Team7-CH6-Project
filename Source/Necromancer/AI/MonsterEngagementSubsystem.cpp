@@ -19,11 +19,13 @@ bool UMonsterEngagementSubsystem::RequestAttackSlot(AActor* Monster, AActor* Tar
 
 	TSet<FSlotInfo>& Attackers = SlotMap.FindOrAdd(Target);
 
-	// 이미 슬롯을 가지고 있는지 확인
-	for (const FSlotInfo& Info : Attackers)
+	// 이미 슬롯을 가지고 있는지 확인 → AcquireTime 갱신 (안전 만료 방지)
+	for (FSlotInfo& Info : Attackers)
 	{
 		if (Info.Monster == Monster)
 		{
+			float CurrentRefreshTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+			Info.AcquireTime = CurrentRefreshTime;
 			return true;
 		}
 	}
@@ -101,7 +103,7 @@ bool UMonsterEngagementSubsystem::HasAttackSlot(AActor* Monster, AActor* Target)
 		return false;
 	}
 
-	bool bIsRanged = IsRangedMonster(const_cast<AActor*>(Monster));
+	bool bIsRanged = IsRangedMonster(Monster);
 	const TMap<TWeakObjectPtr<AActor>, TSet<FSlotInfo>>& SlotMap = bIsRanged ? RangedAttackSlots : MeleeAttackSlots;
 
 	if (const TSet<FSlotInfo>* Attackers = SlotMap.Find(Target))
@@ -190,6 +192,11 @@ void UMonsterEngagementSubsystem::CleanupStaleEntries()
 				SlotIt.RemoveCurrent();
 			}
 		}
+
+		if (It->Value.Num() == 0)
+		{
+			It.RemoveCurrent();
+		}
 	}
 
 	// Ranged 슬롯 정리
@@ -207,6 +214,11 @@ void UMonsterEngagementSubsystem::CleanupStaleEntries()
 			{
 				SlotIt.RemoveCurrent();
 			}
+		}
+
+		if (It->Value.Num() == 0)
+		{
+			It.RemoveCurrent();
 		}
 	}
 }
@@ -264,4 +276,107 @@ float UMonsterEngagementSubsystem::GetDistanceToTarget(AActor* Monster, AActor* 
 	}
 
 	return FVector::Dist(Monster->GetActorLocation(), Target->GetActorLocation());
+}
+
+void UMonsterEngagementSubsystem::RefreshSlotAfterAttack(AActor* Monster, AActor* Target)
+{
+	if (!Monster || !Target || !GetWorld())
+	{
+		return;
+	}
+
+	bool bIsRanged = IsRangedMonster(Monster);
+	TMap<TWeakObjectPtr<AActor>, TSet<FSlotInfo>>& SlotMap = bIsRanged ? RangedAttackSlots : MeleeAttackSlots;
+
+	if (TSet<FSlotInfo>* Attackers = SlotMap.Find(Target))
+	{
+		for (FSlotInfo& Info : *Attackers)
+		{
+			if (Info.Monster == Monster)
+			{
+				float CurrentTime = GetWorld()->GetTimeSeconds();
+				Info.AcquireTime = CurrentTime;
+
+				// 첫 공격 시에만 LastAttackTime 기록 (이후 공격에서는 갱신하지 않음)
+				if (Info.LastAttackTime == 0.0f)
+				{
+					Info.LastAttackTime = CurrentTime;
+				}
+				return;
+			}
+		}
+	}
+}
+
+bool UMonsterEngagementSubsystem::ShouldYieldSlot(AActor* Monster, AActor* Target) const
+{
+	if (!Monster || !Target || !GetWorld())
+	{
+		return false;
+	}
+
+	bool bIsRanged = IsRangedMonster(Monster);
+	const TMap<TWeakObjectPtr<AActor>, TSet<FSlotInfo>>& SlotMap = bIsRanged ? RangedAttackSlots : MeleeAttackSlots;
+	int32 MaxAttackers = bIsRanged ? MaxRangedAttackers : MaxMeleeAttackers;
+
+	const TSet<FSlotInfo>* Attackers = SlotMap.Find(Target);
+	if (!Attackers)
+	{
+		return false;
+	}
+
+	for (const FSlotInfo& Info : *Attackers)
+	{
+		if (Info.Monster == Monster)
+		{
+			// 아직 공격한 적 없으면 양보하지 않음
+			if (Info.LastAttackTime == 0.0f)
+			{
+				return false;
+			}
+
+			// 첫 공격 후 SlotRetentionTime 경과 확인
+			float CurrentTime = GetWorld()->GetTimeSeconds();
+			if (CurrentTime - Info.LastAttackTime < SlotRetentionTime)
+			{
+				return false;
+			}
+
+			// 슬롯이 만석일 때만 양보 (빈자리 있으면 다른 몬스터가 그냥 들어옴)
+			if (Attackers->Num() < MaxAttackers)
+			{
+				return false;
+			}
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void UMonsterEngagementSubsystem::GrantTemporarySlot(AActor* Monster, AActor* Target)
+{
+	if (!Monster || !Target || !GetWorld())
+	{
+		return;
+	}
+
+	bool bIsRanged = IsRangedMonster(Monster);
+	TMap<TWeakObjectPtr<AActor>, TSet<FSlotInfo>>& SlotMap = bIsRanged ? RangedAttackSlots : MeleeAttackSlots;
+
+	TSet<FSlotInfo>& Attackers = SlotMap.FindOrAdd(Target);
+
+	// 이미 슬롯 보유 중이면 무시
+	for (const FSlotInfo& Info : Attackers)
+	{
+		if (Info.Monster == Monster)
+		{
+			return;
+		}
+	}
+
+	// MaxAttackers 무시하고 추가 (초과 인원은 ShouldYieldSlot으로 자연 감소)
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+	Attackers.Add(FSlotInfo(Monster, CurrentTime));
 }

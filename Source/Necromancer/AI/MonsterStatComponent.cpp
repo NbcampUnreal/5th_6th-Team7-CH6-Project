@@ -96,3 +96,35 @@ float UMonsterStatComponent::GetAttackCooldown() const
 {
 	return AttackCooldown;
 }
+
+void UMonsterStatComponent::ApplyFloorScaling(int32 FloorLevel)
+{
+	if (!GetOwner()->HasAuthority())
+	{
+		return;
+	}
+
+	const float Level = static_cast<float>(FloorLevel);
+
+	if (HealthScaleCurve)
+	{
+		const float Mult = HealthScaleCurve->GetFloatValue(Level);
+		MaxHealth *= Mult;
+		SetCurrentHealth(MaxHealth);
+	}
+
+	if (AttackScaleCurve)
+	{
+		AttackPower *= AttackScaleCurve->GetFloatValue(Level);
+	}
+
+	if (ArmorScaleCurve)
+	{
+		Armor *= ArmorScaleCurve->GetFloatValue(Level);
+	}
+
+	if (PoiseScaleCurve)
+	{
+		MaxPoise *= PoiseScaleCurve->GetFloatValue(Level);
+	}
+}
