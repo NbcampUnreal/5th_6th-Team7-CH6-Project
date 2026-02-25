@@ -6,13 +6,21 @@
 #include "Components/ActorComponent.h"
 #include "WorldActorSpawner.generated.h"
 
+UENUM()
+enum class ESpawnCategory : uint8
+{
+	Submit,
+	Item,
+	Etc
+};
+
 USTRUCT(BlueprintType)
 struct FActorSpawnData
 {
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TSubclassOf<AActor> WorldActorClass;
+	ESpawnCategory SpawnCategory;
 
 	UPROPERTY()
 	TObjectPtr<USceneComponent> SpawnPoint = nullptr;
@@ -30,18 +38,9 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner")
-	TArray<TSubclassOf<AActor>> SubmmitActorClasses;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner")
-	TArray<TSubclassOf<AActor>> ItemActorClasses;
 public:	
 	UPROPERTY(BlueprintReadOnly, Category = "Spawner")
-	TArray<FActorSpawnData> SubmitSpawnDataList;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Spawner")
-	TArray<FActorSpawnData> ItemSpawnDataList;
+	TArray<FActorSpawnData> SpawnDataList;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Spawner")
 	bool bHasSpawned = false;
