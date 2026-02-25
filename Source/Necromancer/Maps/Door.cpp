@@ -27,7 +27,7 @@ void ADoor::BeginPlay()
 		float MinValue, MAxValue;
 		DoorTimelineCurveFloat->GetValueRange(MinValue, MAxValue);
 		DoorOpenTimeLineFunc(MinValue);
-		StaticMesh->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+		StaticMesh->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision); 
 	}
 }
 
