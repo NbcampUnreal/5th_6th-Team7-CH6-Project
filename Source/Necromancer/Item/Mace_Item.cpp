@@ -7,7 +7,7 @@
 
 AMace_Item::AMace_Item()
 {
-	Damage = 20.f;
+	//Damage = 20.f;
 
 	//// ¸Þ½¬
 	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> MaceMeshAsset(TEXT(""));

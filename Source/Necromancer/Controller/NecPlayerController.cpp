@@ -6,6 +6,18 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameMode/NecGameMode.h"
 
+ANecPlayerController::ANecPlayerController()
+{
+	static ConstructorHelpers::FClassFinder<UInGameHUDWidget> HUDWidgetFinder(
+		TEXT("/Game/Necromancer/Blueprints/UI/WBP_InGameHUD")
+	);
+	
+	if (HUDWidgetFinder.Succeeded())
+	{
+		InGameHUDWidgetClass = HUDWidgetFinder.Class;
+	}
+}
+
 void ANecPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -15,9 +27,13 @@ void ANecPlayerController::BeginPlay()
 		return;
 	}
 
-	if (GetWorld()->GetNetMode() == NM_ListenServer)
+	FString MapName = GetWorld()->GetMapName();
+	if (MapName.Contains("Lobby"))
 	{
-		CreateReadyWidgetForHost();
+		if (GetWorld()->GetNetMode() == NM_ListenServer)
+		{
+			CreateReadyWidgetForHost();
+		}
 	}
 	else
 	{
@@ -50,12 +66,24 @@ void ANecPlayerController::CreateInGameHUD()
 	SetInputMode(GameOnly);
 	bShowMouseCursor = false;
 
+	if (IsValid(InGameHUDWidgetInstance))
+	{
+		if (!InGameHUDWidgetInstance->IsInViewport())
+		{
+			InGameHUDWidgetInstance->AddToViewport(1);
+		}
+
+		InGameHUDWidgetInstance->InitHUD();
+		return;
+	}
+
 	if (IsValid(InGameHUDWidgetClass))
 	{
 		InGameHUDWidgetInstance = CreateWidget<UInGameHUDWidget>(this, InGameHUDWidgetClass);
 		if (IsValid(InGameHUDWidgetInstance))
 		{
 			InGameHUDWidgetInstance->AddToViewport(1);
+			InGameHUDWidgetInstance->InitHUD();
 		}
 	}
 }
@@ -76,6 +104,20 @@ void ANecPlayerController::SetupInputComponent()
 	}
 }
 
+void ANecPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	if (IsLocalController())
+	{
+		FString MapName = GetWorld()->GetMapName();
+		if (!MapName.Contains("Lobby"))
+		{
+			CreateInGameHUD();
+		}
+	}
+}
+
 void ANecPlayerController::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
@@ -83,6 +125,20 @@ void ANecPlayerController::OnRep_PlayerState()
 	if (IsValid(InGameHUDWidgetInstance))
 	{
 		InGameHUDWidgetInstance->InitHUD();
+	}
+}
+
+void ANecPlayerController::OnRep_Pawn()
+{
+	Super::OnRep_Pawn();
+
+	if (IsLocalController())
+	{
+		FString MapName = GetWorld()->GetMapName();
+		if (!MapName.Contains("Lobby"))
+		{
+			CreateInGameHUD();
+		}
 	}
 }
 

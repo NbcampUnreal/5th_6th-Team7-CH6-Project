@@ -182,7 +182,7 @@ void AMonsterBase::SpawnDropItems()
 		return;
 	}
 
-	UItemDataSubsystem* ItemSubsystem = GI->GetSubsystem<UItemDataSubsystem>();
+	UDataTableSubsystem* ItemSubsystem = GI->GetSubsystem<UDataTableSubsystem>();
 	if (!ItemSubsystem)
 	{
 		return;
