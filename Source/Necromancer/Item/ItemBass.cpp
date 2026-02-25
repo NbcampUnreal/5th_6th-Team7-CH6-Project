@@ -1,8 +1,9 @@
-// ItemBass.cpp
+﻿// ItemBass.cpp
 
 #include "Item/ItemBass.h"
 #include "Components/SceneComponent.h"
 #include "GameFramework/Character.h"
+#include "GridInventory/ItemInstance/ItemInstance.h"
 
 AItemBass::AItemBass()
 {
@@ -19,9 +20,6 @@ AItemBass::AItemBass()
 
 void AItemBass::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-    DOREPLIFETIME(AItemBass, ItemData);
 }
 
 void AItemBass::Server_Use_Implementation(ACharacter* User)
@@ -53,16 +51,14 @@ bool AItemBass::ReduceDurability(int32 Amount)
 {
     if (!HasAuthority()) return false;
     if (Amount <= 0) return false;
-    if (ItemData.CurrentDurability <= 0) return false;
+    if (IsBroken()) return false;
 
-    ItemData.CurrentDurability -= Amount;
-
-    if (ItemData.CurrentDurability < 0)
-    {
-        ItemData.CurrentDurability = 0;
-    }
-
+    ItemInstanceComponent->GetItemInstance()->AddDurability(-Amount);
     return true;
+}
+
+void AItemBass::Equip(AActor* Owner)
+{
 }
 
 void AItemBass::ExecuteUse(ACharacter* User)
