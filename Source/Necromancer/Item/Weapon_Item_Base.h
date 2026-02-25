@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Item/ItemBass.h"
 #include "DataAsset/WeaponDataAsset.h"
+#include "Engine/StreamableManager.h"
 #include "Weapon_Item_Base.generated.h"
 
 class USkeletalMeshComponent;
@@ -30,8 +31,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	EWeaponType GetWeaponType() const { return WeaponData ? WeaponData->WeaponType : EWeaponType::Unarmed; }
 
-	UAnimMontage* GetAttackMontage() const { return WeaponData ? WeaponData->AttackMontage : nullptr; }
-	UAnimMontage* GetGuardMontage() const { return WeaponData ? WeaponData->GuardMontage : nullptr; }
+	UAnimMontage* GetAttackMontage() const;
+	UAnimMontage* GetGuardMontage() const;
 
 	float GetDamage() const { return WeaponData ? WeaponData->BaseDamage : 0.0f; }
 	float GetGuardRate() const { return WeaponData ? WeaponData->BaseGuardRate : 0.0f; }
@@ -41,8 +42,12 @@ public:
 	
 	void SetDamageMultiplier(float NewMultiplier) { CurrentDamageMultiplier = NewMultiplier; }
 
+	void PreloadWeaponAssets();
+
 protected:
 	void PerformTrace();
+
+	void OnWeaponAssetsLoaded();
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
@@ -66,6 +71,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
 	bool bDrawDebug = false;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
+	bool bIsUnarmed;
+
 	float CurrentDamageMultiplier = 1.0f;
 
 	bool bIsAttacking = false;
@@ -73,6 +81,8 @@ protected:
 	TArray<AActor*> HitActors;
 
 	FVector LastCenterLocation = FVector::ZeroVector;
+
+	TSharedPtr<FStreamableHandle> AssetLoadHandle;
 
 private:
 	TArray<FComboActionInfo> EmptyComboActions;
