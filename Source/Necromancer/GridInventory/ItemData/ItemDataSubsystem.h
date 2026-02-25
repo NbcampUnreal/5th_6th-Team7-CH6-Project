@@ -10,12 +10,12 @@
 /**
  * 
  */
-UCLASS()
-class NECROMANCER_API UItemDataSubsystem : public UGameInstanceSubsystem
+UCLASS(BlueprintType, Blueprintable)
+class NECROMANCER_API UDataTableSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 public:
-    UItemDataSubsystem();
+    UDataTableSubsystem();
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
     UFUNCTION(BlueprintCallable)
@@ -23,7 +23,15 @@ public:
 
     const FItemData* GetItemData(FName ItemID) const;
 
+    const FworldActorInfo* GetworldActorInfo(FName ItemID) const;
+
+    const FItemData* GetRandomItemData() const;
+
 private:
-    UPROPERTY()
-    UDataTable* ItemTable;
+    UPROPERTY(EditDefaultsOnly)
+    TSoftObjectPtr<UDataTable> ItemTable;
+    UPROPERTY(EditDefaultsOnly)
+    TSoftObjectPtr<UDataTable> DropTable;
+    UPROPERTY(EditDefaultsOnly)
+    TSoftObjectPtr<UDataTable> ActorTable;
 };

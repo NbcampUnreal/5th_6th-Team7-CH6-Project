@@ -3,30 +3,28 @@
 
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
 
-UItemDataSubsystem::UItemDataSubsystem()
+UDataTableSubsystem::UDataTableSubsystem()
 {
-    static ConstructorHelpers::FObjectFinder<UDataTable> ItemTableFinder(
-        TEXT("/Game/Necromancer/Blueprints/Item/DataTable/DT_ItemData.DT_ItemData")
-    );
+    static ConstructorHelpers::FObjectFinder<UDataTable> ItemTableFinder(TEXT("/Game/Necromancer/Blueprints/Item/DataTable/DT_ItemData.DT_ItemData")); 
+    if (ItemTableFinder.Succeeded()) { ItemTable = ItemTableFinder.Object; }
+    else { UE_LOG(LogTemp, Error, TEXT("ItemDataSubsystem: Failed to load ItemDataTable")); } 
+    static ConstructorHelpers::FObjectFinder<UDataTable> DropTableFinder(TEXT("/Game/Necromancer/Blueprints/Item/DataTable/DT_DropInfo.DT_DropInfo")); 
+    if (DropTableFinder.Succeeded()) { DropTable = DropTableFinder.Object; }
+    else { UE_LOG(LogTemp, Error, TEXT("ItemDataSubsystem: Failed to load DropTable")); }
+    static ConstructorHelpers::FObjectFinder<UDataTable> ActorTableFinder(TEXT("/Game/Necromancer/Blueprints/WorldActor/DT_WorldActor.DT_WorldActor"));
 
-    if (ItemTableFinder.Succeeded())
-    {
-        ItemTable = ItemTableFinder.Object;
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("ItemDataSubsystem: Failed to load ItemDataTable"));
-    }
+    if (ActorTableFinder.Succeeded()) { ActorTable = ActorTableFinder.Object; }
+    else { UE_LOG(LogTemp, Error, TEXT("ItemDataSubsystem: Failed to load ActorTable")); }
 }
 
-void UItemDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+void UDataTableSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
 
     
 }
 
-bool UItemDataSubsystem::GetItemData(FName ItemID, FItemData& OutItemData) const
+bool UDataTableSubsystem::GetItemData(FName ItemID, FItemData& OutItemData) const
 {
     if (!ItemTable)
     {
@@ -45,7 +43,7 @@ bool UItemDataSubsystem::GetItemData(FName ItemID, FItemData& OutItemData) const
     return false;
 }
 
-const FItemData* UItemDataSubsystem::GetItemData(FName ItemID) const
+const FItemData* UDataTableSubsystem::GetItemData(FName ItemID) const
 {
     if (!ItemTable)
     {
@@ -61,4 +59,76 @@ const FItemData* UItemDataSubsystem::GetItemData(FName ItemID) const
     UE_LOG(LogTemp, Warning, TEXT("ItemDataSubsystem: ItemTable is not found item"));
     return nullptr;
 
+}
+
+const FworldActorInfo* UDataTableSubsystem::GetworldActorInfo(FName ItemID) const
+{
+    if (!ActorTable)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("DataTableSubsystem: ActorTable is null"));
+        return nullptr;
+    }
+
+    if (const FworldActorInfo* FoundData =
+        ActorTable->FindRow<FworldActorInfo>(ItemID, TEXT("GetData")))
+    {
+        return ActorTable->FindRow<FworldActorInfo>(ItemID, TEXT("GetData"));
+    }
+    UE_LOG(LogTemp, Warning, TEXT("DataTableSubsystem: ActorTable is not found item"));
+    return nullptr;
+}
+
+const FItemData* UDataTableSubsystem::GetRandomItemData() const
+{
+    if (!DropTable || !ItemTable)
+        return nullptr;
+
+    TArray<FDropInfo*> AllDrops;
+    DropTable->GetAllRows(TEXT("DropSearch"), AllDrops);
+
+    if (AllDrops.Num() == 0)
+        return nullptr;
+
+    // 1️⃣ 레벨 필터링
+    TArray<FDropInfo*> ValidDrops;
+
+    for (FDropInfo* Drop : AllDrops)
+    {
+        //if (PlayerLevel >= Drop->MinLevel &&
+         //   PlayerLevel <= Drop->MaxLevel)
+        {
+            ValidDrops.Add(Drop);
+        }
+    }
+
+    if (ValidDrops.Num() == 0)
+        return nullptr;
+
+    // 2️⃣ 총 가중치 계산
+    int32 TotalWeight = 0;
+    for (const FDropInfo* Drop : ValidDrops)
+    {
+        TotalWeight += Drop->DropWeight;
+    }
+
+    // 3️⃣ 랜덤 값 생성
+    int32 RandomValue = FMath::RandRange(0, TotalWeight - 1);
+
+    // 4️⃣ 누적합 비교
+    int32 AccWeight = 0;
+    for (const FDropInfo* Drop : ValidDrops)
+    {
+        AccWeight += Drop->DropWeight;
+
+        if (RandomValue < AccWeight)
+        {
+            // 🎯 ItemID로 실제 아이템 찾기
+            return ItemTable->FindRow<FItemData>(
+                Drop->ItemID,
+                TEXT("FindItemData")
+            );
+        }
+    }
+
+    return nullptr;
 }
