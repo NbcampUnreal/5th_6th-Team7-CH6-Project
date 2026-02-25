@@ -78,6 +78,26 @@ void AMonsterBase::RestoreMovementIfAlive()
 	}
 }
 
+void AMonsterBase::SetCombatMovementMode(bool bCombat)
+{
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (!MoveComp)
+	{
+		return;
+	}
+
+	if (bCombat)
+	{
+		// 전투: 이동 방향 회전 끄고, SmoothLookAt이 직접 회전 관리
+		MoveComp->bOrientRotationToMovement = false;
+	}
+	else
+	{
+		// 순찰: 이동 방향으로 자연스럽게 몸 회전
+		MoveComp->bOrientRotationToMovement = true;
+	}
+}
+
 void AMonsterBase::BeginPlay()
 {
 	Super::BeginPlay();

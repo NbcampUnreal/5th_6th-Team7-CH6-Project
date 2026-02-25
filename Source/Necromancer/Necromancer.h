@@ -20,3 +20,5 @@
 
 #define NAME_SpawnLocation "MonsterSpawnLocation"
 #define NAME_ShouldReturnToSpawn "ShouldReturnToSpawn"
+
+#define NAME_PatrolLocation "PatrolLocation"

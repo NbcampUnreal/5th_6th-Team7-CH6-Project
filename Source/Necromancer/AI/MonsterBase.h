@@ -50,6 +50,12 @@ public:
 
 	void RestoreMovementIfAlive();
 
+	// 전투/순찰 이동 모드 전환
+	// 전투: 타겟을 바라보면서 옆걸음 (Strafe)
+	// 순찰: 이동 방향으로 몸 회전
+	UFUNCTION(BlueprintCallable, Category = "AI")
+	void SetCombatMovementMode(bool bCombat);
+
 protected:
 
 	virtual void BeginPlay() override;
