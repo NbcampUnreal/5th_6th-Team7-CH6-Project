@@ -79,6 +79,12 @@ protected:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<AWeapon_Item_Base> CurrentWeapon;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<AWeapon_Item_Base> UnarmedWeaponClass;
+
+	UPROPERTY(Replicated)
+	TObjectPtr<AWeapon_Item_Base> UnarmedWeaponInstance;
+
 	UPROPERTY(ReplicatedUsing = OnRep_bIsGuarding, BlueprintReadOnly, Category = "Combat")
 	bool bIsGuarding = false;
 

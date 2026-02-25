@@ -71,6 +71,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
 	bool bDrawDebug = false;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
+	bool bIsUnarmed;
+
 	float CurrentDamageMultiplier = 1.0f;
 
 	bool bIsAttacking = false;

@@ -158,8 +158,26 @@ void AWeapon_Item_Base::PreloadWeaponAssets()
 
 void AWeapon_Item_Base::PerformTrace()
 {
-    const FVector StartPos = WeaponMesh->GetSocketLocation(StartSocketName);
-    const FVector EndPos = WeaponMesh->GetSocketLocation(EndSocketName);
+    USkeletalMeshComponent* TraceMesh = WeaponMesh;
+
+    if (bIsUnarmed)
+    {
+        if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
+        {
+            if (ANecPlayerCharacter* OwnerChar = Cast<ANecPlayerCharacter>(OwnerPawn))
+            {
+                TraceMesh = OwnerChar->GetMesh();
+            }
+        }       
+    }
+
+    if (!TraceMesh)
+    {
+        return;
+    }
+
+    const FVector StartPos = TraceMesh->GetSocketLocation(StartSocketName);
+    const FVector EndPos = TraceMesh->GetSocketLocation(EndSocketName);
     const FVector CurrentCenterLocation = (StartPos + EndPos) * 0.5f;
     const FVector Direction = EndPos - StartPos;
     const float WeaponLength = Direction.Length();

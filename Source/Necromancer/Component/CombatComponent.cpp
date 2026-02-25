@@ -19,6 +19,19 @@ void UCombatComponent::BeginPlay()
     Super::BeginPlay();
 
     OwnerCharacter = Cast<ANecPlayerCharacter>(GetOwner());
+    if (OwnerCharacter && OwnerCharacter->HasAuthority() && UnarmedWeaponClass)
+    {
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.Owner = OwnerCharacter;
+        SpawnParams.Instigator = OwnerCharacter;
+
+        UnarmedWeaponInstance = GetWorld()->SpawnActor<AWeapon_Item_Base>(UnarmedWeaponClass, SpawnParams);
+
+        if (!CurrentWeapon)
+        {
+            EquipWeapon(nullptr);
+        }
+    }
 }
 
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -27,6 +40,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
     DOREPLIFETIME(UCombatComponent, bIsGuarding);
     DOREPLIFETIME(UCombatComponent, CurrentWeapon);
+    DOREPLIFETIME(UCombatComponent, UnarmedWeaponInstance);
 }
 
 void UCombatComponent::Attack()
@@ -67,12 +81,19 @@ void UCombatComponent::EquipWeapon(AWeapon_Item_Base* NewWeapon)
         return;
     }
 
-    if (CurrentWeapon)
+    if (CurrentWeapon && CurrentWeapon != UnarmedWeaponInstance)
     {
         CurrentWeapon->Destroy();
     }
 
-    CurrentWeapon = NewWeapon;
+    if (NewWeapon)
+    {
+        CurrentWeapon = NewWeapon;
+    }
+    else
+    {
+        CurrentWeapon = UnarmedWeaponInstance;
+    }
 
     if (CurrentWeapon)
     {
@@ -90,6 +111,10 @@ void UCombatComponent::EquipWeapon(AWeapon_Item_Base* NewWeapon)
 void UCombatComponent::SetCurrentWeapon(AActor* NewWeaponActor)
 {
     AWeapon_Item_Base* NewWeapon = Cast<AWeapon_Item_Base>(NewWeaponActor);
+    if (!NewWeapon)
+    {
+        NewWeapon = UnarmedWeaponInstance;
+    }
 
     if (CurrentWeapon == NewWeapon)
     {
