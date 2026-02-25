@@ -124,6 +124,9 @@ struct FDropInfo : public FTableRowBase
 
     UPROPERTY(EditAnywhere)
     int32 MaxLevel;
+
+    UPROPERTY(EditAnywhere)
+    TArray<FName> Tags;
 };
 
 
