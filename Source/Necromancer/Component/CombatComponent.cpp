@@ -169,6 +169,11 @@ void UCombatComponent::CheckComboTransition()
 
 void UCombatComponent::SetGuard(bool bInGuarding)
 {
+    if (bIsAttacking && bInGuarding)
+    {
+        return;
+    }
+
     if (OwnerCharacter && OwnerCharacter->HasAuthority())
     {
         bIsGuarding = bInGuarding;
