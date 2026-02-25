@@ -13,6 +13,11 @@ UItemInstanceComponent::UItemInstanceComponent()
 }
 
 
+int32 UItemInstanceComponent::GetCurrentDurability() const
+{
+	return ItemInstance->CurrentDurability;
+}
+
 void UItemInstanceComponent::GetAllItemInstances(TArray<UItemInstance*>& OutItems) const
 {
 	OutItems.Reset();

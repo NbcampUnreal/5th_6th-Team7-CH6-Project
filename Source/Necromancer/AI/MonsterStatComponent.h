@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Component/StatComponent.h"
 #include "GameplayTagContainer.h"
+#include "Curves/CurveFloat.h"
 #include "MonsterStatComponent.generated.h"
 
 // 경직
@@ -56,6 +57,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetAttackCooldown() const;
 
+	// 층별 스탯 스케일링 적용 (서버 전용)
+	UFUNCTION(BlueprintCallable, Category = "Stat|FloorScaling")
+	void ApplyFloorScaling(int32 FloorLevel);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -101,4 +106,17 @@ private:
 	// 등급
 	UPROPERTY(EditDefaultsOnly, Category = "Stat")
 	FGameplayTag MonsterGrade;
+
+	// 층별 스케일링 (X=Floor, Y=Multiplier)
+	UPROPERTY(EditDefaultsOnly, Category = "Stat|FloorScaling")
+	TObjectPtr<UCurveFloat> HealthScaleCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stat|FloorScaling")
+	TObjectPtr<UCurveFloat> AttackScaleCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stat|FloorScaling")
+	TObjectPtr<UCurveFloat> ArmorScaleCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stat|FloorScaling")
+	TObjectPtr<UCurveFloat> PoiseScaleCurve;
 };

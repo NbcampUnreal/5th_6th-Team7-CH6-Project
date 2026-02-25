@@ -2,6 +2,7 @@
 
 
 #include "BTTask_RotateToTarget.h"
+#include "Necromancer.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
 #include "GameFramework/Pawn.h"
@@ -34,7 +35,7 @@ void UBTTask_RotateToTarget::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* 
 		return;
 	}
 	
-	AActor* TargetActor = Cast<AActor>(Blackboard->GetValueAsObject("TargetActor"));
+	AActor* TargetActor = Cast<AActor>(Blackboard->GetValueAsObject(NAME_TargetActor));
 	if (!TargetActor)
 	{
 		FinishLatentTask(OwnerComp,EBTNodeResult::Failed);
@@ -44,7 +45,6 @@ void UBTTask_RotateToTarget::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* 
 	FVector PawnLocation = OwnerPawn->GetActorLocation();
 	FVector TargetLocation = TargetActor->GetActorLocation();
 	
-	FRotator PawnRotation = TargetActor->GetActorRotation();
 	FRotator CurrentRotation = OwnerPawn->GetActorRotation();
 	FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(PawnLocation, TargetLocation);
 	

@@ -27,7 +27,7 @@ public:
 
 	UGridInventoryComponent* GetInventory() const { return InventoryComponent; }
 	UItemInstance* GetItemInstance() const { return ItemInstance; }
-	
+	int32 GetCurrentDurability() const;
 	void GetAllItemInstances(TArray<UItemInstance*>& OutItems) const;
 
 protected:

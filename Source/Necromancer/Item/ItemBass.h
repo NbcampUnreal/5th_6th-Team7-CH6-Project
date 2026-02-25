@@ -1,4 +1,4 @@
-// ItemBass.h
+﻿// ItemBass.h
 
 #pragma once
 
@@ -30,7 +30,7 @@ public:
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-    const FItemInstanceData& GetItemData() const { return ItemData; }
+    //const FItemInstanceData& GetItemData() const { return ItemData; }
 
     UFUNCTION(Server, Reliable)
     void Server_Use(class ACharacter* User);
@@ -39,15 +39,13 @@ public:
     void Server_Drop(const FVector& DropLocation);
 
     bool ReduceDurability(int32 Amount);
-    bool IsBroken() const { return ItemData.CurrentDurability <= 0; }
+    bool IsBroken() const { return ItemInstanceComponent->GetCurrentDurability() <= 0; }
 
+    virtual void Equip(AActor* Owner);
 protected:
     virtual void ExecuteUse(class ACharacter* User);
 
 protected:
-    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Item")
-    FItemInstanceData ItemData;
-
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
     UItemInstanceComponent* ItemInstanceComponent;
 };

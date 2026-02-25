@@ -1,6 +1,7 @@
 #include "AI/MonsterSpawnManager.h"
 #include "AI/MonsterSpawner.h"
 #include "AI/MonsterBase.h"
+#include "AI/MonsterStatComponent.h"
 #include "Maps/NecDungeonsGenerator.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
@@ -99,7 +100,13 @@ void AMonsterSpawnManager::SpawnNextInQueue()
 
 		if (Monster)
 		{
-			UE_LOG(LogTemp, Log, TEXT("Spawned [%d/%d]: %s"),CurrentSpawnIndex + 1,SpawnQueue.Num(),*Entry.MonsterClass->GetName());
+			// 층별 스탯 스케일링 적용
+			if (UMonsterStatComponent* StatComp = Monster->FindComponentByClass<UMonsterStatComponent>())
+			{
+				StatComp->ApplyFloorScaling(FloorLevel);
+			}
+
+			UE_LOG(LogTemp, Log, TEXT("Spawned [%d/%d]: %s (Floor:%d)"),CurrentSpawnIndex + 1,SpawnQueue.Num(),*Entry.MonsterClass->GetName(), FloorLevel);
 		}
 	}
 

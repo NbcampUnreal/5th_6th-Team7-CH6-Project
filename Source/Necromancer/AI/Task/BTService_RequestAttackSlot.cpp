@@ -36,10 +36,10 @@ void UBTService_RequestAttackSlot::TickNode(UBehaviorTreeComponent& OwnerComp, u
 		return;
 	}
 
-	AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(FName(NAME_TargetActor)));
+	AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
 	if (!TargetActor)
 	{
-		BB->SetValueAsBool(FName(NAME_HasAttackSlot), false);
+		BB->SetValueAsBool(NAME_HasAttackSlot, false);
 		return;
 	}
 
@@ -49,12 +49,20 @@ void UBTService_RequestAttackSlot::TickNode(UBehaviorTreeComponent& OwnerComp, u
 	UMonsterEngagementSubsystem* Engagement = AIPawn->GetWorld()->GetSubsystem<UMonsterEngagementSubsystem>();
 	if (!Engagement)
 	{
-		BB->SetValueAsBool(FName(NAME_HasAttackSlot), false);
+		BB->SetValueAsBool(NAME_HasAttackSlot, false);
 		return;
 	}
 
 	bool bHasSlot = Engagement->RequestAttackSlot(AIPawn, TargetActor);
-	BB->SetValueAsBool(FName(NAME_HasAttackSlot), bHasSlot);
+
+	// 슬롯 유지 시간 초과 + 만석이면 양보
+	if (bHasSlot && Engagement->ShouldYieldSlot(AIPawn, TargetActor))
+	{
+		Engagement->ReleaseAttackSlot(AIPawn, TargetActor);
+		bHasSlot = false;
+	}
+
+	BB->SetValueAsBool(NAME_HasAttackSlot, bHasSlot);
 }
 
 void UBTService_RequestAttackSlot::OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -88,6 +96,6 @@ void UBTService_RequestAttackSlot::OnCeaseRelevant(UBehaviorTreeComponent& Owner
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 	if (BB)
 	{
-		BB->SetValueAsBool(FName(NAME_HasAttackSlot), false);
+		BB->SetValueAsBool(NAME_HasAttackSlot, false);
 	}
 }

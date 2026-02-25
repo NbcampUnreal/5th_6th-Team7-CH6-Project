@@ -5,6 +5,7 @@
 #include "ComboAttackData.h"
 #include "AIController.h"
 #include "MonsterBase.h"
+#include "MonsterEngagementSubsystem.h"
 #include "MonsterStatComponent.h"
 #include "Necromancer.h"
 #include "GameFramework/Character.h"
@@ -56,7 +57,7 @@ EBTNodeResult::Type UBTTask_MonsterComboAttack::ExecuteTask(
 
     if (UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent())
     {
-        BB->SetValueAsBool(FName(NAME_IsAttacking), true);
+        BB->SetValueAsBool(NAME_IsAttacking, true);
     }
 
     if (AMonsterBase* Monster = Cast<AMonsterBase>(Character))
@@ -158,7 +159,7 @@ void UBTTask_MonsterComboAttack::FinishCombo(EBTNodeResult::Type Result)
     {
         if (UBlackboardComponent* BB = CachedOwnerComp->GetBlackboardComponent())
         {
-            BB->SetValueAsBool(FName(NAME_IsAttacking), false);
+            BB->SetValueAsBool(NAME_IsAttacking, false);
         }
     }
 
@@ -176,6 +177,25 @@ void UBTTask_MonsterComboAttack::FinishCombo(EBTNodeResult::Type Result)
         if (UMonsterStatComponent* StatComp = CachedCharacter->FindComponentByClass<UMonsterStatComponent>())
         {
             StatComp->MarkAttackUsed();
+        }
+
+        // 공격 완료 후 슬롯 유지 (기존에 누락되어 있던 슬롯 관리)
+        if (CachedOwnerComp)
+        {
+            if (UBlackboardComponent* BB = CachedOwnerComp->GetBlackboardComponent())
+            {
+                if (UWorld* World = CachedCharacter->GetWorld())
+                {
+                    if (UMonsterEngagementSubsystem* Engagement = World->GetSubsystem<UMonsterEngagementSubsystem>())
+                    {
+                        AActor* Target = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
+                        if (Target)
+                        {
+                            Engagement->RefreshSlotAfterAttack(CachedCharacter, Target);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -200,7 +220,14 @@ void UBTTask_MonsterComboAttack::PlayNextCombo()
         return;
     }
 
-    UAnimInstance* AnimInstance = CachedCharacter->GetMesh()->GetAnimInstance();
+    USkeletalMeshComponent* Mesh = CachedCharacter->GetMesh();
+    if (!Mesh)
+    {
+        FinishCombo(EBTNodeResult::Failed);
+        return;
+    }
+
+    UAnimInstance* AnimInstance = Mesh->GetAnimInstance();
     if (!AnimInstance)
     {
         FinishCombo(EBTNodeResult::Failed);
