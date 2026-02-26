@@ -41,7 +41,7 @@ public:
     bool ReduceDurability(int32 Amount);
     bool IsBroken() const { return ItemInstanceComponent->GetCurrentDurability() <= 0; }
 
-    virtual void Equip(AActor* Owner);
+    virtual void Equip(AActor* Equip_Owner);
 protected:
     virtual void ExecuteUse(class ACharacter* User);
 

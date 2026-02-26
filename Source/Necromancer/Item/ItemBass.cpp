@@ -57,7 +57,7 @@ bool AItemBass::ReduceDurability(int32 Amount)
     return true;
 }
 
-void AItemBass::Equip(AActor* Owner)
+void AItemBass::Equip(AActor* Equip_Owner)
 {
 }
 
