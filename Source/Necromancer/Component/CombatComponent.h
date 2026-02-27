@@ -79,6 +79,9 @@ protected:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<AWeapon_Item_Base> CurrentWeapon;
 
+	UPROPERTY()
+	TObjectPtr<UAnimMontage> ActiveAttackMontage;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	TSubclassOf<AWeapon_Item_Base> UnarmedWeaponClass;
 

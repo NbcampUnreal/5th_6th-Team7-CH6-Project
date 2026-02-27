@@ -122,6 +122,18 @@ void UCombatComponent::SetCurrentWeapon(AActor* NewWeaponActor)
     }
 
     CurrentWeapon = NewWeapon;
+    
+    // Reset combat state and stop montage when weapon changes
+    ResetCombatState();
+
+    if (OwnerCharacter)
+    {
+        UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+        if (AnimInstance && ActiveAttackMontage && AnimInstance->Montage_IsPlaying(ActiveAttackMontage))
+        {
+            AnimInstance->Montage_Stop(0.1f, ActiveAttackMontage);
+        }
+    }
 }
 
 void UCombatComponent::EnableWeaponCollision()
@@ -195,7 +207,7 @@ void UCombatComponent::ResetCombatState()
 
 void UCombatComponent::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-    if (CurrentWeapon && Montage == CurrentWeapon->GetAttackMontage())
+    if (ActiveAttackMontage && Montage == ActiveAttackMontage)
     {
         UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
         if (AnimInstance && AnimInstance->Montage_IsPlaying(Montage))
@@ -204,6 +216,7 @@ void UCombatComponent::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterru
         }
 
         ResetCombatState();
+        ActiveAttackMontage = nullptr;
     }
 }
 
@@ -267,6 +280,8 @@ void UCombatComponent::PlayComboAttack()
 
         UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
         FName MontageSectionName = ComboList[CurrentComboIndex].MontageSectionName;
+
+        ActiveAttackMontage = AttackMontage;
 
         UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
         if (AttackMontage && AnimInstance)
