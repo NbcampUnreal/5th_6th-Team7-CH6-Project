@@ -1,4 +1,4 @@
-//Wapeon_Itme_Bass.h
+﻿//Wapeon_Itme_Bass.h
 
 #pragma once
 
@@ -43,6 +43,8 @@ public:
 	void SetDamageMultiplier(float NewMultiplier) { CurrentDamageMultiplier = NewMultiplier; }
 
 	void PreloadWeaponAssets();
+
+	virtual void Equip(AActor* Equip_Owner)override;
 
 protected:
 	void PerformTrace();
