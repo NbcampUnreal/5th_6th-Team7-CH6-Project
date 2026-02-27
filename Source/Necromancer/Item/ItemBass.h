@@ -48,4 +48,4 @@ protected:
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
     UItemInstanceComponent* ItemInstanceComponent;
-};
+}; 

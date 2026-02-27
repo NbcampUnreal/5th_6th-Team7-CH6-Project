@@ -7,6 +7,7 @@
 #include "GridInventory/ItemInstance/ItemInstanceComponent.h"
 #include "GridInventory/BucketInventoryComponent.h"
 #include "Item/DropItemBase.h"
+#include "Item/ItemBass.h"
 #include "UI/InventoryHub.h"
 #include "UI/SubmitWidgetHub.h"
 
@@ -333,7 +334,7 @@ void UNecInventoryComponent::DropItemInWorld_Internal(UItemInstance* DropItem)
 	return;
 }
 
-inline void UNecInventoryComponent::ValidateEquipmentSlot(UItemInstance*& SlotItem, AActor*& SlotActor)
+inline void UNecInventoryComponent::ValidateEquipmentSlot(UItemInstance*& SlotItem, AActor*& SlotActor)//인스턴스가 아닌 슬롯을 받아와서 수정하는 것이 필요// 나중에 수정
 {
 	bool bInvalid = false;
 
@@ -362,15 +363,30 @@ inline void UNecInventoryComponent::ValidateEquipmentSlot(UItemInstance*& SlotIt
 
 	if (bInvalid)
 	{
-		SlotItem = nullptr;
+		UDataTableSubsystem* Subsystem =
+			GetWorld()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
 
-		if (IsValid(SlotActor))
+		if (!Subsystem)
 		{
-			if (SlotActor->HasAuthority())
-			{
-				SlotActor->Destroy();
-			}
-			SlotActor = nullptr;
+			return;
+		}
+		if (!SlotItem) {
+			return;
+		}
+		const FItemData* Data = Subsystem->GetItemData(SlotItem->ItemID);
+		if (!Data)
+		{
+			return;
+		}
+		EEquipmentSlot TargetSlot;
+		if (!ItemTypeToEquipmentSlot(Data->m_ItemType, TargetSlot))
+		{
+			return;
+		}
+
+		if (UItemInstance* equipItem = GetEquipmentItem(TargetSlot))
+		{
+			UnequipItem(TargetSlot);
 		}
 	}
 }
@@ -529,22 +545,7 @@ void UNecInventoryComponent::EquipItem_Internal(UItemInstance* EquipItem)
 
 		if (SpawnedActor)
 		{
-			SpawnedActor->SetReplicates(true);
-
-			// 👇 캐릭터 메쉬 가져오기
-			ACharacter* Character = Cast<ACharacter>(OwnerActor);
-			if (Character && Character->GetMesh())
-			{
-				if (Data->m_ItemType == EItemType::Weapon) {
-					FName SocketName = "hand_r_weapon"; // ItemData에 소켓 이름 저장해두는 게 베스트
-
-					SpawnedActor->AttachToComponent(
-						Character->GetMesh(),
-						FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-						SocketName
-					);
-				}
-			}
+			Cast<AItemBass>(SpawnedActor)->Equip(OwnerActor);
 		}
 	}
 
@@ -563,6 +564,12 @@ void UNecInventoryComponent::UnequipItem_Internal(EEquipmentSlot Slot)
 
 	SetEquipmentActor(Slot, nullptr);
 	SetEquipmentItem(Slot, nullptr);
+
+	//메쉬 다시 보이게
+	APlayerState* PS = Cast<APlayerState>(GetOwner());
+	if (!PS) return;
+	ACharacter* OwnerCharacter = Cast<ACharacter>(PS->GetPawn());
+	OwnerCharacter->GetMesh()->SetVisibility(true, true);
 }
 
 void UNecInventoryComponent::Server_EquipItem_Implementation(UItemInstance* EquipItem)
