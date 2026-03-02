@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "GenericTeamAgentInterface.h"
 #include "GridInventory/NecInventoryComponent.h"
+#include "WorldActor/Interactable.h"
 #include "NecPlayerCharacter.generated.h"
 
 class USpringArmComponent;
@@ -14,11 +15,14 @@ class UPlayerMovementComponent;
 class UCombatComponent;
 class UUserWidget;
 class UTargetingComponent;
+class USphereComponent;
 class AWeapon_Item_Base;
+class  USoulComponent;
 struct FInputActionValue;
 
+
 UCLASS()
-class NECROMANCER_API ANecPlayerCharacter : public ACharacter , public IGenericTeamAgentInterface
+class NECROMANCER_API ANecPlayerCharacter : public ACharacter , public IGenericTeamAgentInterface, public IInteractable
 {
 	GENERATED_BODY()
 
@@ -60,7 +64,7 @@ protected:
 	void ToggleMenu(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void Interact();
+	void TryInteract();
 	
 
 	UFUNCTION()
@@ -68,6 +72,12 @@ protected:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_HandleDeath();
+
+	UFUNCTION()
+	void HandleRevive();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_HandleRevive();
 
 	void EndGame();
 
@@ -124,7 +134,7 @@ protected:
 	float InteractRange = 200.0f;
 
 	FTimerHandle DeathTimerHandle;
-	
+
 protected:
 	//인벤토리
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Inventory")
@@ -144,4 +154,53 @@ public:
 			InteractTarget = nullptr;
 		}
 	}
+
+#pragma region interact
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TObjectPtr<USphereComponent> InteractionCheckCollision;
+
+	float CollisionRadius = 700.0f;
+
+	UFUNCTION(BlueprintCallable)
+	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult) {
+	}
+
+	UFUNCTION(BlueprintCallable)
+	virtual void OnSphereEnd(UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex) {
+	}
+
+	UFUNCTION(BlueprintCallable)
+	virtual void OnCheckOverlap(UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult) {
+	}
+
+	UFUNCTION(BlueprintCallable)
+	virtual void OnCheckEndOverlap(UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex) {
+	}
+public:
+	virtual void Interact_Implementation(AActor* Interactor) override;
+#pragma endregion
+
+#pragma region SoulComponent
+protected:
+	TObjectPtr<USoulComponent> SoulComponent;
+
+#pragma endregion
+
 };

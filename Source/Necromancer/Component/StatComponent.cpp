@@ -1,4 +1,4 @@
-#include "Component/StatComponent.h"
+﻿#include "Component/StatComponent.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
@@ -52,19 +52,20 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
     }
 
     float ActualDamage = Damage;
-
-    ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(DamagedActor);
-    if (PlayerCharacter)
-    {
-        UCombatComponent* CombatComp = PlayerCharacter->FindComponentByClass<UCombatComponent>();
-        if (CombatComp && CombatComp->IsGuarding())
+    if (DamagedActor) {
+        ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(DamagedActor);
+        if (PlayerCharacter)
         {
-            ActualDamage *= CombatComp->GetCurrentWeapon()->GetGuardRate();
-
-            UStaminaComponent* StaminaComp = PlayerCharacter->GetStaminaComponent();
-            if (StaminaComp)
+            UCombatComponent* CombatComp = PlayerCharacter->FindComponentByClass<UCombatComponent>();
+            if (CombatComp && CombatComp->IsGuarding())
             {
-                StaminaComp->ConsumeStamina(30.0f);
+                ActualDamage *= CombatComp->GetCurrentWeapon()->GetGuardRate();
+
+                UStaminaComponent* StaminaComp = PlayerCharacter->GetStaminaComponent();
+                if (StaminaComp)
+                {
+                    StaminaComp->ConsumeStamina(30.0f);
+                }
             }
         }
     }

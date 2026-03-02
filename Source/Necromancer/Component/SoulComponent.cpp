@@ -3,28 +3,29 @@
 
 #include "Component/SoulComponent.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
 
 USoulComponent::USoulComponent()
 {
     PrimaryComponentTick.bCanEverTick = false;
+
+    CurrentHPDrain = BaseHPDrain;
 }
 
 void USoulComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (!GetOwner()->HasAuthority())
-        return;
 
-    CurrentHPDrain = BaseHPDrain;
+    ReserveBatteries.Empty();
 
-    // 초기 Active 배터리
-    ActiveBattery = FSoulBattery();
-
-    // Reserve 3개 초기 생성
-    for (int32 i = 0; i < MaxReserveSlots; i++)
+    for (int32 i = 0; i < MaxReserveSlots; ++i)
     {
-        ReserveBatteries.Add(FSoulBattery());
+        FSoulBattery TestBattery;
+        TestBattery.MaxCapacity = 100.f;
+        TestBattery.CurrentCapacity = 100.f;
+
+        ReserveBatteries.Add(TestBattery);
     }
 
     GetWorld()->GetTimerManager().SetTimer(
@@ -36,27 +37,36 @@ void USoulComponent::BeginPlay()
     );
 }
 
+
 void USoulComponent::HandleDrain()
 {
-    if (!GetOwner()->HasAuthority())
+    if (CurrentState == ESoulState::Down)
         return;
 
-    float Remaining = DrainPerTick;
-
-    Remaining -= ActiveBattery.Consume(Remaining);
-
+    float Used = ActiveBattery.Consume(DrainPerTick);
     if (ActiveBattery.IsEmpty())
     {
         SwapReserveToActive();
     }
-
     if (ActiveBattery.IsEmpty() && ReserveBatteries.Num() == 0)
     {
         EnterDepletedState();
-
-        OnHPDrainRequested.Broadcast(CurrentHPDrain);
+        OnSoulDepleted.Broadcast();
         IncreaseHPDrain();
     }
+    else {
+        if (CurrentState == ESoulState::Depleted)
+        {
+            CurrentState = ESoulState::Normal;
+        }
+
+        CurrentHPDrain = FMath::Max(
+            CurrentHPDrain - DrainAcceleration,
+            BaseHPDrain
+        );
+    }
+
+    
 }
 
 void USoulComponent::SwapReserveToActive()
@@ -67,7 +77,7 @@ void USoulComponent::SwapReserveToActive()
     ActiveBattery = ReserveBatteries[0];
     ReserveBatteries.RemoveAt(0);
 
-    CurrentState = ESoulState::LowPower;
+    //CurrentState = ESoulState::LowPower;
 }
 
 void USoulComponent::EnterDepletedState()
@@ -76,21 +86,54 @@ void USoulComponent::EnterDepletedState()
         return;
 
     CurrentState = ESoulState::Depleted;
-    OnSoulDepleted.Broadcast();
 }
 
 void USoulComponent::IncreaseHPDrain()
 {
-    CurrentHPDrain += DrainAcceleration;
-    CurrentHPDrain = FMath::Min(CurrentHPDrain, MaxHPDrain);
+    if (CurrentState != ESoulState::Depleted)
+        return;
+
+    CurrentHPDrain = FMath::Min(
+        CurrentHPDrain + DrainAcceleration,
+        MaxHPDrain
+    );
+
+    AActor* OwnerActor = GetOwner();
+    if (!OwnerActor)
+        return;
+
+    UGameplayStatics::ApplyDamage(
+        OwnerActor,
+        CurrentHPDrain,
+        nullptr,
+        OwnerActor,
+        nullptr // 필요하면 전용 DamageType 지정
+    );
+}
+
+void USoulComponent::RecoverHPDrain(float DeltaTime)
+{
+    if (CurrentHPDrain <= BaseHPDrain)
+    {
+        CurrentHPDrain = BaseHPDrain;
+        return;
+    }
+
+    CurrentHPDrain -= DrainAcceleration * DeltaTime;
+
+    if (CurrentHPDrain < BaseHPDrain)
+    {
+        CurrentHPDrain = BaseHPDrain;
+    }
 }
 
 void USoulComponent::EnterDownState()
 {
-    if (!GetOwner()->HasAuthority())
+    if (CurrentState == ESoulState::Down)
         return;
 
     CurrentState = ESoulState::Down;
+
     OnEnterDownState.Broadcast();
 
     GetWorld()->GetTimerManager().SetTimer(
@@ -110,7 +153,7 @@ void USoulComponent::TryRevive()
     if (ReserveBatteries.Num() <= 0)
         return;
 
-    ActiveBattery = ReserveBatteries[0];
+    //ActiveBattery = ReserveBatteries[0];
     ReserveBatteries.RemoveAt(0);
 
     ActiveBattery.SetHalf();
@@ -137,17 +180,14 @@ void USoulComponent::TryRevive()
 
 void USoulComponent::AddReserveBattery(const FSoulBattery& NewBattery)
 {
-    if (!GetOwner()->HasAuthority())
-        return;
-
-    if (ReserveBatteries.Num() >= MaxReserveSlots)
-        return;
-
-    ReserveBatteries.Add(NewBattery);
-
-    if (CurrentState == ESoulState::Depleted)
+    if (ReserveBatteries.Num() < MaxReserveSlots)
     {
-        CurrentHPDrain = BaseHPDrain;
-        CurrentState = ESoulState::LowPower;
+        ReserveBatteries.Add(NewBattery);
+
+        if (CurrentState == ESoulState::Depleted)
+        {
+            CurrentState = ESoulState::Normal;
+
+        }
     }
 }
