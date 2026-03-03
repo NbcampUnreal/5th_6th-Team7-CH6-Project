@@ -49,6 +49,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat")
 	bool IsGuarding() const { return bIsGuarding; }
 
+	UFUNCTION(BlueprintPure, Category = "Combat")
+	bool IsAttacking() const { return bIsAttacking; }
+
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void ResetCombatState();
 

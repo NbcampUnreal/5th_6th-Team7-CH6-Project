@@ -179,7 +179,7 @@ void UBTTask_MonsterComboAttack::FinishCombo(EBTNodeResult::Type Result)
             StatComp->MarkAttackUsed();
         }
 
-        // 공격 완료 후 슬롯 유지 (기존에 누락되어 있던 슬롯 관리)
+        // 공격 완료 후 슬롯 유지
         if (CachedOwnerComp)
         {
             if (UBlackboardComponent* BB = CachedOwnerComp->GetBlackboardComponent())
