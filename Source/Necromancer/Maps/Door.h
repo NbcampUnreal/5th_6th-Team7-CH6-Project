@@ -22,8 +22,6 @@ public:
 	virtual void Interact_Implementation(AActor* Interactor) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-
-
 protected:
 	UFUNCTION()
 	virtual void DoorOpenTimeLineFunc(float Output);

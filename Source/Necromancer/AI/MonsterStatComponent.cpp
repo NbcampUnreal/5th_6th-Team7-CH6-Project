@@ -97,6 +97,11 @@ float UMonsterStatComponent::GetAttackCooldown() const
 	return AttackCooldown;
 }
 
+float UMonsterStatComponent::GetSkillLevel() const
+{
+	return SkillLevel;
+}
+
 void UMonsterStatComponent::ApplyFloorScaling(int32 FloorLevel)
 {
 	if (!GetOwner()->HasAuthority())

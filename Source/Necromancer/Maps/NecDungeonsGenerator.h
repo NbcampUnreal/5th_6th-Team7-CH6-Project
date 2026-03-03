@@ -25,6 +25,9 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Room")
 	void SpawnNextRoom();
 
+	UFUNCTION(BlueprintCallable, Category = "Room")
+	void SpawnEndRoom();
+
 	// 겹치는 방 배열에 담기
 	UFUNCTION(BlueprintCallable, Category = "Overlap")
 	void AddOverlappingRoomToList();
@@ -83,6 +86,10 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TSubclassOf<AActor> StartRoom;
 
+	// 마지막 방 담을 변수
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
+	TSubclassOf<AActor> EndRoom;
+
 	// 구멍 막기
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Holes");
 	TSubclassOf<AActor> BlockHoles;
@@ -110,6 +117,9 @@ protected:
 	// 방의 출구 Arrow Component를 담을 배열
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exits")
 	TArray<USceneComponent*>ExitsList;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exits")
+	TArray<USceneComponent*>SecondFExitsList;
 
 	// 방 설치에 선택된 ArrowComponent
 	USceneComponent* SelectedExitPoint;

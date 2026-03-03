@@ -24,3 +24,17 @@
 #define NAME_PatrolLocation "PatrolLocation"
 
 #define NAME_CanPropagateAggro "CanPropagateAggro"
+
+// 전투 리액션/역할 시스템
+#define NAME_PlayerIsAttacking "PlayerIsAttacking"
+#define NAME_CombatRole "CombatRole"
+#define NAME_BestAction "BestAction"
+
+// 전투 역할 (BT 분기용)
+UENUM(BlueprintType)
+enum class ECombatRole : uint8
+{
+	Attacker,
+	Flanker,
+	Waiter
+};

@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "DataAsset/WeaponDataAsset.h"
 #include "NecAnimInstanceBase.generated.h"
 
 class ANecPlayerCharacter;
@@ -17,11 +18,18 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 protected:
+	UFUNCTION()
+	void OnWeaponChanged(EWeaponType NewWeaponType);
+
+protected:
 	UPROPERTY()
 	TObjectPtr<ANecPlayerCharacter> OwnerCharacter;
 
 	UPROPERTY()
 	TObjectPtr<UCharacterMovementComponent> OwnerCharacterMovementComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	EWeaponType CurrentWeaponType = EWeaponType::Unarmed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FVector Velocity;
