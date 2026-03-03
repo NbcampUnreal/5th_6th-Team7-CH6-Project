@@ -31,7 +31,7 @@ public:
 private:
 	void InitProfileSaveGame();
 
-private:
+public:
 	UFUNCTION(BlueprintCallable)
 	void IncreaseKillCount();
 

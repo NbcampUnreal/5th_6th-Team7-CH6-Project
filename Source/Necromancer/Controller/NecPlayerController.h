@@ -74,4 +74,8 @@ protected:
 
 public:
 	void OnStartGame();
+
+public:
+	UFUNCTION(Client, Reliable)
+	void Client_NotifyMonsterKill();
 };

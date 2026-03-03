@@ -30,7 +30,9 @@ void UNecSaveGameSubsystem::InitProfileSaveGame()
 void UNecSaveGameSubsystem::IncreaseKillCount()
 {
     ProfileSaveGame->TotalKillCount++;
-    UE_LOG(LogTemp, Warning, TEXT("Kill Count Updated! Total: %d"), ProfileSaveGame ? ProfileSaveGame->TotalKillCount : 0);
+    //UE_LOG(LogTemp, Warning, TEXT("Kill Count Updated! Total: %d"), ProfileSaveGame ? ProfileSaveGame->TotalKillCount : 0);
+
+    //SaveProfileSaveGame();
 }
 
 void UNecSaveGameSubsystem::SaveProfileSaveGame()
