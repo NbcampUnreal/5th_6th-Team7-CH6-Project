@@ -8,6 +8,7 @@
 #include "Component/CombatComponent.h"
 #include "Component/StaminaComponent.h"
 #include "Item/Weapon_Item_Base.h"
+#include "Controller/NecPlayerController.h"
 
 UStatComponent::UStatComponent()
 	: CurrentHealth(0.0f)
@@ -100,6 +101,15 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
 
     if (NewHealth <= 0.0f)
     {
+        if (InstigatedBy)
+        {
+            ANecPlayerController* PC = Cast<ANecPlayerController>(InstigatedBy);
+            if (PC)
+            {
+                PC->Client_NotifyMonsterKill();
+            }
+        }
+
         OnDeath.Broadcast();
     }
 }
