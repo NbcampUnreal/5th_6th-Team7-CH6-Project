@@ -1,4 +1,4 @@
-#include "Component/StatComponent.h"
+﻿#include "Component/StatComponent.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
@@ -8,6 +8,7 @@
 #include "Component/CombatComponent.h"
 #include "Component/StaminaComponent.h"
 #include "Item/Weapon_Item_Base.h"
+#include "Controller/NecPlayerController.h"
 
 UStatComponent::UStatComponent()
 	: CurrentHealth(0.0f)
@@ -52,19 +53,20 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
     }
 
     float ActualDamage = Damage;
-
-    ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(DamagedActor);
-    if (PlayerCharacter)
-    {
-        UCombatComponent* CombatComp = PlayerCharacter->FindComponentByClass<UCombatComponent>();
-        if (CombatComp && CombatComp->IsGuarding())
+    if (DamagedActor) {
+        ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(DamagedActor);
+        if (PlayerCharacter)
         {
-            ActualDamage *= CombatComp->GetCurrentWeapon()->GetGuardRate();
-
-            UStaminaComponent* StaminaComp = PlayerCharacter->GetStaminaComponent();
-            if (StaminaComp)
+            UCombatComponent* CombatComp = PlayerCharacter->FindComponentByClass<UCombatComponent>();
+            if (CombatComp && CombatComp->IsGuarding())
             {
-                StaminaComp->ConsumeStamina(30.0f);
+                ActualDamage *= CombatComp->GetCurrentWeapon()->GetGuardRate();
+
+                UStaminaComponent* StaminaComp = PlayerCharacter->GetStaminaComponent();
+                if (StaminaComp)
+                {
+                    StaminaComp->ConsumeStamina(30.0f);
+                }
             }
         }
     }
@@ -99,6 +101,15 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
 
     if (NewHealth <= 0.0f)
     {
+        if (InstigatedBy)
+        {
+            ANecPlayerController* PC = Cast<ANecPlayerController>(InstigatedBy);
+            if (PC)
+            {
+                PC->Client_NotifyMonsterKill();
+            }
+        }
+
         OnDeath.Broadcast();
     }
 }

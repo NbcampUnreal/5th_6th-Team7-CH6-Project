@@ -4,7 +4,6 @@
 #include "AIController.h"
 #include "MonsterBase.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "Necromancer.h"
 
 UBTService_SmoothLookAt::UBTService_SmoothLookAt()
@@ -45,35 +44,16 @@ void UBTService_SmoothLookAt::TickNode(UBehaviorTreeComponent& OwnerComp, uint8*
 		{
 			Monster->SetCombatMovementMode(false);
 		}
+		AIC->ClearFocus(EAIFocusPriority::Gameplay);
 		return;
 	}
 
-	// 타겟 있으면 전투 모드 (이동 방향 회전 OFF → Strafe 가능)
+	// 타겟 있으면 전투 모드 + SetFocus로 타겟 바라보기
 	if (AMonsterBase* Monster = Cast<AMonsterBase>(Pawn))
 	{
 		Monster->SetCombatMovementMode(true);
 	}
-
-	FVector PawnLocation = Pawn->GetActorLocation();
-	FVector TargetLocation = Target->GetActorLocation();
-
-	FRotator CurrentRotation = Pawn->GetActorRotation();
-	FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(PawnLocation, TargetLocation);
-
-	if (bYawOnly)
-	{
-		TargetRotation.Pitch = CurrentRotation.Pitch;
-		TargetRotation.Roll = CurrentRotation.Roll;
-	}
-
-	FRotator NewRotation = FMath::RInterpConstantTo(
-		CurrentRotation,
-		TargetRotation,
-		DeltaSeconds,
-		RotationSpeed
-	);
-
-	Pawn->SetActorRotation(NewRotation);
+	AIC->SetFocus(Target, EAIFocusPriority::Gameplay);
 }
 
 void UBTService_SmoothLookAt::OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -83,6 +63,7 @@ void UBTService_SmoothLookAt::OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp,
 	// 서비스가 비활성화되면 순찰 모드로 복귀
 	if (AAIController* AIC = OwnerComp.GetAIOwner())
 	{
+		AIC->ClearFocus(EAIFocusPriority::Gameplay);
 		if (AMonsterBase* Monster = Cast<AMonsterBase>(AIC->GetPawn()))
 		{
 			Monster->SetCombatMovementMode(false);

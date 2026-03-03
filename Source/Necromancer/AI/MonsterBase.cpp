@@ -88,13 +88,16 @@ void AMonsterBase::SetCombatMovementMode(bool bCombat)
 
 	if (bCombat)
 	{
-		// 전투: 이동 방향 회전 끄고, SmoothLookAt이 직접 회전 관리
+		// 전투: 이동 방향 회전 끄고, Controller 회전(SetFocus)으로 타겟을 바라봄
 		MoveComp->bOrientRotationToMovement = false;
+		MoveComp->bUseControllerDesiredRotation = true;
+		MoveComp->RotationRate = FRotator(0.0f, CombatRotationSpeed, 0.0f);
 	}
 	else
 	{
 		// 순찰: 이동 방향으로 자연스럽게 몸 회전
 		MoveComp->bOrientRotationToMovement = true;
+		MoveComp->bUseControllerDesiredRotation = false;
 	}
 }
 
@@ -231,6 +234,7 @@ void AMonsterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AMonsterBase, bIsDead);
+	DOREPLIFETIME(AMonsterBase, bIsBlocking);
 }
 
 void AMonsterBase::OnRep_IsDead()
@@ -270,10 +274,21 @@ void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
 		return;
 	}
 
-	
+	// 블로킹 중이면 데미지 감소 + 블록 리액션
+	if (bIsBlocking)
+	{
+		float ReducedDamage = DamageAmount * (1.0f - ShieldGuardRate);
+		MonsterStatComponent->ApplyPoise(ReducedDamage);
+
+		if (HasAuthority() && BlockReactMontage)
+		{
+			Multicast_PlayMontage(BlockReactMontage);
+		}
+		return;
+	}
+
 	StopAnimMontage();
 
-	
 	if (AAIController* AIC = GetController<AAIController>())
 	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
@@ -282,7 +297,6 @@ void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
 		}
 	}
 
-	// 피격 시 공격 슬롯이 없으면 임시 부여
 	TryGrantTemporarySlot();
 
 	MonsterStatComponent->ApplyPoise(DamageAmount);
@@ -361,4 +375,13 @@ void AMonsterBase::OnHitReactMontageEnded(UAnimMontage* Montage, bool bInterrupt
 			BB->SetValueAsBool(NAME_IsStaggered, false);
 		}
 	}
+}
+
+void AMonsterBase::SetBlockingState(bool bBlock)
+{
+	bIsBlocking = bBlock;
+}
+
+void AMonsterBase::OnRep_IsBlocking()
+{
 }

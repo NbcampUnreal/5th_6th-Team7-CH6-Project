@@ -1,4 +1,4 @@
-//Weapon_Item_Base.cpp
+﻿//Weapon_Item_Base.cpp
 
 #include "Weapon_Item_Base.h"
 
@@ -153,6 +153,25 @@ void AWeapon_Item_Base::PreloadWeaponAssets()
             AssetsToLoad,
             FStreamableDelegate::CreateUObject(this, &AWeapon_Item_Base::OnWeaponAssetsLoaded)
         );
+    }
+}
+
+void AWeapon_Item_Base::Equip(AActor* Equip_Owner)
+{
+    SetReplicates(true);
+
+    // 👇 캐릭터 메쉬 가져오기
+    ACharacter* Character = Cast<ACharacter>(Equip_Owner);
+    if (Character && Character->GetMesh())
+    {
+        FName SocketName = "hand_r_weapon"; // ItemData에 소켓 이름 저장해두는 게 베스트
+
+        AttachToComponent(
+            Character->GetMesh(),
+            FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+            SocketName
+        );
+
     }
 }
 

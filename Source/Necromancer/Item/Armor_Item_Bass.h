@@ -1,4 +1,4 @@
-// Armor_Item_Bass.h
+﻿// Armor_Item_Bass.h
 
 #pragma once
 
@@ -18,6 +18,8 @@ public:
 	AArmor_Item_Bass();
 
 	float GetDefenseRate() const { return Defense; }
+
+	virtual void Equip(AActor* Equip_Owner)override;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Armor")
