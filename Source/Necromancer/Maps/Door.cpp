@@ -54,6 +54,12 @@ void ADoor::DoorOpenTimeLineFunc(float Output)
 	StaticMesh->SetRelativeRotation(Value);
 }
 
+void ADoor::Server_ToggleDoor_Implementation()
+{
+	bDoorOpen = !bDoorOpen;
+	OnRep_DoorState();
+}
+
 void ADoor::OnRep_DoorState()
 {
 	if (bDoorOpen)
@@ -66,10 +72,4 @@ void ADoor::OnRep_DoorState()
 		DoorTimeline->Reverse();
 		StaticMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	}
-}
-
-void ADoor::Server_ToggleDoor_Implementation()
-{
-	bDoorOpen = !bDoorOpen;
-	OnRep_DoorState();
 }
