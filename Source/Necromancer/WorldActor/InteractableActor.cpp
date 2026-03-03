@@ -115,6 +115,10 @@ void AInteractableActor::OnSphereOverlap(UPrimitiveComponent* OverlappedComp,
 	}
 }
 
+void ANecPlayerCharacter::Interact_Implementation(AActor* Interactor)
+{
+}
+
 void AInteractableActor::OnSphereEnd(UPrimitiveComponent* OverlappedComp,
 	AActor* OtherActor,
 	UPrimitiveComponent* OtherComp,

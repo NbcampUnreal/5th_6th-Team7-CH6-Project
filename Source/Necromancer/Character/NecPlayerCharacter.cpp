@@ -11,6 +11,8 @@
 #include "Component/PlayerMovementComponent.h"
 #include "Component/CombatComponent.h"
 #include "Component/TargetingComponent.h"
+#include "Component/SoulComponent.h"
+#include "Components/SphereComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -48,6 +50,17 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	TargetingComponent = CreateDefaultSubobject<UTargetingComponent>(TEXT("TargetingComponent"));
 	InventoryComponent = CreateDefaultSubobject<UNecInventoryComponent>(TEXT("NecInventoryComponent"));
+	SoulComponent = CreateDefaultSubobject<USoulComponent>(TEXT("SoulComponent"));
+
+	InteractionCheckCollision = CreateDefaultSubobject<USphereComponent>(TEXT("InteractionCollision"));
+	InteractionCheckCollision->SetSphereRadius(CollisionRadius);
+	InteractionCheckCollision->SetupAttachment(GetCapsuleComponent());
+	InteractionCheckCollision->OnComponentBeginOverlap.AddDynamic(
+		this,
+		&ANecPlayerCharacter::OnCheckOverlap);
+	InteractionCheckCollision->OnComponentEndOverlap.AddDynamic(
+		this,
+		&ANecPlayerCharacter::OnCheckEndOverlap);
 
 
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
@@ -164,7 +177,7 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 					PlayerController->InteractAction,
 					ETriggerEvent::Started,
 					this,
-					&ANecPlayerCharacter::Interact
+					&ANecPlayerCharacter::TryInteract
 				);
 			}
 		}
@@ -313,7 +326,7 @@ void ANecPlayerCharacter::ToggleMenu(const FInputActionValue& Value)
 	}
 }
 
-void ANecPlayerCharacter::Interact()
+void ANecPlayerCharacter::TryInteract()
 {
 	if (InteractTarget) {
 		if (InteractTarget->Implements<UInteractable>())
@@ -332,22 +345,24 @@ void ANecPlayerCharacter::HandleDeath()
 {
 	if (HasAuthority())
 	{		
-		AController* CurrentController = GetController();
+		//AController* CurrentController = GetController();
 
-		if (CurrentController)
-		{
-			CurrentController->UnPossess();			
-		}
+		//if (CurrentController)
+		//{
+		//	//CurrentController->UnPossess();			
+		//}
 
 		Multicast_HandleDeath();
+		//멀티 수정 필요
+		SoulComponent->EnterDownState();
 
-		GetWorldTimerManager().SetTimer(
+		/*GetWorldTimerManager().SetTimer(
 			DeathTimerHandle,
 			this,
 			&ANecPlayerCharacter::EndGame,
 			5.0f,
 			false
-		);
+		);*/
 	}
 }
 
@@ -364,6 +379,46 @@ void ANecPlayerCharacter::Multicast_HandleDeath_Implementation()
 		GetMesh()->SetSimulatePhysics(true);
 	}
 }
+
+void ANecPlayerCharacter::HandleRevive()
+{
+	if (HasAuthority())
+	{
+		Multicast_HandleRevive();
+	}
+}
+
+void ANecPlayerCharacter::Multicast_HandleRevive_Implementation()
+{
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	UCapsuleComponent* CapsuleComp = GetCapsuleComponent();
+
+	if (!MeshComp || !CapsuleComp)
+		return;
+
+	// 1️⃣ pelvis 기준 캡슐 이동
+	FVector PelvisLocation = MeshComp->GetSocketLocation(TEXT("pelvis"));
+	PelvisLocation.Z += CapsuleComp->GetScaledCapsuleHalfHeight();
+
+	CapsuleComp->SetWorldLocation(PelvisLocation);
+
+	FRotator NewRot(0.f, MeshComp->GetComponentRotation().Yaw, 0.f);
+	CapsuleComp->SetWorldRotation(NewRot);
+
+	MeshComp->SetSimulatePhysics(false);
+	MeshComp->bBlendPhysics = false;
+
+	MeshComp->AttachToComponent(CapsuleComp, FAttachmentTransformRules::SnapToTargetIncludingScale);
+	MeshComp->SetRelativeLocation(FVector(0.f, 0.f, -CapsuleComp->GetScaledCapsuleHalfHeight()));
+	MeshComp->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+
+	MeshComp->SetCollisionProfileName(TEXT("CharacterMesh"));
+	CapsuleComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+	StatComponent->SetCurrentHealth(1.f);
+}
+
+
 
 void ANecPlayerCharacter::EndGame()
 {
@@ -402,6 +457,12 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 			if (HasAuthority())
 			{
 			}
+		}
+		if (SoulComponent) {
+			SoulComponent->OnReviveRequested.AddDynamic(
+				this,
+				&ANecPlayerCharacter::HandleRevive
+			);
 		}
 	}
 }
@@ -467,4 +528,12 @@ void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)
 		bool bResetExhaustion = StaminaComponent->GetCurrentStamina() > 0.0f;
 		StaminaComponent->StopStaminaDrain(bResetExhaustion);
 	}
+}
+
+void OnSphereOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+}
+
+void OnSphereEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
 }
