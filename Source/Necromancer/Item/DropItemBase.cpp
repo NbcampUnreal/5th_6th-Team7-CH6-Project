@@ -78,7 +78,7 @@ void ADropItemBase::Interact_Internal(AActor* Interactor)
     if (Inventory->AddItemToInventory(ItemInstanceComponent->GetItemInstance())) {
         Inventory->Client_UpdateItem();
 
-        Destroy();
+        HandleDestroyed();
     }    
 }
 
