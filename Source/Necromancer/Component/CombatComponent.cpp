@@ -95,6 +95,9 @@ void UCombatComponent::EquipWeapon(AWeapon_Item_Base* NewWeapon)
         CurrentWeapon = UnarmedWeaponInstance;
     }
 
+    EWeaponType WeaponType = CurrentWeapon ? CurrentWeapon->GetWeaponType() : EWeaponType::Unarmed;
+    OnWeaponChanged.Broadcast(WeaponType);
+
     if (CurrentWeapon)
     {
         CurrentWeapon->PreloadWeaponAssets();
@@ -123,6 +126,9 @@ void UCombatComponent::SetCurrentWeapon(AActor* NewWeaponActor)
 
     CurrentWeapon = NewWeapon;
     
+    EWeaponType WeaponType = CurrentWeapon ? CurrentWeapon->GetWeaponType() : EWeaponType::Unarmed;
+    OnWeaponChanged.Broadcast(WeaponType);
+
     // Reset combat state and stop montage when weapon changes
     ResetCombatState();
 
@@ -223,6 +229,12 @@ void UCombatComponent::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterru
 void UCombatComponent::OnRep_bIsGuarding()
 {
     UpdateGuardVisuals();
+}
+
+void UCombatComponent::OnRep_CurrentWeapon()
+{
+    EWeaponType WeaponType = CurrentWeapon ? CurrentWeapon->GetWeaponType() : EWeaponType::Unarmed;
+    OnWeaponChanged.Broadcast(WeaponType);
 }
 
 void UCombatComponent::UpdateGuardVisuals()

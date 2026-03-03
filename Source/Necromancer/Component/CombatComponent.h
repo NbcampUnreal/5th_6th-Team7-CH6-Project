@@ -2,11 +2,14 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "DataAsset/WeaponDataAsset.h"
 #include "CombatComponent.generated.h"
 
 class ANecPlayerCharacter;
 class UStaminaComponent;
 class AWeapon_Item_Base;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponChangedSignature, EWeaponType, NewWeaponType);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class NECROMANCER_API UCombatComponent : public UActorComponent
@@ -52,12 +55,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void ResetCombatState();
 
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponChangedSignature OnWeaponChanged;
+
 protected:	
 	UFUNCTION()
 	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	UFUNCTION()
 	void OnRep_bIsGuarding();
+
+	UFUNCTION()
+	void OnRep_CurrentWeapon();
 		
 	void UpdateGuardVisuals();
 
@@ -76,7 +85,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<ANecPlayerCharacter> OwnerCharacter;
 
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentWeapon, VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<AWeapon_Item_Base> CurrentWeapon;
 
 	UPROPERTY()
