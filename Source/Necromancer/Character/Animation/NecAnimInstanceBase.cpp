@@ -1,6 +1,8 @@
 #include "Character/Animation/NecAnimInstanceBase.h"
 #include "Character/NecPlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Component/CombatComponent.h"
+#include "Item/Weapon_Item_Base.h"
 
 void UNecAnimInstanceBase::NativeInitializeAnimation()
 {
@@ -10,6 +12,16 @@ void UNecAnimInstanceBase::NativeInitializeAnimation()
 	if (IsValid(OwnerCharacter))
 	{
 		OwnerCharacterMovementComponent = OwnerCharacter->GetCharacterMovement();
+
+		if (UCombatComponent* CombatComp = OwnerCharacter->FindComponentByClass<UCombatComponent>())
+		{
+			CombatComp->OnWeaponChanged.AddDynamic(this, &UNecAnimInstanceBase::OnWeaponChanged);
+
+			if (AWeapon_Item_Base* CurrentWeapon = CombatComp->GetCurrentWeapon())
+			{
+				CurrentWeaponType = CurrentWeapon->GetWeaponType();
+			}
+		}
 	}
 }
 
@@ -39,4 +51,9 @@ void UNecAnimInstanceBase::NativeUpdateAnimation(float DeltaSeconds)
 	//bShouldMove = (!OwnerCharacterMovementComponent->GetCurrentAcceleration().IsNearlyZero()) && (5.0f < GroundSpeed);
 	bShouldMove = GroundSpeed > 5.0f;
 	bIsFalling = OwnerCharacterMovementComponent->IsFalling();
+}
+
+void UNecAnimInstanceBase::OnWeaponChanged(EWeaponType NewWeaponType)
+{
+	CurrentWeaponType = NewWeaponType;
 }

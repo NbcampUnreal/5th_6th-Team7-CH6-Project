@@ -6,6 +6,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameMode/NecGameMode.h"
 
+#include "GameInstance/NecAFGameInstance.h"
+#include "SaveGame/NecSaveGameSubsystem.h"
+
 ANecPlayerController::ANecPlayerController()
 {
 	static ConstructorHelpers::FClassFinder<UInGameHUDWidget> HUDWidgetFinder(
@@ -157,5 +160,15 @@ void ANecPlayerController::OnStartGame()
 	{
 		NecGameMode->StartGame();
 		CreateInGameHUD();
+	}
+}
+
+void ANecPlayerController::Client_NotifyMonsterKill_Implementation()
+{
+	UNecSaveGameSubsystem* NecSaveGameSubsystem = GetGameInstance()->GetSubsystem<UNecSaveGameSubsystem>();
+	//GetGameInstance()
+	if (NecSaveGameSubsystem)
+	{
+		NecSaveGameSubsystem->IncreaseKillCount();
 	}
 }
