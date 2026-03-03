@@ -1,15 +1,13 @@
-//Item_Consumption_Base.h
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "GridInventory/ItemData/ItemData.h"
-
 #include "Item_Consumption_Base.generated.h"
 
 class USoundBase;
 class ACharacter;
+class AItemBass;
 
 UCLASS(Blueprintable, EditInlineNew, DefaultToInstanced)
 class NECROMANCER_API UItem_Consumption_Base : public UObject
@@ -17,11 +15,11 @@ class NECROMANCER_API UItem_Consumption_Base : public UObject
     GENERATED_BODY()
 
 public:
-    void Initialize(const FItemData& InItemData);
+    void Initialize(const FItemData& InItemData, AItemBass* InOwnerItem);
 
     void Use(ACharacter* User);
 
-    bool IsBroken() const { return CurrentDurability <= 0; }
+    bool IsBroken() const;
 
     const FItemData& GetItemData() const { return ItemData; }
 
@@ -30,8 +28,13 @@ protected:
 
     void ExecuteUseAction(ACharacter* User);
 
+    void SyncToInventory();
+
 protected:
     FItemData ItemData;
 
     int32 CurrentDurability;
+
+    UPROPERTY()
+    AItemBass* OwnerItem;
 };

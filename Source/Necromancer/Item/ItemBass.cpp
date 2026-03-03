@@ -61,6 +61,10 @@ void AItemBass::Equip(AActor* Equip_Owner)
 {
 }
 
+void AItemBass::UpdateItemDataDurability(int32 NewDurability)
+{
+}
+
 void AItemBass::ExecuteUse(ACharacter* User)
 {
 }
