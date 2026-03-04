@@ -6,6 +6,7 @@
 #include "GridInventory/NecInventoryComponent.h"
 #include "GridInventory/ItemInstance/ItemInstanceComponent.h"
 #include "GridInventory/ItemInstance/ItemInstance.h"
+#include "GridInventory/ItemData/ItemDataSubsystem.h"
 
 // Sets default values
 ADropItemBase::ADropItemBase()
@@ -46,11 +47,21 @@ void ADropItemBase::Interact_Implementation(AActor* Interactor)
         {
             return;
         }
-        PlayerCharacter->Server_Interact(this);
+        PlayerCharacter->Server_TryInteract(this);
     }
     else {
         Interact_Internal(Interactor);
     }
+}
+
+FText ADropItemBase::GetInteractText() const
+{
+    UDataTableSubsystem* Subsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
+    const FItemData* ItemData = Subsystem->GetItemData(ItemInstanceComponent->GetItemInstance()->ItemID);
+    return FText::Format(
+        FText::FromString(TEXT("{0} 획득")),
+        ItemData->ItemName
+    );
 }
 
 void ADropItemBase::Server_Interact_Implementation(AActor* Interactor)
