@@ -37,6 +37,7 @@ void UStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
     DOREPLIFETIME(UStatComponent, CurrentHealth);
     DOREPLIFETIME(UStatComponent, MaxHealth);
     DOREPLIFETIME(UStatComponent, Armor);
+    DOREPLIFETIME(UStatComponent, IsDead);
 }
 
 void UStatComponent::OnRep_Health()
@@ -100,6 +101,7 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
 
     if (NewHealth <= 0.0f)
     {
+        IsDead = true;
         OnDeath.Broadcast();
     }
 }
@@ -112,7 +114,9 @@ void UStatComponent::SetCurrentHealth(float NewHealth)
     }
 
     CurrentHealth = NewHealth;
-
+    if (CurrentHealth > 0) {
+        IsDead = false;
+    }
     OnRep_Health();
 }
 
