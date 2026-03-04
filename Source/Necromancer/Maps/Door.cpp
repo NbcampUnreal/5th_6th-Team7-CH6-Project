@@ -6,10 +6,11 @@
 
 ADoor::ADoor()
 {
+	SetReplicates(true);
+	AActor::SetReplicateMovement(true);
 	DoorTimeline = CreateDefaultSubobject<UTimelineComponent>("DoorTimeline");
 
 	bDoorOpen = false;
-	AActor::SetReplicateMovement(true);
 }
 
 void ADoor::BeginPlay()
