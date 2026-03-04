@@ -96,12 +96,15 @@ void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
         FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(OwnerLocation, TargetLocForYaw);
         LookAtRot.Pitch = LockOnPitch;
 
-        if (AController* PC = OwnerCharacter->GetController())
+        if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
         {
-            FRotator CurrentRot = OwnerCharacter->GetControlRotation();
-            FRotator TargetRot = FMath::RInterpTo(CurrentRot, LookAtRot, DeltaTime, 10.0f);
+            if (AController* PC = OwnerCharacter->GetController())
+            {
+                FRotator CurrentRot = OwnerCharacter->GetControlRotation();
+                FRotator TargetRot = FMath::RInterpTo(CurrentRot, LookAtRot, DeltaTime, 10.0f);
 
-            PC->SetControlRotation(TargetRot);
+                PC->SetControlRotation(TargetRot);
+            }
         }
     }
 

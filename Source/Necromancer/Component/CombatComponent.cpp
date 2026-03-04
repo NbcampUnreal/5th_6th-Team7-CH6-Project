@@ -192,12 +192,10 @@ void UCombatComponent::SetGuard(bool bInGuarding)
         return;
     }
 
-    if (OwnerCharacter && OwnerCharacter->HasAuthority())
-    {
-        bIsGuarding = bInGuarding;
-        UpdateGuardVisuals();
-    }
-    else
+    bIsGuarding = bInGuarding;
+    UpdateGuardVisuals();
+
+    if (OwnerCharacter && !OwnerCharacter->HasAuthority())
     {
         Server_SetGuard(bInGuarding);
     }
