@@ -95,24 +95,22 @@ void UCombatComponent::EquipWeapon(AWeapon_Item_Base* NewWeapon)
         CurrentWeapon = UnarmedWeaponInstance;
     }
 
-    EWeaponType WeaponType = CurrentWeapon ? CurrentWeapon->GetWeaponType() : EWeaponType::Unarmed;
-    OnWeaponChanged.Broadcast(WeaponType);
-
     if (CurrentWeapon)
     {
         CurrentWeapon->PreloadWeaponAssets();
         CurrentWeapon->SetOwner(OwnerCharacter);
-
-        CurrentWeapon->AttachToComponent(
-            OwnerCharacter->GetMesh(),
-            FAttachmentTransformRules::SnapToTargetIncludingScale,
-            FName("hand_r_weapon")
-        );
     }
+
+    OnRep_CurrentWeapon();
 }
 
 void UCombatComponent::SetCurrentWeapon(AActor* NewWeaponActor)
 {
+    if (OwnerCharacter && !OwnerCharacter->HasAuthority())
+    {
+        return;
+    }
+
     AWeapon_Item_Base* NewWeapon = Cast<AWeapon_Item_Base>(NewWeaponActor);
     if (!NewWeapon)
     {
@@ -126,8 +124,10 @@ void UCombatComponent::SetCurrentWeapon(AActor* NewWeaponActor)
 
     CurrentWeapon = NewWeapon;
     
-    EWeaponType WeaponType = CurrentWeapon ? CurrentWeapon->GetWeaponType() : EWeaponType::Unarmed;
-    OnWeaponChanged.Broadcast(WeaponType);
+    /*EWeaponType WeaponType = CurrentWeapon ? CurrentWeapon->GetWeaponType() : EWeaponType::Unarmed;
+    OnWeaponChanged.Broadcast(WeaponType);*/
+
+    OnRep_CurrentWeapon();
 
     // Reset combat state and stop montage when weapon changes
     ResetCombatState();
@@ -231,8 +231,23 @@ void UCombatComponent::OnRep_bIsGuarding()
 
 void UCombatComponent::OnRep_CurrentWeapon()
 {
-    EWeaponType WeaponType = CurrentWeapon ? CurrentWeapon->GetWeaponType() : EWeaponType::Unarmed;
+    EWeaponType WeaponType = IsValid(CurrentWeapon) ? CurrentWeapon->GetWeaponType() : EWeaponType::Unarmed;
     OnWeaponChanged.Broadcast(WeaponType);
+
+    if (IsValid(CurrentWeapon) && IsValid(OwnerCharacter) && IsValid(OwnerCharacter->GetMesh()))
+    {
+        CurrentWeapon->AttachToComponent(
+            OwnerCharacter->GetMesh(),
+            FAttachmentTransformRules::SnapToTargetIncludingScale,
+            FName("hand_r_weapon")
+        );
+    }
+
+    /*CurrentWeapon->AttachToComponent(
+        OwnerCharacter->GetMesh(),
+        FAttachmentTransformRules::SnapToTargetIncludingScale,
+        FName("hand_r_weapon")
+    );*/
 }
 
 void UCombatComponent::UpdateGuardVisuals()
