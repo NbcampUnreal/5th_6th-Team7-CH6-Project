@@ -113,6 +113,25 @@ void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 void UTargetingComponent::ToggleLockOn()
 {
+    if (CurrentTarget)
+    {
+        ClearLockOn();
+    }
+    else
+    {
+        FindTarget();
+
+        if (CurrentTarget && OwnerCharacter)
+        {
+            OwnerCharacter->SetLockOn(true);
+        }
+    }
+
+    if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
+    {
+        OnRep_CurrentTarget();
+    }
+
     Server_ToggleLockOn();
 }
 

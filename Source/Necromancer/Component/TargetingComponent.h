@@ -42,7 +42,7 @@ protected:
 	void UpdateLockOnUI();
 
 protected:
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentTarget)
 	TObjectPtr<AActor> CurrentTarget;
 
 	UPROPERTY()
