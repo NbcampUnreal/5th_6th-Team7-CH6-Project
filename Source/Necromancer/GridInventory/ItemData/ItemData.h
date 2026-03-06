@@ -105,6 +105,8 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
     int32 Cost;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 SpawnCost;
 };
 
 
@@ -143,4 +145,86 @@ struct FworldActorInfo : public FTableRowBase
 
     UPROPERTY(EditAnywhere)
     int32 Level;
+};
+
+USTRUCT(BlueprintType)
+struct FDropEntry : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere)
+    FDataTableRowHandle ItemRow;
+
+    UPROPERTY(EditAnywhere)
+    int32 Weight = 1;
+
+    int32 GetItemCost() const
+    {
+        if (ItemRow.DataTable)
+        {
+            if (FItemData* Row = ItemRow.GetRow<FItemData>("DropEntry"))
+            {
+                return Row->Cost;
+            }
+        }
+        return 0;
+    }
+};
+
+class FDropManager
+{
+public:
+
+    int32 CurrentCost = 0;
+    int32 MaxCost = 100;
+
+    UDataTable* ItemDataTable = nullptr;
+
+    bool TrySpawnRandomItem(UWorld* World, FVector SpawnLocation)
+    {
+        if (!World || !ItemDataTable)
+            return false;
+
+        TArray<FName> RowNames = ItemDataTable->GetRowNames();
+
+        TArray<FItemData*> ValidItems;
+
+        for (const FName& RowName : RowNames)
+        {
+            FItemData* Item = ItemDataTable->FindRow<FItemData>(RowName, "DropCheck");
+            if (!Item)
+                continue;
+            if (CurrentCost + Item->Cost <= MaxCost)
+            {
+                ValidItems.Add(Item);
+            }
+        }
+
+        if (ValidItems.Num() == 0)
+            return false;
+
+        int32 RandomIndex = FMath::RandRange(0, ValidItems.Num() - 1);
+        FItemData* SelectedItem = ValidItems[RandomIndex];
+
+        if (!SelectedItem || !SelectedItem->DropItemActorClass)
+            return false;
+
+        World->SpawnActor<AActor>(SelectedItem->DropItemActorClass,SpawnLocation,FRotator::ZeroRotator);
+
+        CurrentCost += SelectedItem->Cost;
+
+        return true;
+    }
+};
+
+USTRUCT(BlueprintType)
+struct FWorldActorSpawnData : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere)
+    FName ItemID;
+
+    UPROPERTY(EditAnywhere)
+    USceneComponent* SpawnPoint;
 };
