@@ -153,4 +153,11 @@ public:
     void EnterDownState();
     void TryRevive();
     bool IsInvincible() const { return bIsInvincible; }
+
+    UFUNCTION(BlueprintCallable)
+    const FSoulBattery& GetActiveBattery() const;
+    UFUNCTION(BlueprintCallable)
+    int32 GetReserveBatteryCount() const;
+    UFUNCTION(BlueprintCallable)
+    int32 GetMaxReserveSlots() const;
 };

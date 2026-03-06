@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
@@ -36,6 +36,9 @@ public:
     UFUNCTION(BlueprintPure)
     float GetArmor() const { return Armor; }
 
+    UFUNCTION(BlueprintPure)
+    bool GetIsDead() const { return IsDead; }
+
     UFUNCTION(BlueprintCallable)
     void AddMaxHealth(float Amount);
 
@@ -67,4 +70,7 @@ protected:
 
     UPROPERTY(Replicated, EditAnywhere, Category = "Armor", meta = (ClampMin = "0.0"))
     float Armor = 0.0f;
+
+    UPROPERTY(Replicated)
+    bool IsDead = false;
 };

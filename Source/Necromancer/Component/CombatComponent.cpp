@@ -95,6 +95,9 @@ void UCombatComponent::EquipWeapon(AWeapon_Item_Base* NewWeapon)
         CurrentWeapon = UnarmedWeaponInstance;
     }
 
+    EWeaponType WeaponType = CurrentWeapon ? CurrentWeapon->GetWeaponType() : EWeaponType::Unarmed;
+    OnWeaponChanged.Broadcast(WeaponType);
+
     if (CurrentWeapon)
     {
         CurrentWeapon->PreloadWeaponAssets();
@@ -122,6 +125,21 @@ void UCombatComponent::SetCurrentWeapon(AActor* NewWeaponActor)
     }
 
     CurrentWeapon = NewWeapon;
+    
+    EWeaponType WeaponType = CurrentWeapon ? CurrentWeapon->GetWeaponType() : EWeaponType::Unarmed;
+    OnWeaponChanged.Broadcast(WeaponType);
+
+    // Reset combat state and stop montage when weapon changes
+    ResetCombatState();
+
+    if (OwnerCharacter)
+    {
+        UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+        if (AnimInstance && ActiveAttackMontage && AnimInstance->Montage_IsPlaying(ActiveAttackMontage))
+        {
+            AnimInstance->Montage_Stop(0.1f, ActiveAttackMontage);
+        }
+    }
 }
 
 void UCombatComponent::EnableWeaponCollision()
@@ -195,7 +213,7 @@ void UCombatComponent::ResetCombatState()
 
 void UCombatComponent::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-    if (CurrentWeapon && Montage == CurrentWeapon->GetAttackMontage())
+    if (ActiveAttackMontage && Montage == ActiveAttackMontage)
     {
         UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
         if (AnimInstance && AnimInstance->Montage_IsPlaying(Montage))
@@ -204,12 +222,19 @@ void UCombatComponent::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterru
         }
 
         ResetCombatState();
+        ActiveAttackMontage = nullptr;
     }
 }
 
 void UCombatComponent::OnRep_bIsGuarding()
 {
     UpdateGuardVisuals();
+}
+
+void UCombatComponent::OnRep_CurrentWeapon()
+{
+    EWeaponType WeaponType = CurrentWeapon ? CurrentWeapon->GetWeaponType() : EWeaponType::Unarmed;
+    OnWeaponChanged.Broadcast(WeaponType);
 }
 
 void UCombatComponent::UpdateGuardVisuals()
@@ -267,6 +292,8 @@ void UCombatComponent::PlayComboAttack()
 
         UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
         FName MontageSectionName = ComboList[CurrentComboIndex].MontageSectionName;
+
+        ActiveAttackMontage = AttackMontage;
 
         UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
         if (AttackMontage && AnimInstance)

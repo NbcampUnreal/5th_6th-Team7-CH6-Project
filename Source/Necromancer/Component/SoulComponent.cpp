@@ -178,6 +178,21 @@ void USoulComponent::TryRevive()
     );
 }
 
+const FSoulBattery& USoulComponent::GetActiveBattery() const
+{
+    return ActiveBattery;
+}
+
+int32 USoulComponent::GetReserveBatteryCount() const
+{
+    return ReserveBatteries.Num();
+}
+
+int32 USoulComponent::GetMaxReserveSlots() const
+{
+    return MaxReserveSlots;
+}
+
 void USoulComponent::AddReserveBattery(const FSoulBattery& NewBattery)
 {
     if (ReserveBatteries.Num() < MaxReserveSlots)

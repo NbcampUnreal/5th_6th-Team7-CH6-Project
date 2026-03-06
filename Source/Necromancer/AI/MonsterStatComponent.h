@@ -57,6 +57,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetAttackCooldown() const;
 
+	// 스킬 레벨 (0~1, 리액션 확률 조절)
+	UFUNCTION(BlueprintCallable)
+	float GetSkillLevel() const;
+
 	// 층별 스탯 스케일링 적용 (서버 전용)
 	UFUNCTION(BlueprintCallable, Category = "Stat|FloorScaling")
 	void ApplyFloorScaling(int32 FloorLevel);
@@ -102,6 +106,10 @@ private:
 	float AttackCooldown = 2.0f;
 
 	float LastAttackTime = -999.0f;
+
+	// 스킬 레벨 (0~1, 높을수록 회피/블록 확률 증가)
+	UPROPERTY(EditDefaultsOnly, Category = "Stat", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float SkillLevel = 0.5f;
 
 	// 등급
 	UPROPERTY(EditDefaultsOnly, Category = "Stat")

@@ -5,6 +5,10 @@
 #include "Character/NecPlayerCharacter.h"
 #include "GridInventory/BucketInventoryComponent.h"
 #include "GridInventory/NecInventoryComponent.h"
+
+#include "GameFramework/GameStateBase.h"
+#include "GameFramework/PlayerState.h"
+#include "GameFramework/PlayerController.h"
 #include "UI/SubmitWidgetHub.h"
 #include "Net/UnrealNetwork.h"
 
@@ -14,7 +18,7 @@ ASubmitBusket::ASubmitBusket()
     PrimaryActorTick.bCanEverTick = false;
 
     BucketInventory = CreateDefaultSubobject<UBucketInventoryComponent>(TEXT("BucketInventory"));
-    BucketInventory->SetRequircost(100);
+    BucketInventory->SetRequircost(500);
     BucketInventory->OnSubmit.AddDynamic(
         this,
         &ASubmitBusket::Submit
@@ -81,6 +85,25 @@ void ASubmitBusket::Server_Submit_Implementation()
 void ASubmitBusket::Submit_Internal()
 {
     bIsActive = false;
+
+    AGameStateBase* GS = GetWorld()->GetGameState();
+    if (!GS) return;
+
+    for (APlayerState* PS : GS->PlayerArray)
+    {
+        if (!PS) continue;
+
+        AController* Controller = PS->GetOwner<AController>();
+        if (!Controller) continue;
+
+        APawn* Pawn = Controller->GetPawn();
+        if (!Pawn) continue;
+
+        ANecPlayerCharacter* Character = Cast<ANecPlayerCharacter>(Pawn);
+        if (!Character) continue;
+        Character->AddSubmissionReward();
+        // 🔥 여기서 캐릭터 처리
+    }
 }
 
 void ASubmitBusket::OnRep_IsActive()

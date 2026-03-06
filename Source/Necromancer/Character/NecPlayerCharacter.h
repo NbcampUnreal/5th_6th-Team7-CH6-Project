@@ -64,8 +64,10 @@ protected:
 	void ToggleMenu(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void TryInteract();
-	
+	void Action_CycleTarget(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void TryInteract();	
 
 	UFUNCTION()
 	void HandleDeath();
@@ -100,7 +102,7 @@ public:
 	void SetLockOn(bool bEnable);
 
 	UFUNCTION(Server, Reliable)
-	void Server_Interact(AActor* Target);
+	void Server_TryInteract(AActor* Target);
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
@@ -133,6 +135,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Test")
 	float InteractRange = 200.0f;
 
+	
+
 	FTimerHandle DeathTimerHandle;
 
 protected:
@@ -143,18 +147,19 @@ public:
 	AActor* GetCurrentEquipmentActor(EEquipmentSlot Slot);
 
 private:
-	AActor* InteractTarget = nullptr;
+	UPROPERTY()
+	TWeakObjectPtr<AActor> CurrentTarget;
+	UPROPERTY()
+	TArray<TWeakObjectPtr<AActor>> InteractTargets;
 public:
-	void SetInteractTarget(AActor* Target) {
-		InteractTarget = Target;
-	}
-	void ClearInteractTarget(AActor* Target) {
-		if (InteractTarget == Target)
-		{
-			InteractTarget = nullptr;
-		}
-	}
-
+	void AddInteractTarget(AActor* Target);
+	void RemoveInteractTarget(AActor* Target);
+	void SelectFallbackTarget();
+	void CleanupInvalidTargets();
+	UFUNCTION(BlueprintCallable)
+	AActor* GetCurrentInteractTarget() const;
+	void CycleTarget(bool bNext);
+	
 #pragma region interact
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
@@ -200,7 +205,10 @@ public:
 #pragma region SoulComponent
 protected:
 	TObjectPtr<USoulComponent> SoulComponent;
+public:
+	USoulComponent* GetSoulComponent() const;
 
+	void AddSubmissionReward();
 #pragma endregion
 
 };

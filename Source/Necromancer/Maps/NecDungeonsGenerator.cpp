@@ -105,13 +105,24 @@ void ANecDungeonsGenerator::SpawnNextRoom()
 	if (HasAuthority())
 	{
 		// 랜덤 출구
-		if (ExitsList.Num() == 0)
+		if (ExitsList.Num() == 0 && SecondFExitsList.Num() == 0)
 		{
 			return;
 		}
-		SelectedExitPoint = RandomArrayItemFromArrow(ExitsList);
+		// 2층 방이 있을 경우
+		else if (SecondFExitsList.Num() != 0)
+		{
+			SelectedExitPoint = SecondFExitsList[0];
+		}
+		// 2층 방이 없는 경우 1층에서 랜덤
+		else
+		{
+			SelectedExitPoint = RandomArrayItemFromArrow(ExitsList);
+		}
+
 		// 랜덤방
 		TSubclassOf<AActor>NextRoom = RandomArrayItemFromRoom(RoomList);
+
 		// 스폰 위치 
 		FTransform SpawnTransform = SelectedExitPoint->GetComponentTransform();
 
@@ -121,8 +132,37 @@ void ANecDungeonsGenerator::SpawnNextRoom()
 		// 액터 생성하고 변수에 저장
 		LatestRoom = GetWorld()->SpawnActor<AActor>(NextRoom, SpawnTransform, SpawnParams);
 
+		// 2층 Arrow 삭제
+		SecondFExitsList.Empty();
+
 		//딜레이
 		StartDelay();
+	}
+	else
+	{
+		return;
+	}
+}
+
+void ANecDungeonsGenerator::SpawnEndRoom()
+{
+	if (HasAuthority())
+	{
+		// 랜덤 출구
+		if (ExitsList.Num() == 0)
+		{
+			return;
+		}
+		SelectedExitPoint = RandomArrayItemFromArrow(ExitsList);
+
+		// 스폰 위치 
+		FTransform SpawnTransform = SelectedExitPoint->GetComponentTransform();
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		// 액터 생성하고 변수에 저장
+		LatestRoom = GetWorld()->SpawnActor<AActor>(EndRoom, SpawnTransform, SpawnParams);
 	}
 	else
 	{
@@ -201,7 +241,17 @@ void ANecDungeonsGenerator::CheckForOverlap()
 				for (USceneComponent* comp : Components)
 				{
 					// 그중에 출구 들어있는 씬 컴포넌트
-					if (comp && comp->ComponentHasTag(FName("Exits Folder")))
+					if (comp && comp->ComponentHasTag(FName("2F Exits Folder")))
+					{
+						const TArray<USceneComponent*>ChildCom = comp->GetAttachChildren();
+						for (USceneComponent* Child : ChildCom)
+						{
+							// 출구 추가
+							SecondFExitsList.Add(Child);
+						}
+						break;
+					}
+					else if (comp && comp->ComponentHasTag(FName("Exits Folder")))
 					{
 						// 신 컴포넌트 아래 컴포넌트들 배열에 저장
 						const TArray<USceneComponent*>ChildCom = comp->GetAttachChildren();
@@ -222,8 +272,8 @@ void ANecDungeonsGenerator::CheckForOverlap()
 		// 아직 방 설치 가능하면 방설치
 		if (RoomCount < RoomAmount)
 		{
-			// 특수한 방 추가
-			if (RoomCount % (RoomAmount - 1) == 0)
+			// 방 10번 생성될 때마다 특수한 방 추가
+			if (RoomCount % 10 == 0)
 			{
 				RoomList = SpecialRoomList;
 			}
@@ -235,6 +285,8 @@ void ANecDungeonsGenerator::CheckForOverlap()
 		}
 		else
 		{
+			// 마지막 방 생성
+			SpawnEndRoom();
 			// 구멍 막기
 			CloseHoles();
 			// 문 생성

@@ -117,6 +117,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float MovementDeceleration = 300.0f;
 
+	// 전투 중 타겟을 바라보는 회전 속도 (도/초)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float CombatRotationSpeed = 360.0f;
+
 	// 피격 리액션 처리
 	UFUNCTION()
 	virtual void OnDamageReceived(float DamageAmount, FVector HitLocation);
@@ -125,4 +129,25 @@ protected:
 
 	// 피격 시 공격 슬롯 없으면 임시 부여
 	void TryGrantTemporarySlot();
+
+	// 블로킹 상태 (방패 막기)
+	UPROPERTY(ReplicatedUsing = OnRep_IsBlocking)
+	bool bIsBlocking = false;
+
+	UFUNCTION()
+	void OnRep_IsBlocking();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> BlockReactMontage;
+
+public:
+	// 방패 피해 감소율 (0.0 ~ 1.0, 0.8 = 80% 감소)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float ShieldGuardRate = 0.8f;
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetBlockingState(bool bBlock);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	bool IsBlocking() const { return bIsBlocking; }
 };
