@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 
 #include "SaveGame/NecProfileSaveGame.h"
+#include "SaveGame/NecSessionSaveGame.h"
 
 void UNecSaveGameSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -27,7 +28,12 @@ void UNecSaveGameSubsystem::InitProfileSaveGame()
     }
 }
 
-void UNecSaveGameSubsystem::IncreaseKillCount()
+void UNecSaveGameSubsystem::SaveProfileSaveGame()
+{
+    UGameplayStatics::SaveGameToSlot(ProfileSaveGame, ProfileSaveGameSlotName, 0);
+}
+
+void UNecSaveGameSubsystem::IncreaseProfileKillCount()
 {
     ProfileSaveGame->TotalKillCount++;
     //UE_LOG(LogTemp, Warning, TEXT("Kill Count Updated! Total: %d"), ProfileSaveGame ? ProfileSaveGame->TotalKillCount : 0);
@@ -35,7 +41,50 @@ void UNecSaveGameSubsystem::IncreaseKillCount()
     //SaveProfileSaveGame();
 }
 
-void UNecSaveGameSubsystem::SaveProfileSaveGame()
+int32 UNecSaveGameSubsystem::GetProfileKillCount()
 {
-    UGameplayStatics::SaveGameToSlot(ProfileSaveGame, ProfileSaveGameSlotName, 0);
+    return ProfileSaveGame->TotalKillCount;
+}
+
+
+
+
+
+void UNecSaveGameSubsystem::InitSessionSaveGame(int32 SlotIdx = -1)
+{
+    // New Game
+    if (SlotIdx == -1) 
+    {
+        SessionSaveGame = Cast<UNecSessionSaveGame>(UGameplayStatics::CreateSaveGameObject(UNecSessionSaveGame::StaticClass()));
+        UGameplayStatics::SaveGameToSlot(SessionSaveGame, DefaultSessionSaveGameSlotName, 0);
+    }
+    else
+    {
+        // Load Game
+        FString SessionSlotName = FString::Printf(("Session_%d"), SlotIdx);
+        SessionSaveGame = Cast<UNecSessionSaveGame>(UGameplayStatics::LoadGameFromSlot(SessionSlotName, 0));
+    }
+}
+
+void UNecSaveGameSubsystem::SaveSessionSaveGame(int32 SlotIdx = -1)
+{
+    if (SlotIdx == -1)
+    {
+        UGameplayStatics::SaveGameToSlot(SessionSaveGame, DefaultSessionSaveGameSlotName, 0);
+    }
+    else
+    {
+        FString SessionSaveGameSlotName = FString::Printf(("Session_%d"), SlotIdx);
+        UGameplayStatics::SaveGameToSlot(SessionSaveGame, SessionSaveGameSlotName, 0);
+    }
+}
+
+void UNecSaveGameSubsystem::IncreaseLvDepth()
+{
+    SessionSaveGame->LvDepth++;
+}
+
+int32 UNecSaveGameSubsystem::GetLvDepth()
+{
+    return SessionSaveGame->LvDepth;
 }
