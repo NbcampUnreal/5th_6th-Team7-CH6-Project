@@ -58,8 +58,8 @@ private:
 	/// 게임 세션을 생성 또는 저장 결정
 	/// if SlotIdx == -1 then SaveCurrentSession, else then SaveGameSession to Continue Game
 	/// </param>
-	void InitSessionSaveGame(int32 SlotIdx = -1);
-	void SaveSessionSaveGame(int32 SlotIdx = -1);
+	void InitSessionSaveGame(int32 SlotIdx);
+	void SaveSessionSaveGame(int32 SlotIdx);
 
 public:
 	void IncreaseLvDepth();

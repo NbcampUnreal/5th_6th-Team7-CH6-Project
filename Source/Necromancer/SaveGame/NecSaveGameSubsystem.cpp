@@ -61,7 +61,7 @@ void UNecSaveGameSubsystem::InitSessionSaveGame(int32 SlotIdx = -1)
     else
     {
         // Load Game
-        FString SessionSlotName = FString::Printf(("Session_%d"), SlotIdx);
+        FString SessionSlotName = FString::Printf(TEXT("Session_%d"), SlotIdx);
         SessionSaveGame = Cast<UNecSessionSaveGame>(UGameplayStatics::LoadGameFromSlot(SessionSlotName, 0));
     }
 }
@@ -74,7 +74,7 @@ void UNecSaveGameSubsystem::SaveSessionSaveGame(int32 SlotIdx = -1)
     }
     else
     {
-        FString SessionSaveGameSlotName = FString::Printf(("Session_%d"), SlotIdx);
+        FString SessionSaveGameSlotName = FString::Printf(TEXT("Session_%d"), SlotIdx);
         UGameplayStatics::SaveGameToSlot(SessionSaveGame, SessionSaveGameSlotName, 0);
     }
 }
