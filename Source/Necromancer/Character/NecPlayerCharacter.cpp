@@ -180,6 +180,16 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 					&ANecPlayerCharacter::TryInteract
 				);
 			}
+
+			if (PlayerController->WheelAction)
+			{
+				EnhancedInputComp->BindAction(
+					PlayerController->WheelAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ANecPlayerCharacter::Action_CycleTarget
+				);
+			}
 		}
 	}	
 }
@@ -328,17 +338,29 @@ void ANecPlayerCharacter::ToggleMenu(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::TryInteract()
 {
-	if (InteractTarget) {
-		if (InteractTarget->Implements<UInteractable>())
-		{
-			IInteractable::Execute_Interact(InteractTarget, this);
-		}
+	AActor* Target = CurrentTarget.Get();
+
+	if (!Target) return;
+	if (!Target->Implements<UInteractable>()) return;
+
+	if (HasAuthority())
+	{
+		IInteractable::Execute_Interact(Target, this);
 	}
+	else
+	{
+		Server_TryInteract(Target);
+	}
+	CleanupInvalidTargets();
+
 }
 
-void ANecPlayerCharacter::Server_Interact_Implementation(AActor* Target)
+void ANecPlayerCharacter::Server_TryInteract_Implementation(AActor* Target)
 {
-	Cast<AInteractableActor>(Target)->Interact_Internal(this);
+	if (!Target) return;
+	if (!Target->Implements<UInteractable>()) return;
+
+	IInteractable::Execute_Interact(Target, this);
 }
 
 void ANecPlayerCharacter::HandleDeath()
@@ -355,7 +377,6 @@ void ANecPlayerCharacter::HandleDeath()
 		Multicast_HandleDeath();
 		//멀티 수정 필요
 		SoulComponent->EnterDownState();
-
 		/*GetWorldTimerManager().SetTimer(
 			DeathTimerHandle,
 			this,
@@ -502,6 +523,104 @@ AActor* ANecPlayerCharacter::GetCurrentEquipmentActor(EEquipmentSlot Slot)
 	return InventoryComponent->GetEquipmentActor(Slot);
 }
 
+void ANecPlayerCharacter::AddInteractTarget(AActor* Target) {
+	if (!IsValid(Target)) return;
+
+	InteractTargets.AddUnique(Target);
+
+	if (!CurrentTarget.IsValid())
+	{
+		CurrentTarget = Target;
+	}
+	CleanupInvalidTargets();
+}
+
+void ANecPlayerCharacter::RemoveInteractTarget(AActor* Target) {
+	if (!IsValid(Target)) return;
+
+	InteractTargets.Remove(Target);
+
+	if (CurrentTarget.Get() == Target)
+	{
+		SelectFallbackTarget();
+	}
+	CleanupInvalidTargets();
+}
+
+void ANecPlayerCharacter::SelectFallbackTarget()
+{
+	CurrentTarget = nullptr;
+
+	// 유효한 것 중 첫 번째 선택
+	for (const TWeakObjectPtr<AActor>& Target : InteractTargets)
+	{
+		if (Target.IsValid())
+		{
+			CurrentTarget = Target;
+			return;
+		}
+	}
+}
+
+void ANecPlayerCharacter::CleanupInvalidTargets()
+{
+	InteractTargets.RemoveAll(
+		[](const TWeakObjectPtr<AActor>& Target)
+		{
+			return !Target.IsValid();
+		}
+	);
+
+	if (!CurrentTarget.IsValid())
+	{
+		SelectFallbackTarget();
+	}
+}
+
+AActor* ANecPlayerCharacter::GetCurrentInteractTarget() const
+{
+	return CurrentTarget.IsValid() ? CurrentTarget.Get() : nullptr;
+}
+
+void ANecPlayerCharacter::CycleTarget(bool bNext)
+{
+	CleanupInvalidTargets();
+
+	if (InteractTargets.Num() == 0)
+		return;
+
+	int32 CurrentIndex = InteractTargets.IndexOfByKey(CurrentTarget);
+
+	if (CurrentIndex == INDEX_NONE)
+	{
+		CurrentTarget = InteractTargets[0];
+		return;
+	}
+
+	int32 NewIndex;
+
+	if (bNext)
+		NewIndex = (CurrentIndex + 1) % InteractTargets.Num();
+	else
+		NewIndex = (CurrentIndex - 1 + InteractTargets.Num()) % InteractTargets.Num();
+
+	CurrentTarget = InteractTargets[NewIndex];
+}
+
+inline void ANecPlayerCharacter::Action_CycleTarget(const FInputActionValue& Value)
+{
+	float Axis = Value.Get<float>();
+
+	if (Axis > 0.f)
+	{
+		CycleTarget(true);
+	}
+	else if (Axis < 0.f)
+	{
+		CycleTarget(false);
+	}
+}
+
 void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)
 {
 	if (!IsValid(PlayerMovementComponent) || !IsValid(StaminaComponent))
@@ -536,4 +655,20 @@ void OnSphereOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UP
 
 void OnSphereEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+}
+
+void ANecPlayerCharacter::Interact_Implementation(AActor* Interactor)
+{
+}
+
+USoulComponent* ANecPlayerCharacter::GetSoulComponent() const
+{
+	return SoulComponent;
+}
+
+void ANecPlayerCharacter::AddSubmissionReward()
+{
+	if (SoulComponent) {
+		SoulComponent->AddReserveBattery(FSoulBattery());
+	}
 }

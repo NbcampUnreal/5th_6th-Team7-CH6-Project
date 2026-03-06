@@ -111,13 +111,11 @@ void AInteractableActor::OnSphereOverlap(UPrimitiveComponent* OverlappedComp,
 	{
 		ANecPlayerCharacter* Player = Cast<ANecPlayerCharacter>(OtherActor);
 		//부탁
-		Player->SetInteractTarget(this);
+		Player->AddInteractTarget(this);
 	}
 }
 
-void ANecPlayerCharacter::Interact_Implementation(AActor* Interactor)
-{
-}
+
 
 void AInteractableActor::OnSphereEnd(UPrimitiveComponent* OverlappedComp,
 	AActor* OtherActor,
@@ -130,7 +128,7 @@ void AInteractableActor::OnSphereEnd(UPrimitiveComponent* OverlappedComp,
 	{
 		ANecPlayerCharacter* Player = Cast<ANecPlayerCharacter>(OtherActor);
 		//부탁
-		Player->ClearInteractTarget(this);
+		Player->RemoveInteractTarget(this);
 	}
 }
 
@@ -185,6 +183,11 @@ void AInteractableActor::SetPreviewWidgetEnable(bool Enable)
 	}
 
 	ShowInteractCheckWidget(Enable);
+}
+
+FText AInteractableActor::GetInteractText() const
+{
+	return FText();
 }
 
 float AInteractableActor::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,

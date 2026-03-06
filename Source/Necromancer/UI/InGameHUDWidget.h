@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
@@ -9,6 +9,7 @@ class UTextBlock;
 class UImage;
 class UStatComponent;
 class UStaminaComponent;
+class USoulComponent;
 
 UCLASS()
 class NECROMANCER_API UInGameHUDWidget : public UUserWidget
@@ -39,4 +40,7 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UStaminaComponent> PlayerStaminaComponent;
+
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<USoulComponent> SoulComponent;
 };

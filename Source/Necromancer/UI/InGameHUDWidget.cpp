@@ -1,9 +1,11 @@
-#include "UI/InGameHUDWidget.h"
+﻿#include "UI/InGameHUDWidget.h"
 #include "Game/NecPlayerState.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Component/StatComponent.h"
 #include "Component/StaminaComponent.h"
+
+#include "Character/NecPlayerCharacter.h"
 
 void UInGameHUDWidget::NativeConstruct()
 {
@@ -63,4 +65,16 @@ void UInGameHUDWidget::InitHUD()
 			UE_LOG(LogTemp, Warning, TEXT("InGameHUD: Could not find StaminaComponent."));
 		}
 	}
+
+	APlayerController* PC = Cast<APlayerController>(GetOwningPlayer());
+	if (!IsValid(PC))
+	{
+		return;
+	}
+
+	ANecPlayerCharacter* Character = Cast<ANecPlayerCharacter>(PC->GetCharacter());
+	if (!IsValid(Character))
+	{		return;
+	}
+	SoulComponent = Character->GetSoulComponent();
 }

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
@@ -58,6 +58,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TObjectPtr<UInputAction> InteractAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TObjectPtr<UInputAction> WheelAction;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UInGameHUDWidget> InGameHUDWidgetClass;
@@ -72,6 +75,11 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UReadyWidget> ReadyWidgetInstance;
 
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TArray<TSubclassOf<UUserWidget>> WidgetClasses;
+	UPROPERTY()
+	TArray<TObjectPtr<UReadyWidget>> WidgetInstances;
 public:
 	void OnStartGame();
 

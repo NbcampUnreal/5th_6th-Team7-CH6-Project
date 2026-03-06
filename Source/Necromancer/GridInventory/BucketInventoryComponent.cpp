@@ -50,6 +50,7 @@ void UBucketInventoryComponent::RebuildItemOwnerMap()
     Super::RebuildItemOwnerMap();
     if (RequirCost < GetBucketTotalCost()) {
         OnInventoryUpdated.Broadcast();
+        OnSubmit.Broadcast();
     }
 }
 
