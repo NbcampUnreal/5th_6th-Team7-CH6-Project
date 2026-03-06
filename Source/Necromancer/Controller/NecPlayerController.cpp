@@ -166,7 +166,6 @@ void ANecPlayerController::OnStartGame()
 void ANecPlayerController::Client_NotifyMonsterKill_Implementation()
 {
 	UNecSaveGameSubsystem* NecSaveGameSubsystem = GetGameInstance()->GetSubsystem<UNecSaveGameSubsystem>();
-	//GetGameInstance()
 	if (NecSaveGameSubsystem)
 	{
 		NecSaveGameSubsystem->IncreaseProfileKillCount();
