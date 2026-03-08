@@ -2,6 +2,7 @@
 
 #include "BTService_CheckLeash.h"
 #include "AIController.h"
+#include "MonsterAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Necromancer.h"
 
@@ -55,7 +56,12 @@ void UBTService_CheckLeash::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* N
 		if (DistanceFromSpawn > LeashDistance)
 		{
 			BB->SetValueAsBool(FName(NAME_ShouldReturnToSpawn), true);
-			BB->SetValueAsObject(FName(NAME_TargetActor), nullptr);
+
+			// ClearTargetActor를 통해 해제 (어그로 리셋 타이머 포함)
+			if (AMonsterAIController* MonsterAIC = Cast<AMonsterAIController>(AIC))
+			{
+				MonsterAIC->ClearTargetActor();
+			}
 		}
 	}
 	else

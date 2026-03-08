@@ -1,8 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MonsterAttackSetData.h"
 
-UAnimMontage* UMonsterAttackSetData::SelectAttackByDistance(float Distance) const
+const FMonsterAttackEntry* UMonsterAttackSetData::SelectAttackByDistance(float Distance) const
 {
 	TArray<const FMonsterAttackEntry*> ValidAttacks;
 	float TotalWeight = 0.0f;
@@ -35,9 +34,9 @@ UAnimMontage* UMonsterAttackSetData::SelectAttackByDistance(float Distance) cons
 		Accumulated += Entry->Weight;
 		if (RandomValue <= Accumulated)
 		{
-			return Entry->AttackMontage;
+			return Entry;
 		}
 	}
 
-	return ValidAttacks.Last()->AttackMontage;
+	return ValidAttacks.Last();
 }

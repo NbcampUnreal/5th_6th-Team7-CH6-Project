@@ -25,6 +25,10 @@ struct FMonsterAttackEntry
 	// 가중치 (높을수록 선택 확률 증가)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = "0.1"))
 	float Weight = 1.0f;
+
+	// 데미지 배율 (기본 공격력에 곱해짐)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = "0.1"))
+	float DamageMultiplier = 1.0f;
 };
 
 UCLASS(BlueprintType)
@@ -37,5 +41,5 @@ public:
 	TArray<FMonsterAttackEntry> Attacks;
 
 	// 거리에 맞는 공격 중 가중치 랜덤으로 하나 선택
-	UAnimMontage* SelectAttackByDistance(float Distance) const;
+	const FMonsterAttackEntry* SelectAttackByDistance(float Distance) const;
 };
