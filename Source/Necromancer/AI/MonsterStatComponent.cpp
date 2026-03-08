@@ -41,7 +41,17 @@ void UMonsterStatComponent::ApplyPoise(float Amount)
 
 float UMonsterStatComponent::GetAttackPower() const
 {
-	return AttackPower;
+	return AttackPower * CurrentDamageMultiplier;
+}
+
+void UMonsterStatComponent::SetDamageMultiplier(float NewMultiplier)
+{
+	CurrentDamageMultiplier = NewMultiplier;
+}
+
+void UMonsterStatComponent::ResetDamageMultiplier()
+{
+	CurrentDamageMultiplier = 1.0f;
 }
 
 float UMonsterStatComponent::GetAttackRange() const

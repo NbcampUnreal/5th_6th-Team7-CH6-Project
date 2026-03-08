@@ -61,22 +61,32 @@ EBTNodeResult::Type UBTTask_MonsterAttack::ExecuteTask(UBehaviorTreeComponent& O
 
 	// 공격 몽타주 결정: AttackSet이 있으면 거리 기반 랜덤, 없으면 단일 몽타주
 	UAnimMontage* SelectedMontage = AttackMontage;
+	float DamageMultiplier = 1.0f;
+
 	if (AttackSet)
 	{
 		AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
 		if (TargetActor)
 		{
 			float Distance = FVector::Dist(Character->GetActorLocation(), TargetActor->GetActorLocation());
-			UAnimMontage* SetMontage = AttackSet->SelectAttackByDistance(Distance);
-			if (SetMontage)
+			const FMonsterAttackEntry* SelectedEntry = AttackSet->SelectAttackByDistance(Distance);
+			if (SelectedEntry)
 			{
-				SelectedMontage = SetMontage;
+				SelectedMontage = SelectedEntry->AttackMontage;
+				DamageMultiplier = SelectedEntry->DamageMultiplier;
 			}
 		}
 	}
 
+	// 데미지 배율 적용
+	if (StatComp)
+	{
+		StatComp->SetDamageMultiplier(DamageMultiplier);
+	}
+
+	// AI 이동 명령 중지 (루트모션은 유지)
+	AIC->StopMovement();
 	Character->GetCharacterMovement()->StopMovementImmediately();
-	Character->GetCharacterMovement()->DisableMovement();
 
 	AMonsterBase* Monster = Cast<AMonsterBase>(Character);
 	if (Monster)
@@ -169,6 +179,7 @@ void UBTTask_MonsterAttack::CleanupAttackState(UBehaviorTreeComponent* OwnerComp
 			if (UMonsterStatComponent* StatComp = Pawn->FindComponentByClass<UMonsterStatComponent>())
 			{
 				StatComp->MarkAttackUsed();
+				StatComp->ResetDamageMultiplier();
 			}
 
 			if (BB)

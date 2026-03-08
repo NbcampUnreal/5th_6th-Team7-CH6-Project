@@ -15,6 +15,9 @@
 
 AMonsterAIController::AMonsterAIController()
 {
+	// 몬스터 팀 설정 (Perception 친적 판별에 필요)
+	SetGenericTeamId(FGenericTeamId(TEAM_ID_MONSTER));
+
 	AIPerceptionComp = CreateDefaultSubobject<UAIPerceptionComponent>("AIPerceptionComp");
 	SetPerceptionComponent(*AIPerceptionComp);
 
@@ -104,7 +107,6 @@ void AMonsterAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 {
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		GetWorldTimerManager().ClearTimer(LoseTargetTimerHandle);
 		GetWorldTimerManager().ClearTimer(AggroResetTimerHandle);
 
 		// 타겟 후보 결정: 직접 팀 ID가 없으면 Instigator를 확인
@@ -133,9 +135,9 @@ void AMonsterAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 	}
 	else
 	{
+		// 감지를 잃어도 타겟을 유지 (귀환/사망 시에만 해제)
+		// 마지막 위치만 기록
 		SetlastLocation(Actor->GetActorLocation());
-
-		GetWorldTimerManager().SetTimer(LoseTargetTimerHandle, this, &AMonsterAIController::ClearTargetActor, ClearTime, false);
 	}
 }
 
