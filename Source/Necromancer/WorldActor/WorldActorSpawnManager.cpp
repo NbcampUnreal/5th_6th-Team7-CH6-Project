@@ -39,6 +39,8 @@ void AWorldActorSpawnManager::StartSpawning()
 {
 	CollectAllSpawnEntries();
 
+	CurrentSpawnCost = 0;
+
 	if (SpawnQueue.Num() == 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SpawnManager: No Submit spawn entries found"));
@@ -243,6 +245,13 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 				break;
 			}
 
+			if (CurrentSpawnCost + ItemData->SpawnCost > MaxSpawnCost)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Spawn skipped: Cost limit reached (%d/%d)"),
+					CurrentSpawnCost, MaxSpawnCost);
+				break;
+			}
+
 			if (!ItemData->DropItemActorClass)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Spawn failed: DropItemActorClass is null"));
@@ -255,6 +264,10 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 				Rotation,
 				Params
 			);
+			if (SubmitActor)
+			{
+				CurrentSpawnCost += ItemData->SpawnCost;
+			}
 			break;
 		}
 		default:

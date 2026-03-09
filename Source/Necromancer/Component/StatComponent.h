@@ -71,6 +71,9 @@ protected:
     UPROPERTY(Replicated, EditAnywhere, Category = "Armor", meta = (ClampMin = "0.0"))
     float Armor = 0.0f;
 
-    UPROPERTY(Replicated)
+    UPROPERTY(ReplicatedUsing = OnRep_IsDead)
     bool IsDead = false;
+
+    UFUNCTION()
+    void OnRep_IsDead();
 };

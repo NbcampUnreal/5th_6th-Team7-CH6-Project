@@ -10,12 +10,6 @@ USoulComponent::USoulComponent()
     PrimaryComponentTick.bCanEverTick = false;
 
     CurrentHPDrain = BaseHPDrain;
-}
-
-void USoulComponent::BeginPlay()
-{
-    Super::BeginPlay();
-
 
     ReserveBatteries.Empty();
 
@@ -24,9 +18,17 @@ void USoulComponent::BeginPlay()
         FSoulBattery TestBattery;
         TestBattery.MaxCapacity = 100.f;
         TestBattery.CurrentCapacity = 100.f;
-
-        ReserveBatteries.Add(TestBattery);
+        AddReserveBattery(TestBattery);
     }
+    FSoulBattery TestBattery;
+    TestBattery.MaxCapacity = 100.f;
+    TestBattery.CurrentCapacity = 100.f;
+    ActiveBattery = TestBattery;
+}
+
+void USoulComponent::BeginPlay()
+{
+    Super::BeginPlay();
 
     GetWorld()->GetTimerManager().SetTimer(
         DrainTimer,
@@ -74,8 +76,7 @@ void USoulComponent::SwapReserveToActive()
     if (ReserveBatteries.Num() == 0)
         return;
 
-    ActiveBattery = ReserveBatteries[0];
-    ReserveBatteries.RemoveAt(0);
+    ActiveBattery = ReserveBatteries.Pop();
 
     //CurrentState = ESoulState::LowPower;
 }
@@ -147,6 +148,8 @@ void USoulComponent::EnterDownState()
 
 void USoulComponent::TryRevive()
 {
+    if (CurrentState != ESoulState::Down)
+        return;
     if (!GetOwner()->HasAuthority())
         return;
 
@@ -154,8 +157,7 @@ void USoulComponent::TryRevive()
         return;
 
     //ActiveBattery = ReserveBatteries[0];
-    ReserveBatteries.RemoveAt(0);
-
+    ActiveBattery = ReserveBatteries.Pop();
     ActiveBattery.SetHalf();
 
     CurrentState = ESoulState::Normal;
@@ -193,6 +195,25 @@ int32 USoulComponent::GetMaxReserveSlots() const
     return MaxReserveSlots;
 }
 
+void USoulComponent::CopySoulDataFrom(const USoulComponent* Other)
+{
+    if (!Other) return;
+    ReserveBatteries = Other->ReserveBatteries;
+}
+
+
+/* ===== API ===== */
+bool USoulComponent::TakeReserveBattery(FSoulBattery& OutBattery)
+{
+    if (ReserveBatteries.Num() == 0)
+    {
+        return false;
+    }
+
+    OutBattery = ReserveBatteries.Pop();
+    return true;
+}
+
 void USoulComponent::AddReserveBattery(const FSoulBattery& NewBattery)
 {
     if (ReserveBatteries.Num() < MaxReserveSlots)
@@ -203,6 +224,9 @@ void USoulComponent::AddReserveBattery(const FSoulBattery& NewBattery)
         {
             CurrentState = ESoulState::Normal;
 
+        }
+        if (CurrentState == ESoulState::Down) {
+            TryRevive();
         }
     }
 }

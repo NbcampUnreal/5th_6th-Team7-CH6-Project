@@ -57,10 +57,10 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	InteractionCheckCollision->SetupAttachment(GetCapsuleComponent());
 	InteractionCheckCollision->OnComponentBeginOverlap.AddDynamic(
 		this,
-		&ANecPlayerCharacter::OnCheckOverlap);
+		&ANecPlayerCharacter::OnSphereOverlap);
 	InteractionCheckCollision->OnComponentEndOverlap.AddDynamic(
 		this,
-		&ANecPlayerCharacter::OnCheckEndOverlap);
+		&ANecPlayerCharacter::OnSphereEnd);
 
 
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
@@ -338,6 +338,9 @@ void ANecPlayerCharacter::ToggleMenu(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::TryInteract()
 {
+	if (StatComponent->GetIsDead())
+		return;
+
 	AActor* Target = CurrentTarget.Get();
 
 	if (!Target) return;
@@ -349,7 +352,12 @@ void ANecPlayerCharacter::TryInteract()
 	}
 	else
 	{
-		Server_TryInteract(Target);
+		if (!Target) return;
+		if (!Target->Implements<UInteractable>()) return;
+
+		IInteractable::Execute_Interact(Target, this);
+		//Server_TryInteract(Target);
+
 	}
 	CleanupInvalidTargets();
 
@@ -377,6 +385,9 @@ void ANecPlayerCharacter::HandleDeath()
 		Multicast_HandleDeath();
 		//멀티 수정 필요
 		SoulComponent->EnterDownState();
+
+		CurrentTarget = nullptr;
+		InteractTargets.Empty();
 		/*GetWorldTimerManager().SetTimer(
 			DeathTimerHandle,
 			this,
@@ -524,6 +535,9 @@ AActor* ANecPlayerCharacter::GetCurrentEquipmentActor(EEquipmentSlot Slot)
 }
 
 void ANecPlayerCharacter::AddInteractTarget(AActor* Target) {
+	if (StatComponent->GetIsDead())
+		return;
+
 	if (!IsValid(Target)) return;
 
 	InteractTargets.AddUnique(Target);
@@ -649,17 +663,85 @@ void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)
 	}
 }
 
-void OnSphereOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void  ANecPlayerCharacter::OnSphereOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!StatComponent)
+		return;
+	if (!StatComponent->GetIsDead())
+		return;
+	if (!OtherActor) return;
+	if (ANecPlayerCharacter* Player = Cast<ANecPlayerCharacter>(OtherActor))
+	{
+		Player->AddInteractTarget(this);
+	}
+}
+
+void  ANecPlayerCharacter::OnSphereEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (!StatComponent)
+		return;
+	if (!StatComponent->GetIsDead())
+		return;
+	if (!OtherActor) return;
+	if (ANecPlayerCharacter* Player = Cast<ANecPlayerCharacter>(OtherActor))
+	{
+		Player->RemoveInteractTarget(this);
+	}
+}
+
+void ANecPlayerCharacter::OnCheckOverlap(UPrimitiveComponent* OverlappedComp,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex,
+	bool bFromSweep,
+	const FHitResult& SweepResult)
 {
 }
 
-void OnSphereEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void ANecPlayerCharacter::OnCheckEndOverlap(UPrimitiveComponent* OverlappedComp,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex)
 {
 }
 
 void ANecPlayerCharacter::Interact_Implementation(AActor* Interactor)
 {
+	if (!StatComponent->GetIsDead())
+		return;
+	if (!HasAuthority())
+	{
+		ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(Interactor);
+		if (!PlayerCharacter)
+		{
+			return;
+		}
+		PlayerCharacter->Server_TryInteract(this);
+	}
+	else {
+		ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(Interactor);
+		if (!PlayerCharacter)
+		{
+			return;
+		}
+		FSoulBattery Battery;
+
+		if (PlayerCharacter->GetSoulComponent()->TakeReserveBattery(Battery))
+		{
+			SoulComponent->AddReserveBattery(Battery);
+		}
+		else
+		{
+			// 여분 배터리가 없음
+		}
+	}
 }
+
+FText ANecPlayerCharacter::GetInteractText_Implementation() const
+{
+	return FText::FromString(TEXT("부활"));
+}
+
 
 USoulComponent* ANecPlayerCharacter::GetSoulComponent() const
 {
@@ -668,6 +750,8 @@ USoulComponent* ANecPlayerCharacter::GetSoulComponent() const
 
 void ANecPlayerCharacter::AddSubmissionReward()
 {
+	if (StatComponent->GetIsDead())
+		return;
 	if (SoulComponent) {
 		SoulComponent->AddReserveBattery(FSoulBattery());
 	}

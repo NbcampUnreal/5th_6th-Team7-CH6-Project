@@ -32,10 +32,18 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
+	virtual bool IsSupportedForNetworking() const override
+	{
+		return true;
+	}
+	bool ReplicateSubobjects(
+		UActorChannel* Channel,
+		FOutBunch* Bunch,
+		FReplicationFlags* RepFlags);
 private:
 	/** 이 컴포넌트가 관리하는 아이템 인스턴스 */
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	UItemInstance* ItemInstance = nullptr;
 
 	/** 컨테이너일 경우에만 생성됨 */
