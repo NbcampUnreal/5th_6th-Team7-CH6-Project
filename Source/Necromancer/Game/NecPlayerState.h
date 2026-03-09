@@ -7,6 +7,7 @@
 class UStatComponent;
 class UStaminaComponent;
 class UNecInventoryComponent;
+class USoulComponent;
 
 UCLASS()
 class NECROMANCER_API ANecPlayerState : public APlayerState
@@ -19,6 +20,7 @@ public:
 	UStatComponent* GetStatComponent() const { return StatComponent; }
 	UStaminaComponent* GetStaminaComponent() const { return StaminaComponent; }
 	UNecInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+	USoulComponent* GetSoulComponent() const { return SoulComponent; }
 protected:
 	virtual void CopyProperties(APlayerState* PlayerState) override;
 
@@ -30,4 +32,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Component")
 	TObjectPtr<UNecInventoryComponent> InventoryComponent;
+
+	UPROPERTY(VisibleAnywhere, Category = "Component")
+	TObjectPtr<USoulComponent> SoulComponent;
 };

@@ -67,7 +67,6 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
 private:
 
     /* ===== Batteries ===== */
@@ -87,7 +86,7 @@ private:
     float DrainPerTick = 5.f;
 
     UPROPERTY(EditAnywhere)
-    float DrainInterval = 1.f;
+    float DrainInterval = 0.2f;
 
     UPROPERTY(EditAnywhere)
     float BaseHPDrain = 5.f;
@@ -148,7 +147,7 @@ public:
     FOnInvincibleEnd OnInvincibleEnd;
 
     /* ===== API ===== */
-
+    bool TakeReserveBattery(FSoulBattery& OutBattery);
     void AddReserveBattery(const FSoulBattery& NewBattery);
     void EnterDownState();
     void TryRevive();
@@ -160,4 +159,6 @@ public:
     int32 GetReserveBatteryCount() const;
     UFUNCTION(BlueprintCallable)
     int32 GetMaxReserveSlots() const;
+
+    void CopySoulDataFrom(const USoulComponent* Other);
 };
