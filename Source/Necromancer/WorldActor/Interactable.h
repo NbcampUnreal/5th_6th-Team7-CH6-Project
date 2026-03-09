@@ -24,4 +24,6 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void TakeDamage(float Damage, AActor* DamageCauser);
 	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	FText GetInteractText() const;
 };

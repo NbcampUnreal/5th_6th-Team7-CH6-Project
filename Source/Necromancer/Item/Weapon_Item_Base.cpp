@@ -164,7 +164,7 @@ void AWeapon_Item_Base::Equip(AActor* Equip_Owner)
     ACharacter* Character = Cast<ACharacter>(Equip_Owner);
     if (Character && Character->GetMesh())
     {
-        FName SocketName = "hand_r_weapon"; // ItemData에 소켓 이름 저장해두는 게 베스트
+        FName SocketName = "hand_r_weapon";
 
         AttachToComponent(
             Character->GetMesh(),

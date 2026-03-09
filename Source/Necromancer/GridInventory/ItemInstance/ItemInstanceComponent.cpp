@@ -6,10 +6,14 @@
 #include "GridInventory/GridInventoryComponent.h"
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
 
+#include "Net/UnrealNetwork.h"
+#include "Engine/ActorChannel.h"
+
 // Sets default values for this component's properties
 UItemInstanceComponent::UItemInstanceComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+	SetIsReplicatedByDefault(true);
 }
 
 
@@ -55,6 +59,28 @@ void UItemInstanceComponent::Initialize(UItemInstance* InItemInstance)
 
 	ItemInstance = InItemInstance;
 	CreateInventoryIfNeeded();
+}
+
+void UItemInstanceComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UItemInstanceComponent, ItemInstance);
+}
+
+bool  UItemInstanceComponent::ReplicateSubobjects(
+	UActorChannel* Channel,
+	FOutBunch* Bunch,
+	FReplicationFlags* RepFlags)
+{
+	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
+
+	if (ItemInstance)
+	{
+		WroteSomething |= Channel->ReplicateSubobject(ItemInstance, *Bunch, *RepFlags);
+	}
+
+	return WroteSomething;
 }
 
 void UItemInstanceComponent::CreateInventoryIfNeeded()

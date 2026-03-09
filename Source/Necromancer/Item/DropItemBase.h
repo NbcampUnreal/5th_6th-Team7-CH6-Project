@@ -25,7 +25,7 @@ public:
 	}
 	virtual void Interact_Implementation(AActor* Interactor) override;
 
-	virtual FText GetInteractText() const override;
+	virtual FText GetInteractText_Implementation() const override;
 private:
 	UFUNCTION(Server, Reliable)
 	void Server_Interact(AActor* Interactor);

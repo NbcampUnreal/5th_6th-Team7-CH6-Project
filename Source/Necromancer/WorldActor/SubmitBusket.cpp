@@ -67,6 +67,12 @@ void ASubmitBusket::Interact_Implementation(AActor* Interactor)
     Inventory->ToggleSubmitUI(BucketInventory);
 }
 
+FText ASubmitBusket::GetInteractText_Implementation() const
+{
+    return FText::FromString(TEXT("제출"));
+}
+
+
 void ASubmitBusket::Submit() {
     if (!HasAuthority())
     {
