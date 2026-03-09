@@ -132,7 +132,10 @@ void UTargetingComponent::ToggleLockOn()
         OnRep_CurrentTarget();
     }
 
-    Server_ToggleLockOn();
+    if (OwnerCharacter && !OwnerCharacter->HasAuthority())
+    {
+        Server_ToggleLockOn();
+    }
 }
 
 void UTargetingComponent::HandleLockOnInput(FVector2D LookInput)
