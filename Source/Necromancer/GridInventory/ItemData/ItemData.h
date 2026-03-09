@@ -164,7 +164,7 @@ struct FDropEntry : public FTableRowBase
         {
             if (FItemData* Row = ItemRow.GetRow<FItemData>("DropEntry"))
             {
-                return Row->Cost;
+                return Row->SpawnCost;
             }
         }
         return 0;
@@ -178,40 +178,53 @@ public:
     int32 CurrentCost = 0;
     int32 MaxCost = 100;
 
-    UDataTable* ItemDataTable = nullptr;
+    UDataTable* DropTable = nullptr;
 
     bool TrySpawnRandomItem(UWorld* World, FVector SpawnLocation)
     {
-        if (!World || !ItemDataTable)
+        if (!World || !DropTable)
             return false;
 
-        TArray<FName> RowNames = ItemDataTable->GetRowNames();
+        TArray<FName> RowNames = DropTable->GetRowNames();
 
-        TArray<FItemData*> ValidItems;
+        TArray<FDropEntry*> ValidDrops;
 
         for (const FName& RowName : RowNames)
         {
-            FItemData* Item = ItemDataTable->FindRow<FItemData>(RowName, "DropCheck");
-            if (!Item)
+            FDropEntry* Drop = DropTable->FindRow<FDropEntry>(RowName, "DropCheck");
+            if (!Drop)
                 continue;
-            if (CurrentCost + Item->Cost <= MaxCost)
+
+            int32 ItemCost = Drop->GetItemCost();
+
+            if (CurrentCost + ItemCost <= MaxCost)
             {
-                ValidItems.Add(Item);
+                ValidDrops.Add(Drop);
             }
         }
 
-        if (ValidItems.Num() == 0)
+        if (ValidDrops.Num() == 0)
             return false;
 
-        int32 RandomIndex = FMath::RandRange(0, ValidItems.Num() - 1);
-        FItemData* SelectedItem = ValidItems[RandomIndex];
+        int32 RandomIndex = FMath::RandRange(0, ValidDrops.Num() - 1);
 
-        if (!SelectedItem || !SelectedItem->DropItemActorClass)
+        FDropEntry* SelectedDrop = ValidDrops[RandomIndex];
+
+        if (!SelectedDrop)
             return false;
 
-        World->SpawnActor<AActor>(SelectedItem->DropItemActorClass,SpawnLocation,FRotator::ZeroRotator);
+        FItemData* ItemData = SelectedDrop->ItemRow.GetRow<FItemData>("Spawn");
 
-        CurrentCost += SelectedItem->Cost;
+        if (!ItemData || !ItemData->DropItemActorClass)
+            return false;
+
+        World->SpawnActor<AActor>(
+            ItemData->DropItemActorClass,
+            SpawnLocation,
+            FRotator::ZeroRotator
+        );
+
+        CurrentCost += ItemData->SpawnCost;
 
         return true;
     }
