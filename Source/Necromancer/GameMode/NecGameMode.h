@@ -25,4 +25,6 @@ protected:
 
 public:
 	void StartGame();
+
+	void OnPlayerDeath(ANecPlayerController* DeadPlayerController);
 };

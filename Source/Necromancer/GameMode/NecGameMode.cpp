@@ -38,3 +38,10 @@ void ANecGameMode::StartGame()
 		NecGameState->OnRep_SessionState();
 	}
 }
+
+void ANecGameMode::OnPlayerDeath(ANecPlayerController* DeadPlayerController)
+{
+	PlayerControllers.RemoveSingle(DeadPlayerController);
+}
+
+

@@ -185,11 +185,6 @@ void AInteractableActor::SetPreviewWidgetEnable(bool Enable)
 	ShowInteractCheckWidget(Enable);
 }
 
-FText AInteractableActor::GetInteractText() const
-{
-	return FText();
-}
-
 float AInteractableActor::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {

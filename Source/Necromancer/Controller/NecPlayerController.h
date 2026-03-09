@@ -83,7 +83,20 @@ protected:
 public:
 	void OnStartGame();
 
+	/// <summary>
+	/// 빙의 해제 및 카메라 이동 시퀀스 수행
+	/// </summary>
+	UFUNCTION()
+	void OnPlayerDeath();
+
+	UFUNCTION(Client, Reliable)
+	void Client_HandleDeath();
+	AActor* GetNextLivePlayer(AActor* CurrentViewTarget);
+
+#pragma region Personal Achievement
 public:
 	UFUNCTION(Client, Reliable)
 	void Client_NotifyMonsterKill();
+
+#pragma endregion
 };
