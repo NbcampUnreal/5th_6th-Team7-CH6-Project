@@ -41,12 +41,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	
-	FTimerHandle LoseTargetTimerHandle;
 	FTimerHandle AggroResetTimerHandle;
-
-	// 타겟 감지 해제 후 대기 시간
-	UPROPERTY(EditDefaultsOnly)
-	float ClearTime = 3.0f;
 
 	// 어그로 전파 재사용 대기 시간 (타겟 해제 후)
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Aggro")
