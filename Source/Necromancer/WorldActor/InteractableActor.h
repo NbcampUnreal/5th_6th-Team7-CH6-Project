@@ -112,7 +112,4 @@ public:
 
 	virtual void SetOutLineEnable(bool Enable);
 	virtual void SetPreviewWidgetEnable(bool Enable);
-
-	UFUNCTION(BlueprintCallable, Category = "UI")
-	virtual FText GetInteractText() const;
 };

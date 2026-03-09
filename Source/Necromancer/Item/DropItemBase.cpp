@@ -31,8 +31,11 @@ inline void ADropItemBase::BeginPlay()
     }
 }
 
+
+
 void ADropItemBase::Interact_Implementation(AActor* Interactor)
 {
+    Super::Interact_Implementation(Interactor);
     UE_LOG(LogTemp, Warning, TEXT("DropItem Interacted"));
 
     if (!Interactor || !ItemInstanceComponent)
@@ -54,10 +57,31 @@ void ADropItemBase::Interact_Implementation(AActor* Interactor)
     }
 }
 
-FText ADropItemBase::GetInteractText() const
+FText ADropItemBase::GetInteractText_Implementation() const
 {
     UDataTableSubsystem* Subsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
-    const FItemData* ItemData = Subsystem->GetItemData(ItemInstanceComponent->GetItemInstance()->ItemID);
+    if (!Subsystem)
+    {
+        return FText::FromString(TEXT("획득"));
+    }
+
+    if (!ItemInstanceComponent)
+    {
+        return FText::FromString(TEXT("획득"));
+    }
+
+    const UItemInstance* Instance = ItemInstanceComponent->GetItemInstance();
+    if (!Instance)
+    {
+        return FText::FromString(TEXT("획득"));
+    }
+
+    const FItemData* ItemData = Subsystem->GetItemData(Instance->ItemID);
+    if (!ItemData)
+    {
+        return FText::FromString(TEXT("획득"));
+    }
+
     return FText::Format(
         FText::FromString(TEXT("{0} 획득")),
         ItemData->ItemName

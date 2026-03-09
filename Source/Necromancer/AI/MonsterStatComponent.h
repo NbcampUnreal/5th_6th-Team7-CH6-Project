@@ -31,6 +31,13 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	float GetAttackPower() const;
+
+	// 현재 공격의 데미지 배율 설정/조회 (BTTask에서 공격 전 호출)
+	UFUNCTION(BlueprintCallable)
+	void SetDamageMultiplier(float NewMultiplier);
+	UFUNCTION(BlueprintCallable)
+	void ResetDamageMultiplier();
+
 	UFUNCTION(BlueprintCallable)
 	float GetAttackRange() const;
 	UFUNCTION(BlueprintCallable)
@@ -106,6 +113,9 @@ private:
 	float AttackCooldown = 2.0f;
 
 	float LastAttackTime = -999.0f;
+
+	// 현재 공격의 데미지 배율 (매 공격마다 BTTask에서 설정, 기본 1.0)
+	float CurrentDamageMultiplier = 1.0f;
 
 	// 스킬 레벨 (0~1, 높을수록 회피/블록 확률 증가)
 	UPROPERTY(EditDefaultsOnly, Category = "Stat", meta = (ClampMin = "0.0", ClampMax = "1.0"))

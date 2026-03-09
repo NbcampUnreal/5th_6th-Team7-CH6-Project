@@ -396,6 +396,34 @@ void UNecInventoryComponent::Server_DropItemInWorld_Implementation(UItemInstance
 	DropItemInWorld_Internal(DropItem);
 }
 
+void UNecInventoryComponent::OnRep_EquipmentActor()
+{
+	APlayerState* PS = Cast<APlayerState>(GetOwner());
+	if (!PS) return;
+
+	APawn* Pawn = PS->GetPawn();
+	if (!Pawn) return;
+
+	ACharacter* Character = Cast<ACharacter>(Pawn);
+	if (!Character) return;
+
+	auto EquipIfValid = [&](AActor* Actor)
+		{
+			if (!Actor) return;
+
+			if (AItemBass* Item = Cast<AItemBass>(Actor))
+			{
+				Item->Equip(Character);
+			}
+		};
+
+	EquipIfValid(HeadActor);
+	EquipIfValid(BodyActor);
+	EquipIfValid(LegsActor);
+	EquipIfValid(BagActor);
+	EquipIfValid(WeaponActor);
+}
+
 UItemInstance* UNecInventoryComponent::GetEquipmentItem(EEquipmentSlot Slot) const
 {
 	switch (Slot)
