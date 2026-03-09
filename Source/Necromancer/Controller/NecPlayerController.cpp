@@ -208,15 +208,15 @@ void ANecPlayerController::Client_HandleDeath_Implementation()
 
 AActor* ANecPlayerController::GetNextLivePlayer(AActor* CurrentViewTarget)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 0"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 0"));
 	ANecGameState* GS = Cast<ANecGameState>(GetWorld()->GetGameState());
 	if (!GS) return nullptr;
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 1"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 1"));
 	const TArray<APlayerState*>& PlayerArray = GS->PlayerArray;
 	if (PlayerArray.Num() == 0) return nullptr;
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 2"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 2"));
 
 	// 현재 보고 있는 타겟의 인덱스 찾기
 	int32 CurrentIndex = -1;
@@ -232,7 +232,7 @@ AActor* ANecPlayerController::GetNextLivePlayer(AActor* CurrentViewTarget)
 		}
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 3"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 3"));
 
 	for (int32 i = 1; i <= PlayerArray.Num(); ++i)
 	{
@@ -248,7 +248,7 @@ AActor* ANecPlayerController::GetNextLivePlayer(AActor* CurrentViewTarget)
 		}
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 4"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 4"));
 
 	return nullptr;
 }
