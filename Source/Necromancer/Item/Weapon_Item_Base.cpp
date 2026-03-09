@@ -160,11 +160,10 @@ void AWeapon_Item_Base::Equip(AActor* Equip_Owner)
 {
     SetReplicates(true);
 
-    // 👇 캐릭터 메쉬 가져오기
     ACharacter* Character = Cast<ACharacter>(Equip_Owner);
     if (Character && Character->GetMesh())
     {
-        FName SocketName = "hand_r_weapon"; // ItemData에 소켓 이름 저장해두는 게 베스트
+        FName SocketName = "hand_r_weapon";
 
         AttachToComponent(
             Character->GetMesh(),
@@ -172,6 +171,23 @@ void AWeapon_Item_Base::Equip(AActor* Equip_Owner)
             SocketName
         );
 
+    }
+}
+
+void AWeapon_Item_Base::Multicast_PlayHitSound_Implementation(FVector HitLocation)
+{
+    if (WeaponData && !WeaponData->AttackSound.IsNull())
+    {
+        USoundBase* SoundToPlay = WeaponData->AttackSound.Get();
+        if (!SoundToPlay && WeaponData->AttackSound.IsPending())
+        {
+            SoundToPlay = WeaponData->AttackSound.LoadSynchronous();
+        }
+
+        if (SoundToPlay)
+        {
+            UGameplayStatics::PlaySoundAtLocation(this, SoundToPlay, HitLocation);
+        }
     }
 }
 
@@ -275,20 +291,7 @@ void AWeapon_Item_Base::PerformTrace()
                 );
 
                 FVector HitLocation = Hit.ImpactPoint;
-
-                if (WeaponData && !WeaponData->AttackSound.IsNull())
-                {
-                    USoundBase* SoundToPlay = WeaponData->AttackSound.Get();
-                    if (!SoundToPlay && WeaponData->AttackSound.IsPending())
-                    {
-                        SoundToPlay = WeaponData->AttackSound.LoadSynchronous();
-                    }
-
-                    if (SoundToPlay)
-                    {
-                        UGameplayStatics::PlaySoundAtLocation(this, SoundToPlay, GetActorLocation());
-                    }
-                }
+                Multicast_PlayHitSound(HitLocation);
             }
         }
     }

@@ -396,6 +396,9 @@ void UCombatComponent::Server_Attack_Implementation(int32 ComboIndex)
     {
         StaminaComp->ConsumeStamina(StaminaCost);
 
+        float Multiplier = ComboList[CurrentComboIndex].DamageMultiplier;
+        CurrentWeapon->SetDamageMultiplier(Multiplier);
+
         Multicast_Attack(ComboIndex);
     }
 }
