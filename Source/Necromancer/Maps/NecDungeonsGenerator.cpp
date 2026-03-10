@@ -285,6 +285,8 @@ void ANecDungeonsGenerator::CheckForOverlap()
 		}
 		else
 		{
+
+
 			// 付瘤阜 规 积己
 			SpawnEndRoom();
 			// 备港 阜扁
@@ -333,8 +335,6 @@ void ANecDungeonsGenerator::SpawnDoor()
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 			GetWorld()->SpawnActor<AActor>(Door, Transform, SpawnParams);
-
-
 		}
 	}
 }
