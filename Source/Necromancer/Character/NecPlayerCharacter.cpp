@@ -25,6 +25,7 @@
 
 #include "WorldActor/Interactable.h"
 #include "WorldActor/InteractableActor.h"
+#include "NiagaraFunctionLibrary.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
@@ -479,6 +480,9 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 
 				UE_LOG(LogTemp, Warning, TEXT("[Server] Successfully linked Component: %s"), *GetName());
 			}
+
+			StatComponent->OnDamageReceived.RemoveDynamic(this, &ANecPlayerCharacter::PlayBloodEffect);
+			StatComponent->OnDamageReceived.AddDynamic(this, &ANecPlayerCharacter::PlayBloodEffect);
 		}
 		InventoryComponent = PS->GetInventoryComponent();
 		if (InventoryComponent) {
@@ -497,6 +501,16 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 			);
 		}
 	}
+}
+
+void ANecPlayerCharacter::PlayBloodEffect(float DamageAmount, FVector HitLocation)
+{
+	if (DamageAmount <= 0.0f || !BloodEffectFX)
+	{
+		return;
+	}
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), BloodEffectFX, HitLocation);
 }
 
 void ANecPlayerCharacter::Server_EquipWeapon_Implementation(AWeapon_Item_Base* WeaponToEquip)
