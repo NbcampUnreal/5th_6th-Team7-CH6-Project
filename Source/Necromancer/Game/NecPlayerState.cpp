@@ -19,6 +19,9 @@ ANecPlayerState::ANecPlayerState()
 
 	SoulComponent  = CreateDefaultSubobject<USoulComponent>(TEXT("SoulComponent"));
 	SoulComponent->SetIsReplicated(true);
+
+	SetNetUpdateFrequency(100.0f);
+	SetMinNetUpdateFrequency(30.0f);
 }
 
 void ANecPlayerState::CopyProperties(APlayerState* PlayerState)
