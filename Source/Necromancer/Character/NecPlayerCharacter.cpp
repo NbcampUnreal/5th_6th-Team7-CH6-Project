@@ -276,6 +276,11 @@ void ANecPlayerCharacter::StartSprint(const FInputActionValue& Value)
 		return;
 	}
 
+	if (IsValid(CombatComponent) && CombatComponent->IsAttacking())
+	{
+		return;
+	}
+
 	if (StaminaComponent->IsExhausted())
 	{
 		if (PlayerMovementComponent->GetIsSprinting())
@@ -687,6 +692,11 @@ inline void ANecPlayerCharacter::Action_CycleTarget(const FInputActionValue& Val
 void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)
 {
 	if (!IsValid(PlayerMovementComponent) || !IsValid(StaminaComponent))
+	{
+		return;
+	}
+
+	if (bIsSprinting && IsValid(CombatComponent) && CombatComponent->IsAttacking())
 	{
 		return;
 	}
