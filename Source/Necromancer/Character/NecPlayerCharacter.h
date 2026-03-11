@@ -218,4 +218,20 @@ public:
 	void AddSubmissionReward();
 #pragma endregion
 
+protected:
+	FString GetEnumText(ENetRole Role);
+
+protected:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+public:
+	/// <summary>
+	/// 컨트롤러 회전값 복제용 -> 클라이언트의 관전에 필요(not server)
+	/// </summary>
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Networking")
+	FRotator RemoteViewRot;
+
+protected:
+		void ReplicateRemoteViewRot();
+
 };

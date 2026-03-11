@@ -21,7 +21,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Item/Weapon_Item_Base.h"
 #include "Components/CapsuleComponent.h"
-
+#include "Net/UnrealNetwork.h"
 
 #include "WorldActor/Interactable.h"
 #include "WorldActor/InteractableActor.h"
@@ -67,6 +67,14 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 }
 
+
+void ANecPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, RemoteViewRot);
+}
+
 void ANecPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -77,7 +85,34 @@ void ANecPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	
+	//DrawDebugString(GetWorld(), FVector(0, 0, 100), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);
+
+	ReplicateRemoteViewRot();
+}
+
+FString ANecPlayerCharacter::GetEnumText(ENetRole _Role)
+{
+	switch (_Role)
+	{
+	case ROLE_None:
+		return "None";
+	case ROLE_SimulatedProxy:
+		return "SimulatedProxy";
+	case ROLE_AutonomousProxy:
+		return "AutonomousProxy";
+	case ROLE_Authority:
+		return "Authority";
+	default:
+		return "ERROR";
+	}
+}
+
+void ANecPlayerCharacter::ReplicateRemoteViewRot()
+{
+	if (HasAuthority() && IsLocallyControlled())
+	{
+		RemoteViewRot = GetControlRotation();
+	}
 }
 
 void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
