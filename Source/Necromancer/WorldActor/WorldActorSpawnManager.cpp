@@ -39,6 +39,8 @@ void AWorldActorSpawnManager::StartSpawning()
 {
 	CollectAllSpawnEntries();
 
+	CurrentSpawnCost = 0;
+
 	if (SpawnQueue.Num() == 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SpawnManager: No Submit spawn entries found"));
@@ -119,6 +121,13 @@ void AWorldActorSpawnManager::StartSpawning()
 						break;
 					}
 
+					if (CurrentSpawnCost + ItemData->SpawnCost > MaxSpawnCost)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Spawn skipped: Cost limit reached (%d/%d)"),
+							CurrentSpawnCost, MaxSpawnCost);
+						break;
+					}
+
 					if (!ItemData->DropItemActorClass)
 					{
 						UE_LOG(LogTemp, Warning, TEXT("Spawn failed: DropItemActorClass is null"));
@@ -176,7 +185,14 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 		return;
 	}
 
+	FActorSpawnData& SpawnData = SpawnQueue[CurrentSpawnIndex];
 	const FActorSpawnData& Entry = SpawnQueue[CurrentSpawnIndex];
+
+	if (LastSpawnPoint != Entry.SpawnPoint)
+	{
+		CurrentSpawnCost = 0;
+		LastSpawnPoint = Entry.SpawnPoint;
+	}
 
 	if (Entry.SpawnPoint)
 	{
@@ -235,12 +251,19 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 		}
 		case ESpawnCategory::Item:
 		{
-			// Item 전용 로직
 			const FItemData* ItemData = Subsystem->GetRandomItemData();
 			if (!ItemData)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Spawn failed: ItemData is null"));
 				break;
+			}
+
+			if (CurrentSpawnCost + ItemData->SpawnCost > MaxSpawnCost)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Spawn skipped: Cost limit reached (%d/%d)"),
+					CurrentSpawnCost, MaxSpawnCost);
+				CurrentSpawnIndex++;
+				return;
 			}
 
 			if (!ItemData->DropItemActorClass)
@@ -255,6 +278,10 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 				Rotation,
 				Params
 			);
+			if (SubmitActor)
+			{
+				CurrentSpawnCost += ItemData->SpawnCost;
+			}
 			break;
 		}
 		default:
@@ -264,13 +291,11 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 			}
 		}		
 
-		
 		if (SubmitActor)
 		{
-			UE_LOG(LogTemp, Log, TEXT("Spawned [%d/%d]"), CurrentSpawnIndex + 1, SpawnQueue.Num());
+			UE_LOG(LogTemp, Log, TEXT("Spawned [%d/%d] Cost:%d/%d"),CurrentSpawnIndex + 1,SpawnQueue.Num(),CurrentSpawnCost,MaxSpawnCost);
 		}
 	}
-
 	CurrentSpawnIndex++;
 }
 

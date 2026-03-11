@@ -6,8 +6,15 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameMode/NecGameMode.h"
 
+#include "Game/NecGameState.h"
+#include "Game/NecPlayerState.h"
+#include "Character/NecPlayerCharacter.h"
+
 #include "GameInstance/NecAFGameInstance.h"
 #include "SaveGame/NecSaveGameSubsystem.h"
+
+#include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 
 ANecPlayerController::ANecPlayerController()
 {
@@ -162,6 +169,136 @@ void ANecPlayerController::OnStartGame()
 		CreateInGameHUD();
 	}
 }
+
+void ANecPlayerController::OnPlayerDeath()
+{
+	if (HasAuthority())
+	{
+		UnPossess();
+
+		ANecGameMode* NecGM = Cast<ANecGameMode>(GetWorld()->GetAuthGameMode());
+		ANecPlayerController* NewViewTarget = nullptr;
+		if (NecGM)
+		{
+			NecGM->OnPlayerDeath(this);
+		}
+		Client_HandleDeath();
+	}
+}
+
+void ANecPlayerController::Client_HandleDeath_Implementation()
+{
+	if (!IsLocalController()) return;
+
+	AGameStateBase* GS = GetWorld()->GetGameState();
+	if (GS)
+	{
+		FTimerHandle TimerHandle;
+		GetWorldTimerManager().SetTimer(TimerHandle, [this]()
+			{
+				AActor* NextTarget = GetNextLivePlayer(nullptr);
+				if (NextTarget)
+				{
+					SpectatingTarget = NextTarget;
+
+					bAutoManageActiveCameraTarget = true;
+					this->SetViewTargetWithBlend(NextTarget, 0.5f);
+
+					GetWorldTimerManager().ClearTimer(SpectateRotationTimerHandle);
+
+					GetWorldTimerManager().SetTimer(
+						SpectateRotationTimerHandle,
+						this,
+						&ANecPlayerController::UpdateSpectateRotation,
+						0.02f,
+						true
+					);
+				}
+			}, 0.2f, false);
+	}
+}
+
+AActor* ANecPlayerController::GetNextLivePlayer(AActor* CurrentViewTarget)
+{
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 0"));
+	ANecGameState* GS = Cast<ANecGameState>(GetWorld()->GetGameState());
+	if (!GS) return nullptr;
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 1"));
+	const TArray<APlayerState*>& PlayerArray = GS->PlayerArray;
+	if (PlayerArray.Num() == 0) return nullptr;
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 2"));
+
+	int32 CurrentIndex = -1;
+	if (CurrentViewTarget)
+	{
+		for (int32 i = 0; i < PlayerArray.Num(); ++i)
+		{
+			if (PlayerArray[i]->GetPawn() == CurrentViewTarget)
+			{
+				CurrentIndex = i;
+				break;
+			}
+		}
+	}
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 3"));
+
+	for (int32 i = 1; i <= PlayerArray.Num(); ++i)
+	{
+		int32 NextIndex = (CurrentIndex + i) % PlayerArray.Num();
+		ANecPlayerState* TargetPS = Cast<ANecPlayerState>(PlayerArray[NextIndex]);
+
+		if (TargetPS && TargetPS != GetPlayerState<ANecPlayerState>())
+		{
+			if (AActor* TargetPawn = TargetPS->GetPawn())
+			{
+				return TargetPawn;
+			}
+		}
+	}
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 4"));
+
+	return nullptr;
+}
+
+void ANecPlayerController::UpdateSpectateRotation()
+{
+	if (IsLocalController() && SpectatingTarget)
+	{
+		if (ANecPlayerCharacter* TargetPawn = Cast<ANecPlayerCharacter>(SpectatingTarget))
+		{
+			FRotator TargetRot = TargetPawn->RemoteViewRot;
+			if (HasAuthority())
+			{
+				TargetRot = TargetPawn->GetControlRotation();
+			}
+			else
+			{
+				TargetRot = TargetPawn->RemoteViewRot;
+			}
+
+			USpringArmComponent* SpringArm = TargetPawn->FindComponentByClass<USpringArmComponent>();
+			if (SpringArm)
+			{
+				SpringArm->bUsePawnControlRotation = false;
+				SpringArm->SetWorldRotation(TargetRot);
+
+				TargetPawn->bUseControllerRotationYaw = false;
+			}
+			SetControlRotation(TargetRot);
+		}
+	}
+	else
+	{
+		GetWorldTimerManager().ClearTimer(SpectateRotationTimerHandle);
+	}
+}
+
+
+
 
 void ANecPlayerController::Client_NotifyMonsterKill_Implementation()
 {

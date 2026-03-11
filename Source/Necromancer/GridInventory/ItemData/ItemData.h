@@ -105,6 +105,8 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Data")
     int32 Cost;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 SpawnCost;
 };
 
 
@@ -143,4 +145,99 @@ struct FworldActorInfo : public FTableRowBase
 
     UPROPERTY(EditAnywhere)
     int32 Level;
+};
+
+USTRUCT(BlueprintType)
+struct FDropEntry : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere)
+    FDataTableRowHandle ItemRow;
+
+    UPROPERTY(EditAnywhere)
+    int32 Weight = 1;
+
+    int32 GetItemCost() const
+    {
+        if (ItemRow.DataTable)
+        {
+            if (FItemData* Row = ItemRow.GetRow<FItemData>("DropEntry"))
+            {
+                return Row->SpawnCost;
+            }
+        }
+        return 0;
+    }
+};
+
+class FDropManager
+{
+public:
+
+    int32 CurrentCost = 0;
+    int32 MaxCost = 100;
+
+    UDataTable* DropTable = nullptr;
+
+    bool TrySpawnRandomItem(UWorld* World, FVector SpawnLocation)
+    {
+        if (!World || !DropTable)
+            return false;
+
+        TArray<FName> RowNames = DropTable->GetRowNames();
+
+        TArray<FDropEntry*> ValidDrops;
+
+        for (const FName& RowName : RowNames)
+        {
+            FDropEntry* Drop = DropTable->FindRow<FDropEntry>(RowName, "DropCheck");
+            if (!Drop)
+                continue;
+
+            int32 ItemCost = Drop->GetItemCost();
+
+            if (CurrentCost + ItemCost <= MaxCost)
+            {
+                ValidDrops.Add(Drop);
+            }
+        }
+
+        if (ValidDrops.Num() == 0)
+            return false;
+
+        int32 RandomIndex = FMath::RandRange(0, ValidDrops.Num() - 1);
+
+        FDropEntry* SelectedDrop = ValidDrops[RandomIndex];
+
+        if (!SelectedDrop)
+            return false;
+
+        FItemData* ItemData = SelectedDrop->ItemRow.GetRow<FItemData>("Spawn");
+
+        if (!ItemData || !ItemData->DropItemActorClass)
+            return false;
+
+        World->SpawnActor<AActor>(
+            ItemData->DropItemActorClass,
+            SpawnLocation,
+            FRotator::ZeroRotator
+        );
+
+        CurrentCost += ItemData->SpawnCost;
+
+        return true;
+    }
+};
+
+USTRUCT(BlueprintType)
+struct FWorldActorSpawnData : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere)
+    FName ItemID;
+
+    UPROPERTY(EditAnywhere)
+    USceneComponent* SpawnPoint;
 };

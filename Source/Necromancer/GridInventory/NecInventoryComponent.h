@@ -105,21 +105,23 @@ private:
 	UPROPERTY(Replicated)
 	UItemInstance* WeaponItem;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_EquipmentActor)
 	AActor* HeadActor;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_EquipmentActor)
 	AActor* BodyActor;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_EquipmentActor)
 	AActor* LegsActor;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_EquipmentActor)
 	AActor* BagActor;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_EquipmentActor)
 	AActor* WeaponActor;
 
+	UFUNCTION()
+	void OnRep_EquipmentActor();
 public:
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	UItemInstance* GetEquipmentItem(EEquipmentSlot Slot) const;

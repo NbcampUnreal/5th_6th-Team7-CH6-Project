@@ -21,7 +21,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Item/Weapon_Item_Base.h"
 #include "Components/CapsuleComponent.h"
-
+#include "Net/UnrealNetwork.h"
 
 #include "WorldActor/Interactable.h"
 #include "WorldActor/InteractableActor.h"
@@ -57,13 +57,21 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	InteractionCheckCollision->SetupAttachment(GetCapsuleComponent());
 	InteractionCheckCollision->OnComponentBeginOverlap.AddDynamic(
 		this,
-		&ANecPlayerCharacter::OnCheckOverlap);
+		&ANecPlayerCharacter::OnSphereOverlap);
 	InteractionCheckCollision->OnComponentEndOverlap.AddDynamic(
 		this,
-		&ANecPlayerCharacter::OnCheckEndOverlap);
+		&ANecPlayerCharacter::OnSphereEnd);
 
 
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+}
+
+
+void ANecPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, RemoteViewRot);
 }
 
 void ANecPlayerCharacter::BeginPlay()
@@ -76,7 +84,34 @@ void ANecPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	
+	//DrawDebugString(GetWorld(), FVector(0, 0, 100), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);
+
+	ReplicateRemoteViewRot();
+}
+
+FString ANecPlayerCharacter::GetEnumText(ENetRole _Role)
+{
+	switch (_Role)
+	{
+	case ROLE_None:
+		return "None";
+	case ROLE_SimulatedProxy:
+		return "SimulatedProxy";
+	case ROLE_AutonomousProxy:
+		return "AutonomousProxy";
+	case ROLE_Authority:
+		return "Authority";
+	default:
+		return "ERROR";
+	}
+}
+
+void ANecPlayerCharacter::ReplicateRemoteViewRot()
+{
+	if (HasAuthority() && IsLocallyControlled())
+	{
+		RemoteViewRot = GetControlRotation();
+	}
 }
 
 void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -338,6 +373,9 @@ void ANecPlayerCharacter::ToggleMenu(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::TryInteract()
 {
+	if (StatComponent->GetIsDead())
+		return;
+
 	AActor* Target = CurrentTarget.Get();
 
 	if (!Target) return;
@@ -349,7 +387,12 @@ void ANecPlayerCharacter::TryInteract()
 	}
 	else
 	{
-		Server_TryInteract(Target);
+		if (!Target) return;
+		if (!Target->Implements<UInteractable>()) return;
+
+		IInteractable::Execute_Interact(Target, this);
+		//Server_TryInteract(Target);
+
 	}
 	CleanupInvalidTargets();
 
@@ -377,6 +420,9 @@ void ANecPlayerCharacter::HandleDeath()
 		Multicast_HandleDeath();
 		//멀티 수정 필요
 		SoulComponent->EnterDownState();
+
+		CurrentTarget = nullptr;
+		InteractTargets.Empty();
 		/*GetWorldTimerManager().SetTimer(
 			DeathTimerHandle,
 			this,
@@ -524,6 +570,9 @@ AActor* ANecPlayerCharacter::GetCurrentEquipmentActor(EEquipmentSlot Slot)
 }
 
 void ANecPlayerCharacter::AddInteractTarget(AActor* Target) {
+	if (StatComponent->GetIsDead())
+		return;
+
 	if (!IsValid(Target)) return;
 
 	InteractTargets.AddUnique(Target);
@@ -649,17 +698,85 @@ void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)
 	}
 }
 
-void OnSphereOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void  ANecPlayerCharacter::OnSphereOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!StatComponent)
+		return;
+	if (!StatComponent->GetIsDead())
+		return;
+	if (!OtherActor) return;
+	if (ANecPlayerCharacter* Player = Cast<ANecPlayerCharacter>(OtherActor))
+	{
+		Player->AddInteractTarget(this);
+	}
+}
+
+void  ANecPlayerCharacter::OnSphereEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (!StatComponent)
+		return;
+	if (!StatComponent->GetIsDead())
+		return;
+	if (!OtherActor) return;
+	if (ANecPlayerCharacter* Player = Cast<ANecPlayerCharacter>(OtherActor))
+	{
+		Player->RemoveInteractTarget(this);
+	}
+}
+
+void ANecPlayerCharacter::OnCheckOverlap(UPrimitiveComponent* OverlappedComp,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex,
+	bool bFromSweep,
+	const FHitResult& SweepResult)
 {
 }
 
-void OnSphereEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void ANecPlayerCharacter::OnCheckEndOverlap(UPrimitiveComponent* OverlappedComp,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex)
 {
 }
 
 void ANecPlayerCharacter::Interact_Implementation(AActor* Interactor)
 {
+	if (!StatComponent->GetIsDead())
+		return;
+	if (!HasAuthority())
+	{
+		ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(Interactor);
+		if (!PlayerCharacter)
+		{
+			return;
+		}
+		PlayerCharacter->Server_TryInteract(this);
+	}
+	else {
+		ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(Interactor);
+		if (!PlayerCharacter)
+		{
+			return;
+		}
+		FSoulBattery Battery;
+
+		if (PlayerCharacter->GetSoulComponent()->TakeReserveBattery(Battery))
+		{
+			SoulComponent->AddReserveBattery(Battery);
+		}
+		else
+		{
+			// 여분 배터리가 없음
+		}
+	}
 }
+
+FText ANecPlayerCharacter::GetInteractText_Implementation() const
+{
+	return FText::FromString(TEXT("부활"));
+}
+
 
 USoulComponent* ANecPlayerCharacter::GetSoulComponent() const
 {
@@ -668,6 +785,8 @@ USoulComponent* ANecPlayerCharacter::GetSoulComponent() const
 
 void ANecPlayerCharacter::AddSubmissionReward()
 {
+	if (StatComponent->GetIsDead())
+		return;
 	if (SoulComponent) {
 		SoulComponent->AddReserveBattery(FSoulBattery());
 	}

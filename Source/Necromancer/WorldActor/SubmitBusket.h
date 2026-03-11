@@ -23,6 +23,7 @@ public:
 	ASubmitBusket();
 	virtual void BeginPlay()override;
 	virtual void Interact_Implementation(AActor* Interactor) override;
+	virtual FText GetInteractText_Implementation() const override;
 	UFUNCTION()
 	void Submit();	
 private:

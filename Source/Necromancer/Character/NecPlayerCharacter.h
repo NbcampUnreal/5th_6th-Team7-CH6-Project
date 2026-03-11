@@ -66,8 +66,7 @@ protected:
 	UFUNCTION()
 	void Action_CycleTarget(const FInputActionValue& Value);
 
-	UFUNCTION()
-	void TryInteract();	
+	
 
 	UFUNCTION()
 	void HandleDeath();
@@ -101,8 +100,7 @@ public:
 
 	void SetLockOn(bool bEnable);
 
-	UFUNCTION(Server, Reliable)
-	void Server_TryInteract(AActor* Target);
+	
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
@@ -145,20 +143,6 @@ protected:
 	TObjectPtr<UNecInventoryComponent> InventoryComponent;
 public:
 	AActor* GetCurrentEquipmentActor(EEquipmentSlot Slot);
-
-private:
-	UPROPERTY()
-	TWeakObjectPtr<AActor> CurrentTarget;
-	UPROPERTY()
-	TArray<TWeakObjectPtr<AActor>> InteractTargets;
-public:
-	void AddInteractTarget(AActor* Target);
-	void RemoveInteractTarget(AActor* Target);
-	void SelectFallbackTarget();
-	void CleanupInvalidTargets();
-	UFUNCTION(BlueprintCallable)
-	AActor* GetCurrentInteractTarget() const;
-	void CycleTarget(bool bNext);
 	
 #pragma region interact
 protected:
@@ -173,15 +157,13 @@ protected:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex,
 		bool bFromSweep,
-		const FHitResult& SweepResult) {
-	}
+		const FHitResult& SweepResult);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void OnSphereEnd(UPrimitiveComponent* OverlappedComp,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex) {
-	}
+		int32 OtherBodyIndex);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void OnCheckOverlap(UPrimitiveComponent* OverlappedComp,
@@ -189,17 +171,37 @@ protected:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex,
 		bool bFromSweep,
-		const FHitResult& SweepResult) {
-	}
+		const FHitResult& SweepResult);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void OnCheckEndOverlap(UPrimitiveComponent* OverlappedComp,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex) {
-	}
-public:
+		int32 OtherBodyIndex);
+
+	
+
+public:	
 	virtual void Interact_Implementation(AActor* Interactor) override;
+	virtual FText GetInteractText_Implementation() const override;
+protected:
+	UFUNCTION()
+	void TryInteract();
+private:
+	UPROPERTY()
+	TWeakObjectPtr<AActor> CurrentTarget;
+	UPROPERTY()
+	TArray<TWeakObjectPtr<AActor>> InteractTargets;
+public:
+	UFUNCTION(Server, Reliable)
+	void Server_TryInteract(AActor* Target);
+	void AddInteractTarget(AActor* Target);
+	void RemoveInteractTarget(AActor* Target);
+	void SelectFallbackTarget();
+	void CleanupInvalidTargets();
+	UFUNCTION(BlueprintCallable)
+	AActor* GetCurrentInteractTarget() const;
+	void CycleTarget(bool bNext);
 #pragma endregion
 
 #pragma region SoulComponent
@@ -210,5 +212,21 @@ public:
 
 	void AddSubmissionReward();
 #pragma endregion
+
+protected:
+	FString GetEnumText(ENetRole Role);
+
+protected:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+public:
+	/// <summary>
+	/// 컨트롤러 회전값 복제용 -> 클라이언트의 관전에 필요(not server)
+	/// </summary>
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Networking")
+	FRotator RemoteViewRot;
+
+protected:
+		void ReplicateRemoteViewRot();
 
 };

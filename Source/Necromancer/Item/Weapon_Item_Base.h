@@ -47,6 +47,9 @@ public:
 	virtual void Equip(AActor* Equip_Owner)override;
 
 protected:
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlayHitSound(FVector HitLocation);
+
 	void PerformTrace();
 
 	void OnWeaponAssetsLoaded();

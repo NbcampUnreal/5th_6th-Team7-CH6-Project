@@ -9,6 +9,7 @@
 #include "Component/StaminaComponent.h"
 #include "Item/Weapon_Item_Base.h"
 #include "Controller/NecPlayerController.h"
+#include "Game/NecPlayerState.h"
 
 UStatComponent::UStatComponent()
 	: CurrentHealth(0.0f)
@@ -44,6 +45,33 @@ void UStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 void UStatComponent::OnRep_Health()
 {
     OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
+}
+
+void UStatComponent::OnRep_IsDead()
+{
+    if (IsDead == true)
+    {
+        // 서버 처리영역: 빙의 해제 -> 나중에 이동필요할 듯(애니메이션 완료후 또는 ...어디론가)
+        APlayerState* PS = Cast<APlayerState>(GetOwner());
+        if (PS == nullptr)
+        {
+            return;
+        }
+
+        ANecPlayerCharacter* MyCharacter = Cast<ANecPlayerCharacter>(PS->GetPawn());
+        if (MyCharacter == nullptr) 
+        {
+            return;
+        }
+
+        ANecPlayerController* OwnerController = Cast<ANecPlayerController>(MyCharacter->GetController());
+        if (OwnerController == nullptr) 
+        {
+            return;
+        }
+
+        OwnerController->OnPlayerDeath();
+    }
 }
 
 void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
@@ -111,6 +139,8 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
             }
         }
         IsDead = true;
+        OnRep_IsDead();
+
         OnDeath.Broadcast();
     }
 }
