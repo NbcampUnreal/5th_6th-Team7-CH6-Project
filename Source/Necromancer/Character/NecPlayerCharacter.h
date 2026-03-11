@@ -213,4 +213,5 @@ public:
 	void AddSubmissionReward();
 #pragma endregion
 
+	FString GetEnumText(ENetRole Role);
 };

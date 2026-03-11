@@ -218,7 +218,6 @@ AActor* ANecPlayerController::GetNextLivePlayer(AActor* CurrentViewTarget)
 
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 2"));
 
-	// 현재 보고 있는 타겟의 인덱스 찾기
 	int32 CurrentIndex = -1;
 	if (CurrentViewTarget)
 	{
