@@ -22,7 +22,7 @@ int32 UItemInstanceComponent::GetCurrentDurability() const
 	return ItemInstance->CurrentDurability;
 }
 
-void UItemInstanceComponent::GetAllItemInstances(TArray<UItemInstance*>& OutItems) const
+void UItemInstanceComponent::GetChildItemInstances(TArray<UItemInstance*>& OutItems) const
 {
 	OutItems.Reset();
 
@@ -33,12 +33,7 @@ void UItemInstanceComponent::GetAllItemInstances(TArray<UItemInstance*>& OutItem
 	}
 
 	// 2. 컨테이너라면 내부 인벤토리 아이템들
-	if (InventoryComponent)
-	{
-		TArray<UItemInstance*> InventoryItems;
-		InventoryComponent->GetInventory(InventoryItems);
-		OutItems.Append(InventoryItems);
-	}
+	OutItems.Append(ChildrenItemInstances);
 }
 
 // Called when the game starts
@@ -50,7 +45,7 @@ void UItemInstanceComponent::BeginPlay()
 	
 }
 
-void UItemInstanceComponent::Initialize(UItemInstance* InItemInstance)
+void UItemInstanceComponent::Initialize(UItemInstance* InItemInstance, TArray<UItemInstance*> Children)
 {
 	if (!IsValid(InItemInstance))
 	{
@@ -58,6 +53,7 @@ void UItemInstanceComponent::Initialize(UItemInstance* InItemInstance)
 	}
 
 	ItemInstance = InItemInstance;
+	ChildrenItemInstances = Children;
 	CreateInventoryIfNeeded();
 }
 
@@ -66,6 +62,7 @@ void UItemInstanceComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UItemInstanceComponent, ItemInstance);
+	DOREPLIFETIME(UItemInstanceComponent, ChildrenItemInstances);
 }
 
 bool  UItemInstanceComponent::ReplicateSubobjects(
@@ -78,6 +75,14 @@ bool  UItemInstanceComponent::ReplicateSubobjects(
 	if (ItemInstance)
 	{
 		WroteSomething |= Channel->ReplicateSubobject(ItemInstance, *Bunch, *RepFlags);
+	}
+
+	for (UItemInstance* ChildItem : ChildrenItemInstances)
+	{
+		if (IsValid(ChildItem))
+		{
+			WroteSomething |= Channel->ReplicateSubobject(ChildItem, *Bunch, *RepFlags);
+		}
 	}
 
 	return WroteSomething;
@@ -98,24 +103,9 @@ void UItemInstanceComponent::CreateInventoryIfNeeded()
 		return;
 	}
 
-	if (InventoryComponent)
-	{
-		return; // 이미 있음
-	}
-
 	AActor* Owner = GetOwner();
 	if (!Owner)
 	{
 		return;
 	}
-
-	InventoryComponent = NewObject<UGridInventoryComponent>(
-		Owner,
-		UGridInventoryComponent::StaticClass()
-	);
-
-	InventoryComponent->RegisterComponent();	
-
-	// 🔥 여기서 ItemInstance의 Sections 정보로 인벤토리 초기화
-	// InventoryComponent->InitializeFromItemInstance(ItemInstance);
 }
