@@ -104,7 +104,9 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
     float NewHealth = FMath::Clamp(CurrentHealth - ActualDamage, 0.0f, MaxHealth);
 
     SetCurrentHealth(NewHealth);
-    OnDamageReceived.Broadcast(ActualDamage, GetOwner()->GetActorLocation());
+
+    FVector HitLocation = DamagedActor ? DamagedActor->GetActorLocation() : FVector::ZeroVector;
+    Multicast_OnDamageReceived(ActualDamage, HitLocation);
     
     if (DamageCauser)
     {
@@ -143,6 +145,11 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
 
         OnDeath.Broadcast();
     }
+}
+
+void UStatComponent::Multicast_OnDamageReceived_Implementation(float DamageAmount, FVector HitLocation)
+{
+    OnDamageReceived.Broadcast(DamageAmount, HitLocation);
 }
 
 void UStatComponent::SetCurrentHealth(float NewHealth)

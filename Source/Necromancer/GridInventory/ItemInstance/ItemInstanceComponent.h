@@ -19,16 +19,15 @@ public:
 	UItemInstanceComponent();
 
 	/** 아이템 인스턴스 초기화 */
-	UFUNCTION(BlueprintCallable, Category = "Item")
-	void Initialize(UItemInstance* InItemInstance);
+	void Initialize(UItemInstance* InItemInstance, TArray<UItemInstance*> Children = TArray<UItemInstance*>());
 
 	/** 컨테이너인지 여부 */
-	bool HasInventory() const { return InventoryComponent != nullptr; }
+	bool HasInventory() const { return false; }
 
-	UGridInventoryComponent* GetInventory() const { return InventoryComponent; }
+	//UGridInventoryComponent* GetInventory() const { return InventoryComponent; }
 	UItemInstance* GetItemInstance() const { return ItemInstance; }
 	int32 GetCurrentDurability() const;
-	void GetAllItemInstances(TArray<UItemInstance*>& OutItems) const;
+	void GetChildItemInstances(TArray<UItemInstance*>& OutItems) const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -47,8 +46,8 @@ private:
 	UItemInstance* ItemInstance = nullptr;
 
 	/** 컨테이너일 경우에만 생성됨 */
-	UPROPERTY()
-	UGridInventoryComponent* InventoryComponent = nullptr;
+	UPROPERTY(Replicated)
+	TArray<UItemInstance*> ChildrenItemInstances;
 
 	void CreateInventoryIfNeeded();
 };

@@ -31,7 +31,7 @@ void UStaminaComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(UStaminaComponent, CurrentStamina);
+    DOREPLIFETIME_CONDITION(UStaminaComponent, CurrentStamina, COND_SkipOwner);
     DOREPLIFETIME(UStaminaComponent, bIsExhausted);
 }
 
@@ -95,13 +95,33 @@ void UStaminaComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
     }
     else
     {
-        CurrentStamina = NewStamina;
-        OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+        if (APlayerState* PS = Cast<APlayerState>(GetOwner()))
+        {
+            if (APawn* OwningPawn = PS->GetPawn())
+            {
+                if (OwningPawn->IsLocallyControlled())
+                {
+                    CurrentStamina = NewStamina;
+                    OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+                }
+            }
+        }
     }
 }
 
 void UStaminaComponent::OnRep_CurrentStamina()
 {
+    if (APlayerState* PS = Cast<APlayerState>(GetOwner()))
+    {
+        if (APawn* OwningPawn = PS->GetPawn())
+        {
+            if (!GetOwner()->HasAuthority() && OwningPawn->IsLocallyControlled())
+            {
+                return;
+            }
+        }
+    }
+
     OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
 }
 

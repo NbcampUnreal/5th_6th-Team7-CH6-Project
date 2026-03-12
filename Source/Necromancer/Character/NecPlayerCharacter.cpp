@@ -25,6 +25,7 @@
 
 #include "WorldActor/Interactable.h"
 #include "WorldActor/InteractableActor.h"
+#include "NiagaraFunctionLibrary.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
@@ -373,8 +374,10 @@ void ANecPlayerCharacter::ToggleMenu(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::TryInteract()
 {
-	if (StatComponent->GetIsDead())
+	if (StatComponent->GetIsDead()) {
+		SoulComponent->TryRevive();
 		return;
+	}
 
 	AActor* Target = CurrentTarget.Get();
 
@@ -390,8 +393,8 @@ void ANecPlayerCharacter::TryInteract()
 		if (!Target) return;
 		if (!Target->Implements<UInteractable>()) return;
 
-		IInteractable::Execute_Interact(Target, this);
-		//Server_TryInteract(Target);
+		//IInteractable::Execute_Interact(Target, this);
+		Server_TryInteract(Target);
 
 	}
 	CleanupInvalidTargets();
@@ -482,7 +485,7 @@ void ANecPlayerCharacter::Multicast_HandleRevive_Implementation()
 	MeshComp->SetCollisionProfileName(TEXT("CharacterMesh"));
 	CapsuleComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
-	StatComponent->SetCurrentHealth(1.f);
+	StatComponent->SetCurrentHealth(50.f);
 }
 
 
@@ -514,6 +517,9 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 
 				UE_LOG(LogTemp, Warning, TEXT("[Server] Successfully linked Component: %s"), *GetName());
 			}
+
+			StatComponent->OnDamageReceived.RemoveDynamic(this, &ANecPlayerCharacter::PlayBloodEffect);
+			StatComponent->OnDamageReceived.AddDynamic(this, &ANecPlayerCharacter::PlayBloodEffect);
 		}
 		InventoryComponent = PS->GetInventoryComponent();
 		if (InventoryComponent) {
@@ -532,6 +538,16 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 			);
 		}
 	}
+}
+
+void ANecPlayerCharacter::PlayBloodEffect(float DamageAmount, FVector HitLocation)
+{
+	if (DamageAmount <= 0.0f || !BloodEffectFX)
+	{
+		return;
+	}
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), BloodEffectFX, HitLocation);
 }
 
 void ANecPlayerCharacter::Server_EquipWeapon_Implementation(AWeapon_Item_Base* WeaponToEquip)

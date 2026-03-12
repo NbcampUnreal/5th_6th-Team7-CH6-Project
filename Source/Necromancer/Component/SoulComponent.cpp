@@ -7,7 +7,7 @@
 
 USoulComponent::USoulComponent()
 {
-    PrimaryComponentTick.bCanEverTick = false;
+    PrimaryComponentTick.bCanEverTick = true;
 
     CurrentHPDrain = BaseHPDrain;
 
@@ -29,45 +29,41 @@ USoulComponent::USoulComponent()
 void USoulComponent::BeginPlay()
 {
     Super::BeginPlay();
+}
 
-    GetWorld()->GetTimerManager().SetTimer(
-        DrainTimer,
-        this,
-        &USoulComponent::HandleDrain,
-        DrainInterval,
-        true
-    );
+void USoulComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+    HandleDrain(DeltaTime);
 }
 
 
-void USoulComponent::HandleDrain()
+void USoulComponent::HandleDrain(float DeltaTime)
 {
-    if (CurrentState == ESoulState::Down)
-        return;
+    float DrainThisFrame = DrainPerTick * DeltaTime;
+    float Used = ActiveBattery.Consume(DrainThisFrame);
 
-    float Used = ActiveBattery.Consume(DrainPerTick);
     if (ActiveBattery.IsEmpty())
     {
         SwapReserveToActive();
     }
+
     if (ActiveBattery.IsEmpty() && ReserveBatteries.Num() == 0)
     {
         EnterDepletedState();
-        OnSoulDepleted.Broadcast();
-        IncreaseHPDrain();
+        IncreaseHPDrain(DeltaTime);
     }
-    else {
+    else
+    {
         if (CurrentState == ESoulState::Depleted)
         {
             CurrentState = ESoulState::Normal;
         }
 
         CurrentHPDrain = FMath::Max(
-            CurrentHPDrain - DrainAcceleration,
+            CurrentHPDrain - (DrainAcceleration * DeltaTime),
             BaseHPDrain
         );
     }
-
     
 }
 
@@ -87,15 +83,18 @@ void USoulComponent::EnterDepletedState()
         return;
 
     CurrentState = ESoulState::Depleted;
+
+    OnSoulDepleted.Broadcast();
 }
 
-void USoulComponent::IncreaseHPDrain()
+void USoulComponent::IncreaseHPDrain(float DeltaTime)
 {
     if (CurrentState != ESoulState::Depleted)
         return;
 
+    // 가속도에도 DeltaTime 적용
     CurrentHPDrain = FMath::Min(
-        CurrentHPDrain + DrainAcceleration,
+        CurrentHPDrain + (DrainAcceleration * DeltaTime),
         MaxHPDrain
     );
 
@@ -103,12 +102,14 @@ void USoulComponent::IncreaseHPDrain()
     if (!OwnerActor)
         return;
 
+    float DamageThisFrame = CurrentHPDrain * DeltaTime;
+
     UGameplayStatics::ApplyDamage(
         OwnerActor,
-        CurrentHPDrain,
+        DamageThisFrame,
         nullptr,
         OwnerActor,
-        nullptr // 필요하면 전용 DamageType 지정
+        nullptr
     );
 }
 
@@ -136,14 +137,6 @@ void USoulComponent::EnterDownState()
     CurrentState = ESoulState::Down;
 
     OnEnterDownState.Broadcast();
-
-    GetWorld()->GetTimerManager().SetTimer(
-        DownTimer,
-        this,
-        &USoulComponent::TryRevive,
-        ReviveWindow,
-        false
-    );
 }
 
 void USoulComponent::TryRevive()
