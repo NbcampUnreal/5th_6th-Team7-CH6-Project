@@ -105,6 +105,9 @@ void AMonsterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// 몬스터 메시에 데칼 투영 차단 (AOE 인디케이터가 메시에 묻는 것 방지)
+	GetMesh()->SetReceivesDecals(false);
+
 	MonsterStatComponent->OnDamageReceived.AddDynamic(this, &AMonsterBase::OnDamageReceived);
 
 	MonsterStatComponent->OnDeath.AddDynamic(this, &AMonsterBase::OnDeath);

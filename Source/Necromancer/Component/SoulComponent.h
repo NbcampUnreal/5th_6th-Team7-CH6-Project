@@ -83,7 +83,7 @@ private:
     /* ===== Drain ===== */
 
     UPROPERTY(EditAnywhere)
-    float DrainPerTick = 5.f;
+    float DrainPerTick = 0.f;
 
     UPROPERTY(EditAnywhere)
     float DrainInterval = 0.2f;
