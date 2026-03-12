@@ -89,6 +89,9 @@ EBTNodeResult::Type UBTTask_BossAction::ExecuteTask(UBehaviorTreeComponent& Owne
 		Boss->SetSuperArmor(true);
 	}
 
+	// 공격 중 대기 사운드 중지
+	Boss->SetIdleSoundActive(false);
+
 	// 타입별 실행
 	switch (SelectedAction->ActionType)
 	{
@@ -327,6 +330,7 @@ void UBTTask_BossAction::CleanupAttackState(UBehaviorTreeComponent* OwnerComp)
 			{
 				Boss->RestoreMovementIfAlive();
 				Boss->SetSuperArmor(false);
+				Boss->SetIdleSoundActive(true);
 			}
 			else if (ACharacter* Char = Cast<ACharacter>(Pawn))
 			{

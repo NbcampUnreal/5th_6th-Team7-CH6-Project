@@ -5,7 +5,8 @@
 #include "CoreMinimal.h"
 #include "GenericTeamAgentInterface.h"
 #include "GameFramework/Character.h"
-#include "Net/UnrealNetwork.h" 
+#include "Components/AudioComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "MonsterBase.generated.h"
 
 class UMonsterStatComponent;
@@ -150,4 +151,21 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	bool IsBlocking() const { return bIsBlocking; }
+
+	// 대기 사운드 제어 (전투 시 중지, 순찰/대기 시 재개)
+	void SetIdleSoundActive(bool bActive);
+
+protected:
+	// 대기 사운드 (루핑용 SoundCue/SoundWave)
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	TObjectPtr<USoundBase> IdleSound;
+
+	// 대기 사운드 볼륨
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	float IdleSoundVolume = 1.0f;
+
+private:
+	// 대기 사운드 AudioComponent
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> IdleAudioComp;
 };
