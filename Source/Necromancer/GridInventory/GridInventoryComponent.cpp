@@ -8,6 +8,8 @@
 #include "Engine/ActorChannel.h"
 #include "GameFramework/PlayerState.h"
 
+
+
 // Sets default values for this component's properties
 UGridInventoryComponent::UGridInventoryComponent()
 {
@@ -119,23 +121,39 @@ void UGridInventoryComponent::LoadItemsFromSaveData(const TArray<FItemInstanceSa
     RebuildItemOwnerMap();
 }
 
+
+
 void UGridInventoryComponent::OnRep_Items()
 {
-   // if (bInventoryActive)
+    for (UItemInstance* Item : Items)
     {
-        RebuildItemOwnerMap();
-        OnInventoryUpdated.Broadcast();
+        if (Item) Item->OnItemUpdated.RemoveAll(this);
     }
+
+    // 2. 복제된 새 아이템들에 대해 로컬에서 바인딩 수행
+    for (UItemInstance* Item : Items)
+    {
+        RegisterItemEvents(Item);
+    }
+
+    // 3. UI 갱신
+    MarkInventoryDirty();
 }
 
-void UGridInventoryComponent::HandleItemChanged(UItemInstance* Item)
+void UGridInventoryComponent::HandleItemChanged()
 {
     RebuildItemOwnerMap();
     OnInventoryUpdated.Broadcast();
 }
 
 void UGridInventoryComponent::SetInventory(const TArray<UItemInstance*>& InItems) {
+    for (UItemInstance* Item : Items) { if (Item) Item->OnItemUpdated.RemoveAll(this); }
+
     Items = InItems;
+
+    for (UItemInstance* Item : Items) { RegisterItemEvents(Item); }
+
+    MarkInventoryDirty();
     RebuildItemOwnerMap();
 }
 
@@ -157,12 +175,6 @@ bool UGridInventoryComponent::FindInventoryContainer(
         return true;
     }
     return false;
-}
-
-void UGridInventoryComponent::Client_UpdateItem_Implementation()
-{
-    RebuildItemOwnerMap();
-    OnInventoryUpdated.Broadcast();
 }
 
 void UGridInventoryComponent::AddRootItem(UItemInstance* NewItem)
@@ -448,9 +460,9 @@ void UGridInventoryComponent::Implement_AddRootItem(UItemInstance*& NewItem)
         Items.Add(NewItem);
     }
     NewItem->OwnerItemGuid = FGuid();
-   
-   //RebuildItemOwnerMap();
-   //OnInventoryUpdated.Broadcast();
+    RegisterItemEvents(NewItem);
+
+    MarkInventoryDirty();
 }
 
 void UGridInventoryComponent::Server_AddItemToPos_Implementation(UItemInstance* NewItem, 
@@ -473,7 +485,7 @@ void UGridInventoryComponent::Implement_AddItemToPos(
     {
         return;
     }
-
+    
     RebuildItemOwnerMap();
 
     if (!CanAddItemToPos(
@@ -496,25 +508,18 @@ void UGridInventoryComponent::Implement_AddItemToPos(
         }
     }
 
-    Items.RemoveAll([NewItem](UItemInstance* Item)
-        {
-            return Item && NewItem && Item->InstanceID == NewItem->InstanceID;
-        });
+    Items.Remove(NewItem);
 
-    UItemInstance* NewItemInstance = NewObject<UItemInstance>(this);
-    Items.Add(NewItem);
-
-    // 인벤토리 위치 직접 설정
     NewItem->OwnerItemGuid = ContainerGuid;
     NewItem->RowIndex = InRowIndex;
     NewItem->SectionIndex = InSectionIndex;
     NewItem->PosX = InPosX;
     NewItem->PosY = InPosY;
 
-    TArray<UItemInstance*> TempItems = Items;
-    Items = TempItems;
-    //RebuildItemOwnerMap();
-    //OnInventoryUpdated.Broadcast();
+    Items.Add(NewItem);
+    RegisterItemEvents(NewItem);
+
+    MarkInventoryDirty();
 }
 
 //자식 아이템 추가
@@ -629,7 +634,7 @@ void UGridInventoryComponent::Implement_RemoveItem(UItemInstance*& Item)
     {
         Items.Remove(Child);
     }
-
+    Item->OnItemUpdated.Clear();
     Items.Remove(Item);
 
     Item->OwnerItemGuid.Invalidate();
@@ -638,8 +643,7 @@ void UGridInventoryComponent::Implement_RemoveItem(UItemInstance*& Item)
     Item->PosX = 0;
     Item->PosY = 0;
 
-    //RebuildItemOwnerMap();
-    //OnInventoryUpdated.Broadcast();
+    MarkInventoryDirty();
 }
 
 void UGridInventoryComponent::GetAllChildrenRecursive(const FGuid& ParentGuid, TArray<UItemInstance*>& OutChildren) const
@@ -655,4 +659,17 @@ void UGridInventoryComponent::GetAllChildrenRecursive(const FGuid& ParentGuid, T
             }
         }
     }
+}
+
+void UGridInventoryComponent::RegisterItemEvents(UItemInstance* Item)
+{
+    if (!Item) return;
+    Item->OnItemUpdated.RemoveAll(this);
+    Item->OnItemUpdated.AddDynamic(this, &UGridInventoryComponent::HandleItemChanged);
+}
+
+void UGridInventoryComponent::MarkInventoryDirty()
+{
+    RebuildItemOwnerMap();
+    OnInventoryUpdated.Broadcast();
 }

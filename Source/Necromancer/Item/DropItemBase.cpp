@@ -117,7 +117,6 @@ void ADropItemBase::Interact_Internal(AActor* Interactor)
         {
             Inventory->AddChildItems(TempChildItems);
         }
-        Inventory->Client_UpdateItem();
 
         HandleDestroyed();
     }    
