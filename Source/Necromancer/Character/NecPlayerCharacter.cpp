@@ -374,8 +374,10 @@ void ANecPlayerCharacter::ToggleMenu(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::TryInteract()
 {
-	if (StatComponent->GetIsDead())
+	if (StatComponent->GetIsDead()) {
+		SoulComponent->TryRevive();
 		return;
+	}
 
 	AActor* Target = CurrentTarget.Get();
 
@@ -483,7 +485,7 @@ void ANecPlayerCharacter::Multicast_HandleRevive_Implementation()
 	MeshComp->SetCollisionProfileName(TEXT("CharacterMesh"));
 	CapsuleComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
-	StatComponent->SetCurrentHealth(1.f);
+	StatComponent->SetCurrentHealth(50.f);
 }
 
 

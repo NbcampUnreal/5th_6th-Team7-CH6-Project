@@ -330,7 +330,10 @@ void UNecInventoryComponent::DropItemInWorld_Internal(UItemInstance* DropItem)
 		SpawnRotation,
 		SpawnParams
 	);
-	Cast<ADropItemBase>(SpawnedItem)->GetItemInstanceComponent()->Initialize(DropItem);
+
+	TArray<UItemInstance*> AllChildItems;
+	GetAllChildrenRecursive(DropItem->InstanceID, AllChildItems);
+	Cast<ADropItemBase>(SpawnedItem)->GetItemInstanceComponent()->Initialize(DropItem, AllChildItems);
 	return;
 }
 
@@ -597,7 +600,9 @@ void UNecInventoryComponent::UnequipItem_Internal(EEquipmentSlot Slot)
 	APlayerState* PS = Cast<APlayerState>(GetOwner());
 	if (!PS) return;
 	ACharacter* OwnerCharacter = Cast<ACharacter>(PS->GetPawn());
-	OwnerCharacter->GetMesh()->SetVisibility(true, true);
+	if (OwnerCharacter) {
+		OwnerCharacter->GetMesh()->SetVisibility(true, true);
+	}
 }
 
 void UNecInventoryComponent::Server_EquipItem_Implementation(UItemInstance* EquipItem)

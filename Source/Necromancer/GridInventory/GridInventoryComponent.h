@@ -64,6 +64,9 @@ public:
     void GetInventory(TArray<UItemInstance*>& OutItems) const;
 
     UFUNCTION(BlueprintCallable)
+    void GetAllChildrenRecursive(const FGuid& ParentGuid, TArray<UItemInstance*>& OutChildren) const;
+
+    UFUNCTION(BlueprintCallable)
     bool FindInventoryContainer(FGuid ContainerId, TArray<UItemInstance*>& OutItems);
 
     UFUNCTION(Client, Reliable)
@@ -88,6 +91,11 @@ public:
         const FGuid& ContainerGuid
     );
 
+    UFUNCTION(BlueprintCallable)
+    void AddChildItems(
+        TArray<UItemInstance*> NewChildItems
+    );
+
 private:
     UFUNCTION(BlueprintCallable)
     bool CanAddItemToPos(UItemInstance* NewItem,
@@ -104,6 +112,7 @@ private:
         int32& OutSectionIndex,
         int32& OutPosX,
         int32& OutPosY);
+
     UFUNCTION(Server, Reliable)
     void Server_AddRootItem(UItemInstance* NewItem);
     void Implement_AddRootItem(UItemInstance*& NewItem);
@@ -122,6 +131,14 @@ private:
         int32 InRowIndex,
         int32 InSectionIndex, 
         int32 InPosX, int32 InPosY);
+
+    UFUNCTION(Server, Reliable)
+    void Server_AddChildItems(
+        const TArray<UItemInstance*>& NewChildItems
+    );
+    void Implement_AddChildItems(
+        const TArray<UItemInstance*>& NewChildItems
+    );
 #pragma endregion
 
 #pragma region RemoveItem
