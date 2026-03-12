@@ -36,6 +36,9 @@ protected:
         FReplicationFlags* RepFlags
     ) override;
 
+    void RegisterItemEvents(UItemInstance* Item);
+
+    void MarkInventoryDirty();
 private:
     bool  bInventoryActive;
 
@@ -48,6 +51,8 @@ private:
     TArray<FItemInstanceSaveData> SavedItems;
 
     TMap<FGuid, TArray<UItemInstance*>> ItemsByOwnerGuid;
+
+    
 public:
     virtual void RebuildItemOwnerMap();    
 
@@ -56,8 +61,8 @@ public:
 public:
     UFUNCTION()
     void OnRep_Items();
-
-    void HandleItemChanged(UItemInstance* Item);
+    UFUNCTION()
+    void HandleItemChanged();
 
     virtual void SetInventory(const TArray<UItemInstance*>& InItems);
 
@@ -68,9 +73,6 @@ public:
 
     UFUNCTION(BlueprintCallable)
     bool FindInventoryContainer(FGuid ContainerId, TArray<UItemInstance*>& OutItems);
-
-    UFUNCTION(Client, Reliable)
-    void Client_UpdateItem();
 #pragma region AddItem
 public:
     UFUNCTION(BlueprintCallable)
@@ -96,7 +98,7 @@ public:
         TArray<UItemInstance*> NewChildItems
     );
 
-private:
+protected:
     UFUNCTION(BlueprintCallable)
     bool CanAddItemToPos(UItemInstance* NewItem,
         const FGuid& ContainerGuid,
