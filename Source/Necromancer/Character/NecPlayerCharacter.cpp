@@ -393,8 +393,8 @@ void ANecPlayerCharacter::TryInteract()
 		if (!Target) return;
 		if (!Target->Implements<UInteractable>()) return;
 
-		IInteractable::Execute_Interact(Target, this);
-		//Server_TryInteract(Target);
+		//IInteractable::Execute_Interact(Target, this);
+		Server_TryInteract(Target);
 
 	}
 	CleanupInvalidTargets();
