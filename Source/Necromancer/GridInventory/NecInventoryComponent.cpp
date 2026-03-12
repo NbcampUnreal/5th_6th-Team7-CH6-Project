@@ -206,7 +206,6 @@ void UNecInventoryComponent::DropItemInWorld(UItemInstance* DropItem)
 
 void UNecInventoryComponent::RebuildItemOwnerMap()
 {
-	Super::RebuildItemOwnerMap();
 	ValidateEquipmentSlot(HeadItem, HeadActor);
 	ValidateEquipmentSlot(BodyItem, BodyActor);
 	ValidateEquipmentSlot(LegsItem, LegsActor);
@@ -215,7 +214,8 @@ void UNecInventoryComponent::RebuildItemOwnerMap()
 	UItemInstance* PrevWeaponItem = WeaponItem;
 	ValidateEquipmentSlot(WeaponItem, WeaponActor);
 	OnEquipmentUpdated.Broadcast(WeaponActor);
-	
+
+	Super::RebuildItemOwnerMap();	
 }
 
 void UNecInventoryComponent::Server_AddNecInventory_Implementation(AActor* NewItemActor)
@@ -337,7 +337,7 @@ void UNecInventoryComponent::DropItemInWorld_Internal(UItemInstance* DropItem)
 	return;
 }
 
-inline void UNecInventoryComponent::ValidateEquipmentSlot(UItemInstance*& SlotItem, AActor*& SlotActor)//인스턴스가 아닌 슬롯을 받아와서 수정하는 것이 필요// 나중에 수정
+void UNecInventoryComponent::ValidateEquipmentSlot(UItemInstance*& SlotItem, AActor*& SlotActor)//인스턴스가 아닌 슬롯을 받아와서 수정하는 것이 필요// 나중에 수정
 {
 	bool bInvalid = false;
 
@@ -488,8 +488,8 @@ void UNecInventoryComponent::UnequipItem(EEquipmentSlot Slot)
 	{
 		Server_UnequipItem(Slot);
 	}
-	RebuildItemOwnerMap();
-	OnInventoryUpdated.Broadcast();
+	//RebuildItemOwnerMap();
+	//OnInventoryUpdated.Broadcast();
 }
 
 void UNecInventoryComponent::SetEquipmentItem(EEquipmentSlot Slot, UItemInstance* NewItem)
@@ -582,7 +582,8 @@ void UNecInventoryComponent::EquipItem_Internal(UItemInstance* EquipItem)
 
 	SetEquipmentItem(TargetSlot, EquipItem);
 	SetEquipmentActor(TargetSlot, SpawnedActor);
-	AddRootItem(EquipItem);	
+	Implement_AddRootItem(EquipItem);
+
 }
 
 void UNecInventoryComponent::UnequipItem_Internal(EEquipmentSlot Slot)
@@ -603,6 +604,7 @@ void UNecInventoryComponent::UnequipItem_Internal(EEquipmentSlot Slot)
 	if (OwnerCharacter) {
 		OwnerCharacter->GetMesh()->SetVisibility(true, true);
 	}
+
 }
 
 void UNecInventoryComponent::Server_EquipItem_Implementation(UItemInstance* EquipItem)
