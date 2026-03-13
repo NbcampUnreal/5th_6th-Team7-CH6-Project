@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -17,41 +17,40 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	// ���� �� ���� �Լ�
+	// 占쏙옙占쏙옙 占쏙옙 占쏙옙占쏙옙 占쌉쇽옙
 	UFUNCTION(BlueprintCallable, Category = "Room")
 	void SpawnStartRoom();
 
-	// ���� �� ���� �Լ� 
+	// 占쏙옙占쏙옙 占쏙옙 占쏙옙占쏙옙 占쌉쇽옙 
 	UFUNCTION(BlueprintCallable, Category = "Room")
 	void SpawnNextRoom();
 
 	UFUNCTION(BlueprintCallable, Category = "Room")
 	void SpawnEndRoom();
 
-<<<<<<< HEAD
-	// ��ġ�� �� �迭�� ���
-=======
+
+	// 占쏙옙치占쏙옙 占쏙옙 占썼열占쏙옙 占쏙옙占?
+
 	UFUNCTION(BlueprintCallable, Category = "Room")
 	void SpawnBossRoom();
 
-	// ��ġ�� �� �迭�� ���
->>>>>>> LDG
+	// 겹치는 방 배열에 담기
 	UFUNCTION(BlueprintCallable, Category = "Overlap")
 	void AddOverlappingRoomToList();
 
-	// ��ġ�� �� ����
+	// 占쏙옙치占쏙옙 占쏙옙 占쏙옙占쏙옙
 	UFUNCTION(BlueprintCallable, Category = "Overlap")
 	void CheckForOverlap();
 
-	// �� ���� �Լ�
+	// 占쏙옙 占쏙옙占쏙옙 占쌉쇽옙
 	UFUNCTION(BlueprintCallable, Category = "Door")
 	void SpawnDoor();
 
-	// ���� ����
+	// 占쏙옙占쏙옙 占쏙옙占쏙옙
 	UFUNCTION(BlueprintCallable, Category = "Wall")
 	void CloseHoles();
 
-	// ���� Ÿ�̸� �Լ�
+	// 占쏙옙占쏙옙 타占싱몌옙 占쌉쇽옙
 	UFUNCTION(BlueprintCallable, Category = "Timer")
 	void StartDungeonTimer();
 
@@ -62,19 +61,19 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* Root;
 
-	// ������
+	// 占쏙옙占쏙옙占쏙옙
 	FTimerHandle DelayTimerHandle;
 	void StartDelay();
 	void OnDelayComplete();
 
-	// ��������Ʈ�� RandomArrayItemFromStream ����
+	// 占쏙옙占쏙옙占쏙옙占쏙옙트占쏙옙 RandomArrayItemFromStream 占쏙옙占쏙옙
 	TSubclassOf<AActor> RandomArrayItemFromRoom(const TArray<TSubclassOf<AActor>>& Array);
 
 	USceneComponent* RandomArrayItemFromArrow(const TArray<USceneComponent*>& Array);
 
 	bool GetbIsDungeonComplete() { return bIsDungeonComplete; }
 
-	// 생성된 모든 방의 중심 위치 반환 (보스 순찰용)
+	// ?앹꽦??紐⑤뱺 諛⑹쓽 以묒떖 ?꾩튂 諛섑솚 (蹂댁뒪 ?쒖같??
 	UFUNCTION(BlueprintCallable, Category = "Dungeon")
 	const TArray<FVector>& GetRoomLocations() const { return RoomLocations; }
 
@@ -82,86 +81,83 @@ protected:
 	UPROPERTY(BlueprintReadWrite);
 	bool bIsDungeonComplete = false;
 
-	// ��ġ�� ��
+	// 占쏙옙치占쏙옙 占쏙옙
 	UPROPERTY(BlueprintReadWrite, Category = "Rooms");
 	AActor* LatestRoom;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Seed");
 	int32 RoomAmount = 20;
 
-	// �� ����
+	// 占쏙옙 占쏙옙占쏙옙
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Seed");
 	int32 RoomCount = 0;
 
-	// ���� �� ���� ����
+	// 占쏙옙占쏙옙 占쏙옙 占쏙옙占쏙옙 占쏙옙占쏙옙
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TSubclassOf<AActor> StartRoom;
 
-	// ������ �� ���� ����
+	// 占쏙옙占쏙옙占쏙옙 占쏙옙 占쏙옙占쏙옙 占쏙옙占쏙옙
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TSubclassOf<AActor> EndRoom;
 
-<<<<<<< HEAD
-	// ���� ����
-=======
-	// ���� �� ���� ����
+
+	// 보스 방 담을 변수
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TSubclassOf<AActor> BossRoom;
 
-	// ���� ����
->>>>>>> LDG
+	// 구멍 막기
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Holes");
 	TSubclassOf<AActor> BlockHoles;
 
-	// �� �迭 ���̽�
+	// 占쏙옙 占썼열 占쏙옙占싱쏙옙
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<AActor>>RoomListBase;
 
-	//  �� �迭 temp
+	//  占쏙옙 占썼열 temp
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<AActor>>RoomList;
 
-	// Ư�� �� �迭
+	// 특占쏙옙 占쏙옙 占썼열
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<AActor>>SpecialRoomList;
 
-	// �� ��ġ�� Arrow ���� �迭 
+	// 占쏙옙 占쏙옙치占쏙옙 Arrow 占쏙옙占쏙옙 占썼열 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Door")
 	TArray<USceneComponent*>DoorList;
 
-	// ��
+	// 占쏙옙
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Door")
 	TArray<TSubclassOf<AActor>>DoorActor;
 
-	// ���� �ⱸ Arrow Component�� ���� �迭
+	// 占쏙옙占쏙옙 占썩구 Arrow Component占쏙옙 占쏙옙占쏙옙 占썼열
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exits")
 	TArray<USceneComponent*>ExitsList;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exits")
 	TArray<USceneComponent*>SecondFExitsList;
 
-	// �� ��ġ�� ���õ� ArrowComponent
+	// 占쏙옙 占쏙옙치占쏙옙 占쏙옙占시듸옙 ArrowComponent
 	USceneComponent* SelectedExitPoint;
 
-	// �ڽ� �ݸ����� ���� �迭
+	// 占쌘쏙옙 占쌥몌옙占쏙옙占쏙옙 占쏙옙占쏙옙 占썼열
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Overlapped")
 	TArray<UPrimitiveComponent*>OverlappedList;
 
-	// ���� Ÿ�̸� ����
+	// 占쏙옙占쏙옙 타占싱몌옙 占쏙옙占쏙옙
 	FTimerHandle DungeonTimerHandle;
 
-	// �ִ� �ð�
+	// 占쌍댐옙 占시곤옙
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Timer")
 	float MaxDungeonTime = 30.0f;
 
-	// �ð� ���� �Լ�
+	// 占시곤옙 占쏙옙占쏙옙 占쌉쇽옙
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Timer")
 	float DungeonStartTime = 0.0f;
 
-	// �ٽ� ������ ����
+	// 占쌕쏙옙 占쏙옙占쏙옙占쏙옙 占쏙옙占쏙옙
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level")
 	FName LevelName = "SampleLevel";
 
-	// 생성된 모든 방의 중심 위치 (보스 순찰용)
+	// ?앹꽦??紐⑤뱺 諛⑹쓽 以묒떖 ?꾩튂 (蹂댁뒪 ?쒖같??
 	TArray<FVector> RoomLocations;
 };
