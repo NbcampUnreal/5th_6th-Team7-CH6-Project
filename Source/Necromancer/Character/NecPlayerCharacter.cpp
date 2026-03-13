@@ -109,7 +109,7 @@ FString ANecPlayerCharacter::GetEnumText(ENetRole _Role)
 
 void ANecPlayerCharacter::ReplicateRemoteViewRot()
 {
-	if (HasAuthority() && IsLocallyControlled())
+	if (HasAuthority())
 	{
 		RemoteViewRot = GetControlRotation();
 	}
