@@ -179,6 +179,32 @@ void ANecDungeonsGenerator::SpawnEndRoom()
 	}
 }
 
+void ANecDungeonsGenerator::SpawnBossRoom()
+{
+	if (HasAuthority())
+	{
+		// ·£´ý Ãâ±¸
+		if (ExitsList.Num() == 0)
+		{
+			return;
+		}
+		SelectedExitPoint = RandomArrayItemFromArrow(ExitsList);
+
+		// ½ºÆù À§Ä¡ 
+		FTransform SpawnTransform = SelectedExitPoint->GetComponentTransform();
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		// ¾×ÅÍ »ý¼ºÇÏ°í º¯¼ö¿¡ ÀúÀå
+		LatestRoom = GetWorld()->SpawnActor<AActor>(BossRoom, SpawnTransform, SpawnParams);
+	}
+	else
+	{
+		return;
+	}
+}
+
 void ANecDungeonsGenerator::AddOverlappingRoomToList()
 {
 	if (HasAuthority())
@@ -301,9 +327,15 @@ void ANecDungeonsGenerator::CheckForOverlap()
 		}
 		else
 		{
+<<<<<<< HEAD
 
 
 			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+=======
+			// º¸½º ¹æ »ý¼º
+			SpawnBossRoom();
+			// ¸¶Áö¸· ¹æ »ý¼º
+>>>>>>> LDG
 			SpawnEndRoom();
 			// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			CloseHoles();
