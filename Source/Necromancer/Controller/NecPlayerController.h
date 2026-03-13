@@ -97,6 +97,15 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_HandleDeath(AActor* TargetToSpectate);
 
+	UFUNCTION(Server, Reliable)
+	void Server_RequestSpectatingTarget();
+
+	/// <summary>
+	/// Client_HandleDeath() || UpdateSpectateRotation() 에서 호출
+	/// </summary>
+	/// <param name="TargetToSpectate"></param>
+	void SetSpectateTargetInternal(AActor* TargetToSpectate);
+
 	void UpdateSpectateRotation();
 
 protected:

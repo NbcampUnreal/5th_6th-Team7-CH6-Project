@@ -188,6 +188,7 @@ void ANecPlayerController::Server_NotifyDeath_Implementation()
 	}
 }
 
+// 이거 이름 바꾸는게 나을듯? 클라이언트_핸들 SetSpectating? 
 void ANecPlayerController::Client_HandleDeath_Implementation(AActor* TargetToSpectate)
 {
 	if (!IsLocalController()) return;
@@ -195,29 +196,39 @@ void ANecPlayerController::Client_HandleDeath_Implementation(AActor* TargetToSpe
 	AGameStateBase* GS = GetWorld()->GetGameState();
 	if (GS)
 	{
-		FTimerHandle TimerHandle;
-		GetWorldTimerManager().SetTimer(TimerHandle, [this, TargetToSpectate]()
+		GetWorldTimerManager().SetTimer(SpectateRotationTimerHandle, [this, TargetToSpectate]()
 			{
-				ANecPlayerCharacter* TargetCharacter = Cast<ANecPlayerCharacter>(TargetToSpectate);
-				if (TargetCharacter)
-				{
-					SpectatingTarget = TargetToSpectate;
-					CurSpectatingTargetState = TargetCharacter->GetPlayerState<ANecPlayerState>();
-
-					bAutoManageActiveCameraTarget = true;
-					this->SetViewTargetWithBlend(TargetToSpectate, 0.5f);
-
-					GetWorldTimerManager().ClearTimer(SpectateRotationTimerHandle);
-
-					GetWorldTimerManager().SetTimer(
-						SpectateRotationTimerHandle,
-						this,
-						&ANecPlayerController::UpdateSpectateRotation,
-						0.02f,
-						true
-					);
-				}
+				SetSpectateTargetInternal(TargetToSpectate);
 			}, 0.2f, false);
+	}
+}
+
+void ANecPlayerController::Server_RequestSpectatingTarget_Implementation()
+{
+	if (ANecGameMode* NecGM = Cast<ANecGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		NecGM->Server_ReqeustSpectatingTarget(this, SpectatingTarget, true);
+	}
+}
+
+void ANecPlayerController::SetSpectateTargetInternal(AActor* TargetToSpectate)
+{
+	ANecPlayerCharacter* TargetCharacter = Cast<ANecPlayerCharacter>(TargetToSpectate);
+	if (TargetCharacter)
+	{
+		SpectatingTarget = TargetToSpectate;
+		CurSpectatingTargetState = TargetCharacter->GetPlayerState<ANecPlayerState>();
+
+		bAutoManageActiveCameraTarget = true;
+		this->SetViewTargetWithBlend(TargetToSpectate, 0.5f);
+
+		GetWorldTimerManager().SetTimer(
+			SpectateRotationTimerHandle,
+			this,
+			&ANecPlayerController::UpdateSpectateRotation,
+			0.02f,
+			true
+		);
 	}
 }
 
@@ -248,16 +259,19 @@ void ANecPlayerController::UpdateSpectateRotation()
 
 				TargetCharacter->bUseControllerRotationYaw = false;
 			}
-			SetControlRotation(TargetRot);
 		}
 		else
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Current TargetPawnState->GetStatComponent()-> is dead "));
+
+			GetWorldTimerManager().ClearTimer(SpectateRotationTimerHandle);
+
+			Server_RequestSpectatingTarget();
 		}
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Current TargetPawnState->GetStatComponent()-> is dead -> SpectateRotationTimerHandle "));
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("not IsLocalController() && SpectatingTarget && CurSpectatingTargetState"));
 		GetWorldTimerManager().ClearTimer(SpectateRotationTimerHandle);
 	}
 }
