@@ -28,7 +28,14 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Room")
 	void SpawnEndRoom();
 
+<<<<<<< HEAD
 	// ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ ï¿½è¿­ï¿½ï¿½ ï¿½ï¿½ï¿½
+=======
+	UFUNCTION(BlueprintCallable, Category = "Room")
+	void SpawnBossRoom();
+
+	// °ãÄ¡´Â ¹æ ¹è¿­¿¡ ´ã±â
+>>>>>>> LDG
 	UFUNCTION(BlueprintCallable, Category = "Overlap")
 	void AddOverlappingRoomToList();
 
@@ -94,7 +101,15 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TSubclassOf<AActor> EndRoom;
 
+<<<<<<< HEAD
 	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+=======
+	// º¸½º ¹æ ´ãÀ» º¯¼ö
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
+	TSubclassOf<AActor> BossRoom;
+
+	// ±¸¸Û ¸·±â
+>>>>>>> LDG
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Holes");
 	TSubclassOf<AActor> BlockHoles;
 
