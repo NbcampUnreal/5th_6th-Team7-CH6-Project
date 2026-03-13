@@ -146,6 +146,10 @@ void AWorldActorSpawnManager::StartSpawning()
 						break;
 					}
 
+					FVector RandomOffset = GetRandomSpawnOffset(SpawnRadius);
+
+					FVector SpawnLocation = Location + RandomOffset;
+
 					Params.SpawnCollisionHandlingOverride =
 						ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
@@ -254,6 +258,10 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 				break;
 			}
 
+			FVector RandomOffset = GetRandomSpawnOffset(60.f);
+
+			FVector SpawnLocation = Location + RandomOffset;
+
 			SubmitActor = World->SpawnActor<AActor>(
 				WorldActorInfo->WorldActorClass,
 				Location,
@@ -311,3 +319,5 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 	}
 	CurrentSpawnIndex++;
 }
+
+

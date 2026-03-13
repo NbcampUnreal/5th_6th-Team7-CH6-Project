@@ -1,4 +1,3 @@
-#include "NecSaveGameSubsystem.h"
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
@@ -47,6 +46,10 @@ int32 UNecSaveGameSubsystem::GetProfileKillCount()
     return ProfileSaveGame->TotalKillCount;
 }
 
+
+
+
+
 void UNecSaveGameSubsystem::InitSessionSaveGame(int32 SlotIdx = -1)
 {
     // New Game
@@ -84,9 +87,4 @@ void UNecSaveGameSubsystem::IncreaseLvDepth()
 int32 UNecSaveGameSubsystem::GetLvDepth()
 {
     return SessionSaveGame->LvDepth;
-}
-
-int32 UNecSaveGameSubsystem::GetRewardScale()
-{
-    return SessionSaveGame->LvDepth * 1000;
 }
