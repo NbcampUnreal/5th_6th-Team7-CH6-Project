@@ -249,6 +249,11 @@ void ANecPlayerCharacter::OnRep_PlayerState()
 
 void ANecPlayerCharacter::Move(const FInputActionValue& Value)
 {
+	if (IsValid(CombatComponent) && CombatComponent->IsAttacking())
+	{
+		return;
+	}
+
 	if (IsValid(PlayerMovementComponent))
 	{
 		PlayerMovementComponent->ProcessMove(Value.Get<FVector2D>());
