@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Engine/DataTable.h"
 #include "GridInventory/ItemData/ItemData.h"
 #include "ItemDataSubsystem.generated.h"
 
@@ -28,10 +29,12 @@ public:
     const FItemData* GetRandomItemData() const;
 
 private:
-    UPROPERTY(EditDefaultsOnly)
+    UPROPERTY(EditDefaultsOnly, Category = "DataTable")
     TSoftObjectPtr<UDataTable> ItemTable;
-    UPROPERTY(EditDefaultsOnly)
+
+    UPROPERTY(EditDefaultsOnly, Category = "DataTable")
     TSoftObjectPtr<UDataTable> DropTable;
-    UPROPERTY(EditDefaultsOnly)
+
+    UPROPERTY(EditDefaultsOnly, Category = "DataTable")
     TSoftObjectPtr<UDataTable> ActorTable;
 };

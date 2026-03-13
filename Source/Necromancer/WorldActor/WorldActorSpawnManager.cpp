@@ -9,6 +9,16 @@
 #include "EngineUtils.h"
 
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
+
+static FVector GetRandomSpawnOffset(float Radius)
+{
+	return FVector(
+		FMath::RandRange(-Radius, Radius),
+		FMath::RandRange(-Radius, Radius),
+		FMath::RandRange(20.f, 60.f)
+	);
+}
+
 // Sets default values
 AWorldActorSpawnManager::AWorldActorSpawnManager()
 {
@@ -38,7 +48,7 @@ void AWorldActorSpawnManager::CheckDungeonComplete()
 void AWorldActorSpawnManager::StartSpawning()
 {
 	CollectAllSpawnEntries();
-
+	UE_LOG(LogTemp, Warning, TEXT("SpawnQueue Count: %d"), SpawnQueue.Num());
 	CurrentSpawnCost = 0;
 
 	if (SpawnQueue.Num() == 0)
@@ -125,7 +135,9 @@ void AWorldActorSpawnManager::StartSpawning()
 					{
 						UE_LOG(LogTemp, Warning, TEXT("Spawn skipped: Cost limit reached (%d/%d)"),
 							CurrentSpawnCost, MaxSpawnCost);
-						break;
+
+						CurrentSpawnIndex++;
+						return;
 					}
 
 					if (!ItemData->DropItemActorClass)
@@ -133,6 +145,15 @@ void AWorldActorSpawnManager::StartSpawning()
 						UE_LOG(LogTemp, Warning, TEXT("Spawn failed: DropItemActorClass is null"));
 						break;
 					}
+
+					FVector RandomOffset = GetRandomSpawnOffset(SpawnRadius);
+
+					FVector SpawnLocation = Location + RandomOffset;
+
+					Params.SpawnCollisionHandlingOverride =
+						ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+					Params.Owner = this;
 
 					SubmitActor = World->SpawnActor<AActor>(
 						ItemData->DropItemActorClass,
@@ -149,10 +170,6 @@ void AWorldActorSpawnManager::StartSpawning()
 				}
 				}
 			}
-		}
-		for (int32 i = 0; i < SpawnQueue.Num(); i++)
-		{
-			CurrentSpawnIndex = i;
 		}
 	}
 	else
@@ -240,6 +257,10 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 				UE_LOG(LogTemp, Warning, TEXT("Spawn failed: WorldActorClass is null"));
 				break;
 			}
+
+			FVector RandomOffset = GetRandomSpawnOffset(60.f);
+
+			FVector SpawnLocation = Location + RandomOffset;
 
 			SubmitActor = World->SpawnActor<AActor>(
 				WorldActorInfo->WorldActorClass,

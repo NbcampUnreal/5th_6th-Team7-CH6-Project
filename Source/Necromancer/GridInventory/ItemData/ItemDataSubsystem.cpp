@@ -2,6 +2,7 @@
 
 
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
+#include "Engine/DataTable.h"
 
 UDataTableSubsystem::UDataTableSubsystem()
 {
@@ -21,6 +22,22 @@ void UDataTableSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
 
+    UE_LOG(LogTemp, Warning, TEXT("DataTableSubsystem Initialized"));
+
+    if (!ItemTable)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ItemTable is NULL"));
+    }
+
+    if (!DropTable)
+    {
+        UE_LOG(LogTemp, Error, TEXT("DropTable is NULL"));
+    }
+
+    if (!ActorTable)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ActorTable is NULL"));
+    }
     
 }
 
@@ -32,14 +49,15 @@ bool UDataTableSubsystem::GetItemData(FName ItemID, FItemData& OutItemData) cons
         return false;
     }
 
-    if (const FItemData* FoundData =
-        ItemTable->FindRow<FItemData>(ItemID, TEXT("GetItemData")))
+    const FItemData* FoundData = ItemTable->FindRow<FItemData>(ItemID, TEXT("GetItemData"));
+
+    if (FoundData)
     {
-        OutItemData = *FoundData; // 복사
+        OutItemData = *FoundData;
         return true;
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("ItemDataSubsystem: ItemTable is not found item"));
+    UE_LOG(LogTemp, Warning, TEXT("ItemDataSubsystem: Item not found: %s"), *ItemID.ToString());
     return false;
 }
 
@@ -51,10 +69,11 @@ const FItemData* UDataTableSubsystem::GetItemData(FName ItemID) const
         return nullptr;
     }
 
-    if (const FItemData* FoundData =
-        ItemTable->FindRow<FItemData>(ItemID, TEXT("GetItemData")))
+    const FItemData* FoundData = ItemTable->FindRow<FItemData>(ItemID, TEXT("GetItemData"));
+
+    if (FoundData)
     {
-        return ItemTable->FindRow<FItemData>(ItemID, TEXT("GetItemData"));
+        return FoundData;
     }
     UE_LOG(LogTemp, Warning, TEXT("ItemDataSubsystem: ItemTable is not found item"));
     return nullptr;
@@ -69,10 +88,12 @@ const FworldActorInfo* UDataTableSubsystem::GetworldActorInfo(FName ItemID) cons
         return nullptr;
     }
 
-    if (const FworldActorInfo* FoundData =
-        ActorTable->FindRow<FworldActorInfo>(ItemID, TEXT("GetData")))
+    const FworldActorInfo* FoundData =
+        ActorTable->FindRow<FworldActorInfo>(ItemID, TEXT("GetData"));
+
+    if (FoundData)
     {
-        return ActorTable->FindRow<FworldActorInfo>(ItemID, TEXT("GetData"));
+        return FoundData;
     }
     UE_LOG(LogTemp, Warning, TEXT("DataTableSubsystem: ActorTable is not found item"));
     return nullptr;
@@ -81,13 +102,13 @@ const FworldActorInfo* UDataTableSubsystem::GetworldActorInfo(FName ItemID) cons
 const FItemData* UDataTableSubsystem::GetRandomItemData() const
 {
     if (!DropTable || !ItemTable)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("DropTable or ItemTable is NULL"));
         return nullptr;
+    }
 
     TArray<FDropInfo*> AllDrops;
     DropTable->GetAllRows(TEXT("DropSearch"), AllDrops);
-
-    if (AllDrops.Num() == 0)
-        return nullptr;
 
     // 1️⃣ 레벨 필터링
     TArray<FDropInfo*> ValidDrops;
@@ -111,6 +132,12 @@ const FItemData* UDataTableSubsystem::GetRandomItemData() const
         TotalWeight += Drop->DropWeight;
     }
 
+    if (TotalWeight <= 0)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Total DropWeight is ZERO"));
+        return nullptr;
+    }
+
     // 3️⃣ 랜덤 값 생성
     int32 RandomValue = FMath::RandRange(0, TotalWeight - 1);
 
@@ -122,13 +149,19 @@ const FItemData* UDataTableSubsystem::GetRandomItemData() const
 
         if (RandomValue < AccWeight)
         {
-            // 🎯 ItemID로 실제 아이템 찾기
-            return ItemTable->FindRow<FItemData>(
-                Drop->ItemID,
-                TEXT("FindItemData")
-            );
+            UE_LOG(LogTemp, Log, TEXT("Drop Selected: %s"), *Drop->ItemID.ToString());
+
+            const FItemData* ItemData =
+                ItemTable->FindRow<FItemData>(Drop->ItemID, TEXT("FindItemData"));
+
+            if (!ItemData)
+            {
+                UE_LOG(LogTemp, Error, TEXT("ItemData NOT FOUND: %s"), *Drop->ItemID.ToString());
+                return nullptr;
+            }
+            UE_LOG(LogTemp, Warning, TEXT("Item FOUND: %s"), *ItemData->ItemName.ToString());
+            return ItemData;
         }
     }
-
     return nullptr;
 }
