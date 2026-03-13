@@ -55,4 +55,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpawnManager")
 	UDataTable* ItemDataTable;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpawnManager")
+	float SpawnRadius = 120.f;
 };
