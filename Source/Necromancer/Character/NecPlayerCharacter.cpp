@@ -249,6 +249,11 @@ void ANecPlayerCharacter::OnRep_PlayerState()
 
 void ANecPlayerCharacter::Move(const FInputActionValue& Value)
 {
+	if (IsValid(CombatComponent) && CombatComponent->IsAttacking())
+	{
+		return;
+	}
+
 	if (IsValid(PlayerMovementComponent))
 	{
 		PlayerMovementComponent->ProcessMove(Value.Get<FVector2D>());
@@ -272,6 +277,11 @@ void ANecPlayerCharacter::Look(const FInputActionValue& Value)
 void ANecPlayerCharacter::StartSprint(const FInputActionValue& Value)
 {
 	if (!IsValid(StaminaComponent) || !IsValid(PlayerMovementComponent))
+	{
+		return;
+	}
+
+	if (IsValid(CombatComponent) && CombatComponent->IsAttacking())
 	{
 		return;
 	}
@@ -703,6 +713,11 @@ inline void ANecPlayerCharacter::Action_CycleTarget(const FInputActionValue& Val
 void ANecPlayerCharacter::Server_SetSprint_Implementation(bool bIsSprinting)
 {
 	if (!IsValid(PlayerMovementComponent) || !IsValid(StaminaComponent))
+	{
+		return;
+	}
+
+	if (bIsSprinting && IsValid(CombatComponent) && CombatComponent->IsAttacking())
 	{
 		return;
 	}
