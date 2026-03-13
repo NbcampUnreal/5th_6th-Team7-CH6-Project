@@ -91,6 +91,7 @@ EBTNodeResult::Type UBTTask_MonsterAttack::ExecuteTask(UBehaviorTreeComponent& O
 	AMonsterBase* Monster = Cast<AMonsterBase>(Character);
 	if (Monster)
 	{
+		Monster->SetIdleSoundActive(false);
 		Monster->Multicast_PlayMontage(SelectedMontage);
 	}
 
@@ -170,6 +171,7 @@ void UBTTask_MonsterAttack::CleanupAttackState(UBehaviorTreeComponent* OwnerComp
 			if (AMonsterBase* Monster = Cast<AMonsterBase>(Pawn))
 			{
 				Monster->RestoreMovementIfAlive();
+				Monster->SetIdleSoundActive(true);
 			}
 			else if (ACharacter* Char = Cast<ACharacter>(Pawn))
 			{

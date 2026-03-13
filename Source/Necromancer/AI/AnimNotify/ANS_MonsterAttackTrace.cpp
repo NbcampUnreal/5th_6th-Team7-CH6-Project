@@ -14,6 +14,7 @@ void UANS_MonsterAttackTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAni
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
 
 	HitActors.Empty();
+	TimeSinceLastTrace = 0.0f;
 
 	if (!MeshComp) return;
 
@@ -35,6 +36,17 @@ void UANS_MonsterAttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnim
 	if (!OwnerActor)
 	{
 		return;
+	}
+
+	// 간격 체크: TraceInterval마다 한 번씩만 트레이스
+	if (TraceInterval > 0.0f)
+	{
+		TimeSinceLastTrace += FrameDeltaTime;
+		if (TimeSinceLastTrace < TraceInterval)
+		{
+			return;
+		}
+		TimeSinceLastTrace = 0.0f;
 	}
 
 	FVector StartSocket = MeshComp->GetSocketLocation(TraceStartSocket);
