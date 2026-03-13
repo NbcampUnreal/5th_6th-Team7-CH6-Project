@@ -85,7 +85,7 @@ void ANecPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//DrawDebugString(GetWorld(), FVector(0, 0, 100), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);
+	DrawDebugString(GetWorld(), FVector(0, 0, 100), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);
 
 	ReplicateRemoteViewRot();
 }
@@ -441,6 +441,13 @@ void ANecPlayerCharacter::Multicast_HandleDeath_Implementation()
 	if (GetCapsuleComponent())
 	{
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+		{
+			MoveComp->StopMovementImmediately();
+			MoveComp->DisableMovement();
+			MoveComp->GravityScale = 0.0f;
+		}
 	}
 
 	if (GetMesh())
@@ -484,6 +491,13 @@ void ANecPlayerCharacter::Multicast_HandleRevive_Implementation()
 
 	MeshComp->SetCollisionProfileName(TEXT("CharacterMesh"));
 	CapsuleComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+	// 부활시에 무브먼트 컴포넌트 원복
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->SetMovementMode(EMovementMode::MOVE_Walking);
+		MoveComp->GravityScale = 1.0f;
+	}
 
 	StatComponent->SetCurrentHealth(50.f);
 }
