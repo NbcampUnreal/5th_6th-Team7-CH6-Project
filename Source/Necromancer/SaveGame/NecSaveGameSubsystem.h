@@ -65,5 +65,7 @@ public:
 	void IncreaseLvDepth();
 	int32 GetLvDepth();
 
+	int32 GetRewardScale();
+
 #pragma endregion
 };
