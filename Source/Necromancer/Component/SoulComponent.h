@@ -67,6 +67,7 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+    virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 private:
 
     /* ===== Batteries ===== */
@@ -83,10 +84,10 @@ private:
     /* ===== Drain ===== */
 
     UPROPERTY(EditAnywhere)
-    float DrainPerTick = 5.f;
+    float DrainPerTick = 0.f;
 
     UPROPERTY(EditAnywhere)
-    float DrainInterval = 0.2f;
+    float DrainInterval = 1.0f;
 
     UPROPERTY(EditAnywhere)
     float BaseHPDrain = 5.f;
@@ -117,11 +118,11 @@ private:
     bool bIsInvincible = false;
 
 private:
+    void HandleDrain(float DeltaTime);
+    void IncreaseHPDrain(float DeltaTime);
 
-    void HandleDrain();
     void SwapReserveToActive();
     void EnterDepletedState();
-    void IncreaseHPDrain();
     void RecoverHPDrain(float DeltaTime);
 
 public:

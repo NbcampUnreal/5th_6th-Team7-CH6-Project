@@ -33,6 +33,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace")
 	FVector TraceExtent = FVector(15.0f, 15.0f, 15.0f);
 
+	// 트레이스 검사 간격 (초, 0이면 매 틱)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace", meta = (ClampMin = "0.0"))
+	float TraceInterval = 0.1f;
+
 	// 디버그 트레이스 표시
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace")
 	bool bShowDebugTrace = false;
@@ -51,5 +55,6 @@ protected:
 
 private:
 	FVector LastCenterLocation;
+	float TimeSinceLastTrace = 0.0f;
 	TArray<TWeakObjectPtr<AActor>> HitActors;
 };

@@ -36,6 +36,9 @@ protected:
         FReplicationFlags* RepFlags
     ) override;
 
+    void RegisterItemEvents(UItemInstance* Item);
+
+    void MarkInventoryDirty();
 private:
     bool  bInventoryActive;
 
@@ -48,6 +51,8 @@ private:
     TArray<FItemInstanceSaveData> SavedItems;
 
     TMap<FGuid, TArray<UItemInstance*>> ItemsByOwnerGuid;
+
+    
 public:
     virtual void RebuildItemOwnerMap();    
 
@@ -56,18 +61,18 @@ public:
 public:
     UFUNCTION()
     void OnRep_Items();
-
-    void HandleItemChanged(UItemInstance* Item);
+    UFUNCTION()
+    void HandleItemChanged();
 
     virtual void SetInventory(const TArray<UItemInstance*>& InItems);
 
     void GetInventory(TArray<UItemInstance*>& OutItems) const;
 
     UFUNCTION(BlueprintCallable)
-    bool FindInventoryContainer(FGuid ContainerId, TArray<UItemInstance*>& OutItems);
+    void GetAllChildrenRecursive(const FGuid& ParentGuid, TArray<UItemInstance*>& OutChildren) const;
 
-    UFUNCTION(Client, Reliable)
-    void Client_UpdateItem();
+    UFUNCTION(BlueprintCallable)
+    bool FindInventoryContainer(FGuid ContainerId, TArray<UItemInstance*>& OutItems);
 #pragma region AddItem
 public:
     UFUNCTION(BlueprintCallable)
@@ -88,7 +93,12 @@ public:
         const FGuid& ContainerGuid
     );
 
-private:
+    UFUNCTION(BlueprintCallable)
+    void AddChildItems(
+        TArray<UItemInstance*> NewChildItems
+    );
+
+protected:
     UFUNCTION(BlueprintCallable)
     bool CanAddItemToPos(UItemInstance* NewItem,
         const FGuid& ContainerGuid,
@@ -104,6 +114,7 @@ private:
         int32& OutSectionIndex,
         int32& OutPosX,
         int32& OutPosY);
+
     UFUNCTION(Server, Reliable)
     void Server_AddRootItem(UItemInstance* NewItem);
     void Implement_AddRootItem(UItemInstance*& NewItem);
@@ -122,6 +133,14 @@ private:
         int32 InRowIndex,
         int32 InSectionIndex, 
         int32 InPosX, int32 InPosY);
+
+    UFUNCTION(Server, Reliable)
+    void Server_AddChildItems(
+        const TArray<UItemInstance*>& NewChildItems
+    );
+    void Implement_AddChildItems(
+        const TArray<UItemInstance*>& NewChildItems
+    );
 #pragma endregion
 
 #pragma region RemoveItem

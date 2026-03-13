@@ -111,7 +111,12 @@ void ADropItemBase::Interact_Internal(AActor* Interactor)
     }
     // 아이템 추가
     if (Inventory->AddItemToInventory(ItemInstanceComponent->GetItemInstance())) {
-        Inventory->Client_UpdateItem();
+        TArray<UItemInstance*> TempChildItems;
+        ItemInstanceComponent->GetChildItemInstances(TempChildItems);
+        if (TempChildItems.Num() > 0)
+        {
+            Inventory->AddChildItems(TempChildItems);
+        }
 
         HandleDestroyed();
     }    

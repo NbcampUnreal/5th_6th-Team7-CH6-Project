@@ -8,6 +8,8 @@
 #include "Engine/ActorChannel.h"
 #include "GameFramework/PlayerState.h"
 
+
+
 // Sets default values for this component's properties
 UGridInventoryComponent::UGridInventoryComponent()
 {
@@ -119,23 +121,39 @@ void UGridInventoryComponent::LoadItemsFromSaveData(const TArray<FItemInstanceSa
     RebuildItemOwnerMap();
 }
 
+
+
 void UGridInventoryComponent::OnRep_Items()
 {
-   // if (bInventoryActive)
+    for (UItemInstance* Item : Items)
     {
-        RebuildItemOwnerMap();
-        OnInventoryUpdated.Broadcast();
+        if (Item) Item->OnItemUpdated.RemoveAll(this);
     }
+
+    // 2. 복제된 새 아이템들에 대해 로컬에서 바인딩 수행
+    for (UItemInstance* Item : Items)
+    {
+        RegisterItemEvents(Item);
+    }
+
+    // 3. UI 갱신
+    MarkInventoryDirty();
 }
 
-void UGridInventoryComponent::HandleItemChanged(UItemInstance* Item)
+void UGridInventoryComponent::HandleItemChanged()
 {
     RebuildItemOwnerMap();
     OnInventoryUpdated.Broadcast();
 }
 
 void UGridInventoryComponent::SetInventory(const TArray<UItemInstance*>& InItems) {
+    for (UItemInstance* Item : Items) { if (Item) Item->OnItemUpdated.RemoveAll(this); }
+
     Items = InItems;
+
+    for (UItemInstance* Item : Items) { RegisterItemEvents(Item); }
+
+    MarkInventoryDirty();
     RebuildItemOwnerMap();
 }
 
@@ -157,12 +175,6 @@ bool UGridInventoryComponent::FindInventoryContainer(
         return true;
     }
     return false;
-}
-
-void UGridInventoryComponent::Client_UpdateItem_Implementation()
-{
-    RebuildItemOwnerMap();
-    OnInventoryUpdated.Broadcast();
 }
 
 void UGridInventoryComponent::AddRootItem(UItemInstance* NewItem)
@@ -309,6 +321,29 @@ bool UGridInventoryComponent::AddItemToContainer(
     return true;
 }
 
+void UGridInventoryComponent::AddChildItems(TArray<UItemInstance*> NewChildItems)
+{
+    if (NewChildItems.Num() == 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("AddChildItems: NewChildItems array is empty."));
+        return;
+    }
+    NewChildItems.RemoveAll([](UItemInstance* Item) {
+        return !IsValid(Item);
+        });
+    if (NewChildItems.Num() == 0) return;
+
+    if (GetOwnerRole() < ROLE_Authority)
+    {
+        Server_AddChildItems(NewChildItems);
+    }
+    else
+    {
+        Implement_AddChildItems(NewChildItems);
+    }
+    RebuildItemOwnerMap();
+}
+
 bool UGridInventoryComponent::CanAddItemToPos(UItemInstance* NewItem, 
     const FGuid& ContainerGuid,
     int32 InRowIndex,
@@ -319,7 +354,6 @@ bool UGridInventoryComponent::CanAddItemToPos(UItemInstance* NewItem,
     {
         return false;
     }
-
     /* 1. 컨테이너 아이템 찾기 */
     UItemInstance* ContainerItem = nullptr;
     for (UItemInstance* Item : Items)
@@ -426,9 +460,9 @@ void UGridInventoryComponent::Implement_AddRootItem(UItemInstance*& NewItem)
         Items.Add(NewItem);
     }
     NewItem->OwnerItemGuid = FGuid();
-   
-   //RebuildItemOwnerMap();
-   //OnInventoryUpdated.Broadcast();
+    RegisterItemEvents(NewItem);
+
+    MarkInventoryDirty();
 }
 
 void UGridInventoryComponent::Server_AddItemToPos_Implementation(UItemInstance* NewItem, 
@@ -451,7 +485,7 @@ void UGridInventoryComponent::Implement_AddItemToPos(
     {
         return;
     }
-
+    
     RebuildItemOwnerMap();
 
     if (!CanAddItemToPos(
@@ -462,37 +496,43 @@ void UGridInventoryComponent::Implement_AddItemToPos(
         InPosX,
         InPosY))
     {
-        return;
+        NewItem->ToggleRotation();
+        if (!CanAddItemToPos(
+            NewItem,
+            ContainerGuid,
+            InRowIndex,
+            InSectionIndex,
+            InPosX,
+            InPosY)) {
+            return;
+        }
     }
 
-    Items.RemoveAll([NewItem](UItemInstance* Item)
-        {
-            return Item && NewItem && Item->InstanceID == NewItem->InstanceID;
-        });
+    Items.Remove(NewItem);
 
-    UItemInstance* NewItemInstance = NewObject<UItemInstance>(this);
-    Items.Add(NewItemInstance);
+    NewItem->OwnerItemGuid = ContainerGuid;
+    NewItem->RowIndex = InRowIndex;
+    NewItem->SectionIndex = InSectionIndex;
+    NewItem->PosX = InPosX;
+    NewItem->PosY = InPosY;
 
-    NewItemInstance->InstanceID = NewItem->InstanceID;
-    NewItemInstance->ItemID = NewItem->ItemID;
+    Items.Add(NewItem);
+    RegisterItemEvents(NewItem);
 
-    // 상태(State) 직접 설정
-    NewItemInstance->CurrentDurability = NewItem->CurrentDurability;
-    NewItemInstance->bRotated = NewItem->bRotated;
-
-    // 인벤토리 위치 직접 설정
-    NewItemInstance->OwnerItemGuid = ContainerGuid;
-    NewItemInstance->RowIndex = InRowIndex;
-    NewItemInstance->SectionIndex = InSectionIndex;
-    NewItemInstance->PosX = InPosX;
-    NewItemInstance->PosY = InPosY;
-
-    TArray<UItemInstance*> TempItems = Items;
-    Items = TempItems;
-    //RebuildItemOwnerMap();
-    //OnInventoryUpdated.Broadcast();
+    MarkInventoryDirty();
 }
 
+//자식 아이템 추가
+void UGridInventoryComponent::Server_AddChildItems_Implementation(const TArray<UItemInstance*>& NewChildItems)
+{
+    Implement_AddChildItems(NewChildItems);
+}
+
+
+void UGridInventoryComponent::Implement_AddChildItems(const TArray<UItemInstance*>& NewChildItems)
+{
+    Items.Append(NewChildItems);
+}
 
 bool UGridInventoryComponent::RemoveItem(UItemInstance* Item)
 {
@@ -587,21 +627,14 @@ void UGridInventoryComponent::Implement_RemoveItem(UItemInstance*& Item)
     }
     RebuildItemOwnerMap();
 
-    if (TArray<UItemInstance*>* ChildItems = ItemsByOwnerGuid.Find(Item->InstanceID))
+    TArray<UItemInstance*> AllItemsToRemove;
+    GetAllChildrenRecursive(Item->InstanceID, AllItemsToRemove);
+
+    for (UItemInstance* Child : AllItemsToRemove)
     {
-        TArray<UItemInstance*> ChildrenToRemove = *ChildItems;
-
-        for (UItemInstance* Child : ChildrenToRemove)
-        {
-            if (!IsValid(Child))
-            {
-                continue;
-            }
-
-            Items.Remove(Child);
-        }
+        Items.Remove(Child);
     }
-
+    Item->OnItemUpdated.Clear();
     Items.Remove(Item);
 
     Item->OwnerItemGuid.Invalidate();
@@ -610,6 +643,33 @@ void UGridInventoryComponent::Implement_RemoveItem(UItemInstance*& Item)
     Item->PosX = 0;
     Item->PosY = 0;
 
-    //RebuildItemOwnerMap();
-    //OnInventoryUpdated.Broadcast();
+    MarkInventoryDirty();
+}
+
+void UGridInventoryComponent::GetAllChildrenRecursive(const FGuid& ParentGuid, TArray<UItemInstance*>& OutChildren) const
+{
+    if (const TArray<UItemInstance*>* FoundChildren = ItemsByOwnerGuid.Find(ParentGuid))
+    {
+        for (UItemInstance* Child : *FoundChildren)
+        {
+            if (IsValid(Child))
+            {
+                OutChildren.Add(Child);
+                GetAllChildrenRecursive(Child->InstanceID, OutChildren);
+            }
+        }
+    }
+}
+
+void UGridInventoryComponent::RegisterItemEvents(UItemInstance* Item)
+{
+    if (!Item) return;
+    Item->OnItemUpdated.RemoveAll(this);
+    Item->OnItemUpdated.AddDynamic(this, &UGridInventoryComponent::HandleItemChanged);
+}
+
+void UGridInventoryComponent::MarkInventoryDirty()
+{
+    RebuildItemOwnerMap();
+    OnInventoryUpdated.Broadcast();
 }

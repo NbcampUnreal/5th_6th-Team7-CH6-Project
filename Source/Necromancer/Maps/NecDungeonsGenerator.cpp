@@ -39,7 +39,7 @@ TSubclassOf<AActor> ANecDungeonsGenerator::RandomArrayItemFromRoom(const TArray<
 {
 	if (Array.Num() == 0)
 	{
-		return nullptr; // ±âº»°ª ¹ÝÈ¯
+		return nullptr; // ï¿½âº»ï¿½ï¿½ ï¿½ï¿½È¯
 	}
 
 	int32 OutIndex = FMath::RandRange(0, Array.Num() - 1);
@@ -50,7 +50,7 @@ USceneComponent* ANecDungeonsGenerator::RandomArrayItemFromArrow(const TArray<US
 {
 	if (Array.Num() == 0)
 	{
-		return nullptr; // ±âº»°ª ¹ÝÈ¯
+		return nullptr; // ï¿½âº»ï¿½ï¿½ ï¿½ï¿½È¯
 	}
 
 	int32 OutIndex = FMath::RandRange(0, Array.Num() - 1);
@@ -71,21 +71,24 @@ void ANecDungeonsGenerator::SpawnStartRoom()
 
 		if (LatestRoom)
 		{
-			// »ý¼ºÇÑ ¹æÀÇ ÄÄÆ÷³ÍÆ® ´ã±â
+			// ë°© ìœ„ì¹˜ ê¸°ë¡ (ë³´ìŠ¤ ìˆœì°°ìš©)
+			RoomLocations.Add(LatestRoom->GetActorLocation());
+
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½
 			TArray<USceneComponent*> Components;
 			LatestRoom->GetComponents<USceneComponent>(Components);
 
-			// ÄÄÆ÷³ÍÆ®µé  Å½»ö
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½  Å½ï¿½ï¿½
 			for (USceneComponent* comp : Components)
 			{
-				// ±×Áß¿¡ Ãâ±¸ µé¾îÀÖ´Â ¾À ÄÄÆ÷³ÍÆ®
+				// ï¿½ï¿½ï¿½ß¿ï¿½ ï¿½â±¸ ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
 				if (comp && comp->ComponentHasTag(FName("Exits Folder")))
 				{
-					// ½Å ÄÄÆ÷³ÍÆ® ¾Æ·¡ ÄÄÆ÷³ÍÆ®µé ¹è¿­¿¡ ÀúÀå
+					// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Æ·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½è¿­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 					const TArray<USceneComponent*>ChildCom = comp->GetAttachChildren();
 					for (USceneComponent* Child : ChildCom)
 					{
-						// Ãâ±¸ Ãß°¡
+						// ï¿½â±¸ ï¿½ß°ï¿½
 						ExitsList.Add(Child);
 					}
 					break;
@@ -104,38 +107,38 @@ void ANecDungeonsGenerator::SpawnNextRoom()
 {
 	if (HasAuthority())
 	{
-		// ·£´ý Ãâ±¸
+		// ï¿½ï¿½ï¿½ï¿½ ï¿½â±¸
 		if (ExitsList.Num() == 0 && SecondFExitsList.Num() == 0)
 		{
 			return;
 		}
-		// 2Ãþ ¹æÀÌ ÀÖÀ» °æ¿ì
+		// 2ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 		else if (SecondFExitsList.Num() != 0)
 		{
 			SelectedExitPoint = SecondFExitsList[0];
 		}
-		// 2Ãþ ¹æÀÌ ¾ø´Â °æ¿ì 1Ãþ¿¡¼­ ·£´ý
+		// 2ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ 1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		else
 		{
 			SelectedExitPoint = RandomArrayItemFromArrow(ExitsList);
 		}
 
-		// ·£´ý¹æ
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		TSubclassOf<AActor>NextRoom = RandomArrayItemFromRoom(RoomList);
 
-		// ½ºÆù À§Ä¡ 
+		// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ 
 		FTransform SpawnTransform = SelectedExitPoint->GetComponentTransform();
 
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		// ¾×ÅÍ »ý¼ºÇÏ°í º¯¼ö¿¡ ÀúÀå
+		// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		LatestRoom = GetWorld()->SpawnActor<AActor>(NextRoom, SpawnTransform, SpawnParams);
 
-		// 2Ãþ Arrow »èÁ¦
+		// 2ï¿½ï¿½ Arrow ï¿½ï¿½ï¿½ï¿½
 		SecondFExitsList.Empty();
 
-		//µô·¹ÀÌ
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		StartDelay();
 	}
 	else
@@ -145,6 +148,38 @@ void ANecDungeonsGenerator::SpawnNextRoom()
 }
 
 void ANecDungeonsGenerator::SpawnEndRoom()
+{
+	if (HasAuthority())
+	{
+		// ï¿½ï¿½ï¿½ï¿½ ï¿½â±¸
+		if (ExitsList.Num() == 0)
+		{
+			return;
+		}
+		SelectedExitPoint = RandomArrayItemFromArrow(ExitsList);
+
+		// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ 
+		FTransform SpawnTransform = SelectedExitPoint->GetComponentTransform();
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+		LatestRoom = GetWorld()->SpawnActor<AActor>(EndRoom, SpawnTransform, SpawnParams);
+
+		// ë°© ìœ„ì¹˜ ê¸°ë¡ (ë³´ìŠ¤ ìˆœì°°ìš©)
+		if (LatestRoom)
+		{
+			RoomLocations.Add(LatestRoom->GetActorLocation());
+		}
+	}
+	else
+	{
+		return;
+	}
+}
+
+void ANecDungeonsGenerator::SpawnBossRoom()
 {
 	if (HasAuthority())
 	{
@@ -162,7 +197,7 @@ void ANecDungeonsGenerator::SpawnEndRoom()
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 		// ¾×ÅÍ »ý¼ºÇÏ°í º¯¼ö¿¡ ÀúÀå
-		LatestRoom = GetWorld()->SpawnActor<AActor>(EndRoom, SpawnTransform, SpawnParams);
+		LatestRoom = GetWorld()->SpawnActor<AActor>(BossRoom, SpawnTransform, SpawnParams);
 	}
 	else
 	{
@@ -186,10 +221,10 @@ void ANecDungeonsGenerator::AddOverlappingRoomToList()
 					const TArray<USceneComponent*> ChildCom = Comp->GetAttachChildren();
 					for (USceneComponent* Child : ChildCom)
 					{
-						// ÀÚ½Äµé Áß¿¡ ¹Ú½º ÄÝ¸®ÀüÀÌ¸é
+						// ï¿½Ú½Äµï¿½ ï¿½ß¿ï¿½ ï¿½Ú½ï¿½ ï¿½Ý¸ï¿½ï¿½ï¿½ï¿½Ì¸ï¿½
 						if (UPrimitiveComponent* PrimitiveChild = Cast<UPrimitiveComponent>(Child))
 						{
-							// Ãß°¡
+							// ï¿½ß°ï¿½
 							TArray<UPrimitiveComponent*> OverlappingComponents;
 							PrimitiveChild->GetOverlappingComponents(OverlappingComponents);
 							if (!OverlappingComponents.IsEmpty())
@@ -215,21 +250,28 @@ void ANecDungeonsGenerator::CheckForOverlap()
 	{
 		AddOverlappingRoomToList();
 
-		// ¿À¹ö·¦ ¸®½ºÆ®°¡ ºñ¾îÀÖÁö ¾Ê´Ù¸é ¹æ±Ý »ý¼ºÇÑ ¹æÀÌ ´Ù¸¥ ¹æ°ú °ãÄ§ 
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Ù¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½Ä§ 
 		if (!OverlappedList.IsEmpty())
 		{
-			// ¿À¹ö·¦ ¸®½ºÆ® Áö¿öÁÖ°í, ¹æ Áö¿öÁÖ°í ´Ù½Ã »ý¼º
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½Ö°ï¿½, ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ö°ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			OverlappedList.Empty();
 			LatestRoom->Destroy();
 			SpawnNextRoom();
 
 			return;
 		}
-		// ¹æ±Ý »ý¼ºÇÑ ¹æ °ãÄ¡Áö ¾ÊÀ½
+		// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		else
 		{
 			OverlappedList.Empty();
 			RoomCount += 1;
+
+			// ë°© ìœ„ì¹˜ ê¸°ë¡ (ë³´ìŠ¤ ìˆœì°°ìš©)
+			if (LatestRoom)
+			{
+				RoomLocations.Add(LatestRoom->GetActorLocation());
+			}
+
 			ExitsList.Remove(SelectedExitPoint);
 			//SelectedExitPoint = nullptr;
 			if (LatestRoom)
@@ -237,27 +279,27 @@ void ANecDungeonsGenerator::CheckForOverlap()
 				TArray<USceneComponent*> Components;
 				LatestRoom->GetComponents<USceneComponent>(Components);
 
-				// ÄÄÆ÷³ÍÆ®µé  Å½»ö
+				// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½  Å½ï¿½ï¿½
 				for (USceneComponent* comp : Components)
 				{
-					// ±×Áß¿¡ Ãâ±¸ µé¾îÀÖ´Â ¾À ÄÄÆ÷³ÍÆ®
+					// ï¿½ï¿½ï¿½ß¿ï¿½ ï¿½â±¸ ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
 					if (comp && comp->ComponentHasTag(FName("2F Exits Folder")))
 					{
 						const TArray<USceneComponent*>ChildCom = comp->GetAttachChildren();
 						for (USceneComponent* Child : ChildCom)
 						{
-							// Ãâ±¸ Ãß°¡
+							// ï¿½â±¸ ï¿½ß°ï¿½
 							SecondFExitsList.Add(Child);
 						}
 						break;
 					}
 					else if (comp && comp->ComponentHasTag(FName("Exits Folder")))
 					{
-						// ½Å ÄÄÆ÷³ÍÆ® ¾Æ·¡ ÄÄÆ÷³ÍÆ®µé ¹è¿­¿¡ ÀúÀå
+						// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Æ·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½è¿­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 						const TArray<USceneComponent*>ChildCom = comp->GetAttachChildren();
 						for (USceneComponent* Child : ChildCom)
 						{
-							// Ãâ±¸ Ãß°¡
+							// ï¿½â±¸ ï¿½ß°ï¿½
 							ExitsList.Add(Child);
 						}
 						break;
@@ -265,14 +307,14 @@ void ANecDungeonsGenerator::CheckForOverlap()
 				}
 			}
 
-			// ¹® ¼³Ä¡ÇÒ °÷ ¸®½ºÆ®¿¡ ´ã±â
+			// ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½
 			DoorList.Add(SelectedExitPoint);
 		}
 
-		// ¾ÆÁ÷ ¹æ ¼³Ä¡ °¡´ÉÇÏ¸é ¹æ¼³Ä¡
+		// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½æ¼³Ä¡
 		if (RoomCount < RoomAmount)
 		{
-			// ¹æ 10¹ø »ý¼ºµÉ ¶§¸¶´Ù Æ¯¼öÇÑ ¹æ Ãß°¡
+			// ï¿½ï¿½ 10ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Æ¯ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ß°ï¿½
 			if (RoomCount % 10 == 0)
 			{
 				RoomList = SpecialRoomList;
@@ -285,20 +327,26 @@ void ANecDungeonsGenerator::CheckForOverlap()
 		}
 		else
 		{
+<<<<<<< HEAD
 
 
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+=======
+			// º¸½º ¹æ »ý¼º
+			SpawnBossRoom();
 			// ¸¶Áö¸· ¹æ »ý¼º
+>>>>>>> LDG
 			SpawnEndRoom();
-			// ±¸¸Û ¸·±â
+			// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			CloseHoles();
-			// ¹® »ý¼º
+			// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			SpawnDoor();
-			// Å¸ÀÌ¸Ó Á¾·á
+			// Å¸ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½
 			GetWorld()->GetTimerManager().ClearTimer(DungeonTimerHandle);
 
 
 			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Blue, TEXT("Dungeon Complete"));
-			// ´øÀü »ý¼º ¿Ï·á
+			// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ï·ï¿½
 			bIsDungeonComplete = true;
 		}
 	}
@@ -312,7 +360,7 @@ void ANecDungeonsGenerator::CloseHoles()
 {
 	if (ExitsList.Num() > 0)
 	{
-		// ½ºÆù½Ã Ãæµ¹ ¹«½Ã·Î
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½æµ¹ ï¿½ï¿½ï¿½Ã·ï¿½
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
@@ -341,27 +389,27 @@ void ANecDungeonsGenerator::SpawnDoor()
 
 void ANecDungeonsGenerator::StartDungeonTimer()
 {
-	// ½ÃÀÛ ½Ã°£ ±â·Ï
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½
 	DungeonStartTime = GetWorld()->GetTimeSeconds();
 
-	// µ¨¸®°ÔÀÌÆ®¸¦ ½ÇÇàÇÏ±â À§ÇÑ Å¸ÀÌ¸Ó
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½Ì¸ï¿½
 	GetWorld()->GetTimerManager().SetTimer(
 		DungeonTimerHandle,
 		this,
 		&ANecDungeonsGenerator::CheckForDungeonComplete,
-		1.0f, // 1ÃÊ¸¶´Ù Ã¼Å©
-		true // ·çÇÁ
+		1.0f, // 1ï¿½Ê¸ï¿½ï¿½ï¿½ Ã¼Å©
+		true // ï¿½ï¿½ï¿½ï¿½
 	);
 }
 
 void ANecDungeonsGenerator::CheckForDungeonComplete()
 {
-	// °æ°ú½Ã°£ °è»ê
+	// ï¿½ï¿½ï¿½ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½
 	float RunningTime = GetWorld()->GetTimeSeconds() - DungeonStartTime;
 
 	if (RunningTime >= MaxDungeonTime)
 	{
-		// ·¹º§ Àç½ÃÀÛ
+		// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
 		UGameplayStatics::OpenLevel(this, LevelName);
 	}
 }
@@ -375,5 +423,5 @@ void ANecDungeonsGenerator::StartDelay()
 void ANecDungeonsGenerator::OnDelayComplete()
 {
 	CheckForOverlap();
-	UE_LOG(LogTemp, Log, TEXT("µô·¹ÀÌ ³¡"));
+	UE_LOG(LogTemp, Log, TEXT("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½"));
 }

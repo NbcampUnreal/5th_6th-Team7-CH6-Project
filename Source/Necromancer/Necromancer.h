@@ -30,6 +30,9 @@
 #define NAME_CombatRole "CombatRole"
 #define NAME_BestAction "BestAction"
 
+// 보스 페이즈
+#define NAME_BossPhase "BossPhase"
+
 // 전투 역할 (BT 분기용)
 UENUM(BlueprintType)
 enum class ECombatRole : uint8
@@ -37,4 +40,21 @@ enum class ECombatRole : uint8
 	Attacker,
 	Flanker,
 	Waiter
+};
+
+// 보스 액션 타입
+UENUM(BlueprintType)
+enum class EBossActionType : uint8
+{
+	Melee,		// 근접 공격 (기존 AN_MonsterAttack으로 판정)
+	AOE,		// 범위 공격 (AN_BossAOEDamage로 판정)
+	Teleport	// 순간이동 (이동 후 옵션 몽타주)
+};
+
+// 순간이동 모드
+UENUM(BlueprintType)
+enum class ETeleportMode : uint8
+{
+	BehindTarget,	// 타겟 뒤쪽으로 순간이동
+	RandomAround	// 타겟 주변 랜덤 위치로 순간이동
 };

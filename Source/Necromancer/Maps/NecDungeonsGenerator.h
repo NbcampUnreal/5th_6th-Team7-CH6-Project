@@ -17,34 +17,41 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	// ½ÃÀÛ ¹æ »ı¼º ÇÔ¼ö
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½
 	UFUNCTION(BlueprintCallable, Category = "Room")
 	void SpawnStartRoom();
 
-	// ´ÙÀ½ ¹æ »ı¼º ÇÔ¼ö 
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½ 
 	UFUNCTION(BlueprintCallable, Category = "Room")
 	void SpawnNextRoom();
 
 	UFUNCTION(BlueprintCallable, Category = "Room")
 	void SpawnEndRoom();
 
+<<<<<<< HEAD
+	// ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ ï¿½è¿­ï¿½ï¿½ ï¿½ï¿½ï¿½
+=======
+	UFUNCTION(BlueprintCallable, Category = "Room")
+	void SpawnBossRoom();
+
 	// °ãÄ¡´Â ¹æ ¹è¿­¿¡ ´ã±â
+>>>>>>> LDG
 	UFUNCTION(BlueprintCallable, Category = "Overlap")
 	void AddOverlappingRoomToList();
 
-	// °ãÄ¡´Â ¹æ »èÁ¦
+	// ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	UFUNCTION(BlueprintCallable, Category = "Overlap")
 	void CheckForOverlap();
 
-	// ¹® »ı¼º ÇÔ¼ö
+	// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½
 	UFUNCTION(BlueprintCallable, Category = "Door")
 	void SpawnDoor();
 
-	// ±¸¸Û ¸·±â
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	UFUNCTION(BlueprintCallable, Category = "Wall")
 	void CloseHoles();
 
-	// ´øÀü Å¸ÀÌ¸Ó ÇÔ¼ö
+	// ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½Ì¸ï¿½ ï¿½Ô¼ï¿½
 	UFUNCTION(BlueprintCallable, Category = "Timer")
 	void StartDungeonTimer();
 
@@ -55,91 +62,106 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* Root;
 
-	// µô·¹ÀÌ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	FTimerHandle DelayTimerHandle;
 	void StartDelay();
 	void OnDelayComplete();
 
-	// ºí·çÇÁ¸°Æ®ÀÇ RandomArrayItemFromStream ±¸Çö
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ RandomArrayItemFromStream ï¿½ï¿½ï¿½ï¿½
 	TSubclassOf<AActor> RandomArrayItemFromRoom(const TArray<TSubclassOf<AActor>>& Array);
 
 	USceneComponent* RandomArrayItemFromArrow(const TArray<USceneComponent*>& Array);
 
 	bool GetbIsDungeonComplete() { return bIsDungeonComplete; }
 
+	// ìƒì„±ëœ ëª¨ë“  ë°©ì˜ ì¤‘ì‹¬ ìœ„ì¹˜ ë°˜í™˜ (ë³´ìŠ¤ ìˆœì°°ìš©)
+	UFUNCTION(BlueprintCallable, Category = "Dungeon")
+	const TArray<FVector>& GetRoomLocations() const { return RoomLocations; }
+
 protected:
 	UPROPERTY(BlueprintReadWrite);
 	bool bIsDungeonComplete = false;
 
-	// ¼³Ä¡µÈ ¹æ
+	// ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½
 	UPROPERTY(BlueprintReadWrite, Category = "Rooms");
 	AActor* LatestRoom;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Seed");
 	int32 RoomAmount = 20;
 
-	// ¹æ °³¼ö
+	// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Seed");
 	int32 RoomCount = 0;
 
-	// ½ÃÀÛ ¹æ ´ãÀ» º¯¼ö
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TSubclassOf<AActor> StartRoom;
 
-	// ¸¶Áö¸· ¹æ ´ãÀ» º¯¼ö
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TSubclassOf<AActor> EndRoom;
 
+<<<<<<< HEAD
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+=======
+	// º¸½º ¹æ ´ãÀ» º¯¼ö
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
+	TSubclassOf<AActor> BossRoom;
+
 	// ±¸¸Û ¸·±â
+>>>>>>> LDG
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Holes");
 	TSubclassOf<AActor> BlockHoles;
 
-	// ¹æ ¹è¿­ º£ÀÌ½º
+	// ï¿½ï¿½ ï¿½è¿­ ï¿½ï¿½ï¿½Ì½ï¿½
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<AActor>>RoomListBase;
 
-	//  ¹æ ¹è¿­ temp
+	//  ï¿½ï¿½ ï¿½è¿­ temp
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<AActor>>RoomList;
 
-	// Æ¯¼ö ¹æ ¹è¿­
+	// Æ¯ï¿½ï¿½ ï¿½ï¿½ ï¿½è¿­
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<AActor>>SpecialRoomList;
 
-	// ¹® ¼³Ä¡ÇÒ Arrow ´ãÀ» ¹è¿­ 
+	// ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ Arrow ï¿½ï¿½ï¿½ï¿½ ï¿½è¿­ 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Door")
 	TArray<USceneComponent*>DoorList;
 
-	// ¹®
+	// ï¿½ï¿½
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Door")
 	TArray<TSubclassOf<AActor>>DoorActor;
 
-	// ¹æÀÇ Ãâ±¸ Arrow Component¸¦ ´ãÀ» ¹è¿­
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½â±¸ Arrow Componentï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½è¿­
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exits")
 	TArray<USceneComponent*>ExitsList;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exits")
 	TArray<USceneComponent*>SecondFExitsList;
 
-	// ¹æ ¼³Ä¡¿¡ ¼±ÅÃµÈ ArrowComponent
+	// ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½Ãµï¿½ ArrowComponent
 	USceneComponent* SelectedExitPoint;
 
-	// ¹Ú½º Äİ¸®ÀüÀ» ´ãÀ» ¹è¿­
+	// ï¿½Ú½ï¿½ ï¿½İ¸ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½è¿­
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Overlapped")
 	TArray<UPrimitiveComponent*>OverlappedList;
 
-	// ´øÀü Å¸ÀÌ¸Ó °ü·Ã
+	// ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½
 	FTimerHandle DungeonTimerHandle;
 
-	// ÃÖ´ë ½Ã°£
+	// ï¿½Ö´ï¿½ ï¿½Ã°ï¿½
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Timer")
 	float MaxDungeonTime = 30.0f;
 
-	// ½Ã°£ ¼¼´Â ÇÔ¼ö
+	// ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Timer")
 	float DungeonStartTime = 0.0f;
 
-	// ´Ù½Ã ½ÃÀÛÇÒ ·¹º§
+	// ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level")
 	FName LevelName = "SampleLevel";
+
+	// ìƒì„±ëœ ëª¨ë“  ë°©ì˜ ì¤‘ì‹¬ ìœ„ì¹˜ (ë³´ìŠ¤ ìˆœì°°ìš©)
+	TArray<FVector> RoomLocations;
 };

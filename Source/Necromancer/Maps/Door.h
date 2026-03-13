@@ -21,6 +21,7 @@ protected:
 public:
 	virtual void Interact_Implementation(AActor* Interactor) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	// virtual FText GetInteractText_Implementation() const override;
 
 protected:
 	UFUNCTION()

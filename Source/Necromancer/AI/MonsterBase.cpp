@@ -25,10 +25,16 @@ AMonsterBase::AMonsterBase()
 	SetNetUpdateFrequency(10.0f);
 	SetMinNetUpdateFrequency(2.0f);
 
-	
+
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
+
+	// 대기 사운드 AudioComponent 생성
+	IdleAudioComp = CreateDefaultSubobject<UAudioComponent>(TEXT("IdleAudioComp"));
+	IdleAudioComp->SetupAttachment(RootComponent);
+	IdleAudioComp->bAutoActivate = false;
+	IdleAudioComp->bOverrideAttenuation = true;
 }
 
 
@@ -105,6 +111,9 @@ void AMonsterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// 몬스터 메시에 데칼 투영 차단 (AOE 인디케이터가 메시에 묻는 것 방지)
+	GetMesh()->SetReceivesDecals(false);
+
 	MonsterStatComponent->OnDamageReceived.AddDynamic(this, &AMonsterBase::OnDamageReceived);
 
 	MonsterStatComponent->OnDeath.AddDynamic(this, &AMonsterBase::OnDeath);
@@ -117,9 +126,17 @@ void AMonsterBase::BeginPlay()
 		MoveComp->bOrientRotationToMovement = true;
 		MoveComp->bUseControllerDesiredRotation = false;
 
-		
+
 		MoveComp->MaxAcceleration = MovementAcceleration;
 		MoveComp->BrakingDecelerationWalking = MovementDeceleration;
+	}
+
+	// 대기 사운드 설정 + 재생 시작
+	if (IdleAudioComp && IdleSound)
+	{
+		IdleAudioComp->SetSound(IdleSound);
+		IdleAudioComp->SetVolumeMultiplier(IdleSoundVolume);
+		IdleAudioComp->Play();
 	}
 }
 
@@ -154,6 +171,9 @@ void AMonsterBase::OnDeath()
 	if (!HasAuthority()) return;
 
 	bIsDead = true;
+
+	// 대기 사운드 영구 중지
+	SetIdleSoundActive(false);
 
 	ForceCleanupAttackState();
 
@@ -384,4 +404,21 @@ void AMonsterBase::SetBlockingState(bool bBlock)
 
 void AMonsterBase::OnRep_IsBlocking()
 {
+}
+
+void AMonsterBase::SetIdleSoundActive(bool bActive)
+{
+	if (!IdleAudioComp || !IdleSound)
+	{
+		return;
+	}
+
+	if (bActive && !IdleAudioComp->IsPlaying())
+	{
+		IdleAudioComp->Play();
+	}
+	else if (!bActive && IdleAudioComp->IsPlaying())
+	{
+		IdleAudioComp->Stop();
+	}
 }

@@ -9,6 +9,7 @@
 #include "Game/NecGameState.h"
 #include "Game/NecPlayerState.h"
 #include "Character/NecPlayerCharacter.h"
+#include "Component/StatComponent.h"
 
 #include "GameInstance/NecAFGameInstance.h"
 #include "SaveGame/NecSaveGameSubsystem.h"
@@ -172,21 +173,22 @@ void ANecPlayerController::OnStartGame()
 
 void ANecPlayerController::OnPlayerDeath()
 {
-	if (HasAuthority())
-	{
-		UnPossess();
+	bIsSpectating = true;
+	Server_NotifyDeath();
+}
 
-		ANecGameMode* NecGM = Cast<ANecGameMode>(GetWorld()->GetAuthGameMode());
-		ANecPlayerController* NewViewTarget = nullptr;
-		if (NecGM)
-		{
-			NecGM->OnPlayerDeath(this);
-		}
-		Client_HandleDeath();
+void ANecPlayerController::Server_NotifyDeath_Implementation()
+{
+	bIsSpectating = true;
+	UnPossess();
+
+	if (ANecGameMode* NecGM = Cast<ANecGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		NecGM->OnPlayerDeath(this);
 	}
 }
 
-void ANecPlayerController::Client_HandleDeath_Implementation()
+void ANecPlayerController::Client_HandleDeath_Implementation(AActor* TargetToSpectate)
 {
 	if (!IsLocalController()) return;
 
@@ -194,15 +196,16 @@ void ANecPlayerController::Client_HandleDeath_Implementation()
 	if (GS)
 	{
 		FTimerHandle TimerHandle;
-		GetWorldTimerManager().SetTimer(TimerHandle, [this]()
+		GetWorldTimerManager().SetTimer(TimerHandle, [this, TargetToSpectate]()
 			{
-				AActor* NextTarget = GetNextLivePlayer(nullptr);
-				if (NextTarget)
+				ANecPlayerCharacter* TargetCharacter = Cast<ANecPlayerCharacter>(TargetToSpectate);
+				if (TargetCharacter)
 				{
-					SpectatingTarget = NextTarget;
+					SpectatingTarget = TargetToSpectate;
+					CurSpectatingTargetState = TargetCharacter->GetPlayerState<ANecPlayerState>();
 
 					bAutoManageActiveCameraTarget = true;
-					this->SetViewTargetWithBlend(NextTarget, 0.5f);
+					this->SetViewTargetWithBlend(TargetToSpectate, 0.5f);
 
 					GetWorldTimerManager().ClearTimer(SpectateRotationTimerHandle);
 
@@ -218,84 +221,47 @@ void ANecPlayerController::Client_HandleDeath_Implementation()
 	}
 }
 
-AActor* ANecPlayerController::GetNextLivePlayer(AActor* CurrentViewTarget)
-{
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 0"));
-	ANecGameState* GS = Cast<ANecGameState>(GetWorld()->GetGameState());
-	if (!GS) return nullptr;
-
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 1"));
-	const TArray<APlayerState*>& PlayerArray = GS->PlayerArray;
-	if (PlayerArray.Num() == 0) return nullptr;
-
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 2"));
-
-	int32 CurrentIndex = -1;
-	if (CurrentViewTarget)
-	{
-		for (int32 i = 0; i < PlayerArray.Num(); ++i)
-		{
-			if (PlayerArray[i]->GetPawn() == CurrentViewTarget)
-			{
-				CurrentIndex = i;
-				break;
-			}
-		}
-	}
-
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 3"));
-
-	for (int32 i = 1; i <= PlayerArray.Num(); ++i)
-	{
-		int32 NextIndex = (CurrentIndex + i) % PlayerArray.Num();
-		ANecPlayerState* TargetPS = Cast<ANecPlayerState>(PlayerArray[NextIndex]);
-
-		if (TargetPS && TargetPS != GetPlayerState<ANecPlayerState>())
-		{
-			if (AActor* TargetPawn = TargetPS->GetPawn())
-			{
-				return TargetPawn;
-			}
-		}
-	}
-
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 4"));
-
-	return nullptr;
-}
-
 void ANecPlayerController::UpdateSpectateRotation()
 {
-	if (IsLocalController() && SpectatingTarget)
+	if (IsLocalController() && SpectatingTarget && CurSpectatingTargetState)
 	{
-		if (ANecPlayerCharacter* TargetPawn = Cast<ANecPlayerCharacter>(SpectatingTarget))
+		ANecPlayerCharacter* TargetCharacter = Cast<ANecPlayerCharacter>(SpectatingTarget);
+		if (TargetCharacter == nullptr) return;
+
+		if (CurSpectatingTargetState->GetStatComponent()->GetIsDead() == false)
 		{
-			FRotator TargetRot = TargetPawn->RemoteViewRot;
+			FRotator TargetRot = TargetCharacter->RemoteViewRot;
 			if (HasAuthority())
 			{
-				TargetRot = TargetPawn->GetControlRotation();
+				TargetRot = TargetCharacter->GetControlRotation();
 			}
 			else
 			{
-				TargetRot = TargetPawn->RemoteViewRot;
+				TargetRot = TargetCharacter->RemoteViewRot;
 			}
 
-			USpringArmComponent* SpringArm = TargetPawn->FindComponentByClass<USpringArmComponent>();
+			USpringArmComponent* SpringArm = TargetCharacter->FindComponentByClass<USpringArmComponent>();
 			if (SpringArm)
 			{
 				SpringArm->bUsePawnControlRotation = false;
 				SpringArm->SetWorldRotation(TargetRot);
 
-				TargetPawn->bUseControllerRotationYaw = false;
+				TargetCharacter->bUseControllerRotationYaw = false;
 			}
 			SetControlRotation(TargetRot);
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Current TargetPawnState->GetStatComponent()-> is dead "));
 		}
 	}
 	else
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Current TargetPawnState->GetStatComponent()-> is dead -> SpectateRotationTimerHandle "));
 		GetWorldTimerManager().ClearTimer(SpectateRotationTimerHandle);
 	}
 }
+
 
 
 

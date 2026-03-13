@@ -21,6 +21,9 @@ public:
     UFUNCTION(BlueprintCallable)
     bool GetItemData(FName ItemID, FItemData& OutItemData) const;
 
+    UFUNCTION(BlueprintCallable)
+    bool IsItemContainer(FName ItemID) const;
+
     const FItemData* GetItemData(FName ItemID) const;
 
     const FworldActorInfo* GetworldActorInfo(FName ItemID) const;

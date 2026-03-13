@@ -88,19 +88,24 @@ public:
 	/// </summary>
 	UFUNCTION()
 	void OnPlayerDeath();
+	UFUNCTION(Server, Reliable)
+	void Server_NotifyDeath();
 
 	/// <summary>
 	/// 사망시, 관전자를 탐색하여 타겟을 이동 수행
 	/// </summary>
 	UFUNCTION(Client, Reliable)
-	void Client_HandleDeath();
-	AActor* GetNextLivePlayer(AActor* CurrentViewTarget);
+	void Client_HandleDeath(AActor* TargetToSpectate);
 
-	
 	void UpdateSpectateRotation();
+
 protected:
+	bool bIsSpectating = false;
+
 	FTimerHandle SpectateRotationTimerHandle;
 	AActor* SpectatingTarget;
+	UPROPERTY()
+	class ANecPlayerState* CurSpectatingTargetState;
 
 #pragma region Personal Achievement
 public:
