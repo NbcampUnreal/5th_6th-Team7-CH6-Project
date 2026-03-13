@@ -8,9 +8,13 @@
 
 #include "Game/NecGameState.h"
 #include "Game/NecPlayerState.h"
+#include "Character/NecPlayerCharacter.h"
 
 #include "GameInstance/NecAFGameInstance.h"
 #include "SaveGame/NecSaveGameSubsystem.h"
+
+#include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 
 ANecPlayerController::ANecPlayerController()
 {
@@ -195,12 +199,20 @@ void ANecPlayerController::Client_HandleDeath_Implementation()
 				AActor* NextTarget = GetNextLivePlayer(nullptr);
 				if (NextTarget)
 				{
-					if (PlayerCameraManager)
-					{
-						PlayerCameraManager->bDefaultConstrainAspectRatio = false;
-					}
+					SpectatingTarget = NextTarget;
 
+					bAutoManageActiveCameraTarget = true;
 					this->SetViewTargetWithBlend(NextTarget, 0.5f);
+
+					GetWorldTimerManager().ClearTimer(SpectateRotationTimerHandle);
+
+					GetWorldTimerManager().SetTimer(
+						SpectateRotationTimerHandle,
+						this,
+						&ANecPlayerController::UpdateSpectateRotation,
+						0.02f,
+						true
+					);
 				}
 			}, 0.2f, false);
 	}
@@ -218,7 +230,6 @@ AActor* ANecPlayerController::GetNextLivePlayer(AActor* CurrentViewTarget)
 
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 2"));
 
-	// 현재 보고 있는 타겟의 인덱스 찾기
 	int32 CurrentIndex = -1;
 	if (CurrentViewTarget)
 	{
@@ -251,6 +262,39 @@ AActor* ANecPlayerController::GetNextLivePlayer(AActor* CurrentViewTarget)
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetNextLivePlayer 4"));
 
 	return nullptr;
+}
+
+void ANecPlayerController::UpdateSpectateRotation()
+{
+	if (IsLocalController() && SpectatingTarget)
+	{
+		if (ANecPlayerCharacter* TargetPawn = Cast<ANecPlayerCharacter>(SpectatingTarget))
+		{
+			FRotator TargetRot = TargetPawn->RemoteViewRot;
+			if (HasAuthority())
+			{
+				TargetRot = TargetPawn->GetControlRotation();
+			}
+			else
+			{
+				TargetRot = TargetPawn->RemoteViewRot;
+			}
+
+			USpringArmComponent* SpringArm = TargetPawn->FindComponentByClass<USpringArmComponent>();
+			if (SpringArm)
+			{
+				SpringArm->bUsePawnControlRotation = false;
+				SpringArm->SetWorldRotation(TargetRot);
+
+				TargetPawn->bUseControllerRotationYaw = false;
+			}
+			SetControlRotation(TargetRot);
+		}
+	}
+	else
+	{
+		GetWorldTimerManager().ClearTimer(SpectateRotationTimerHandle);
+	}
 }
 
 

@@ -26,6 +26,9 @@ protected:
     UFUNCTION()
     void HandleTakeDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
+    UFUNCTION(NetMulticast, Unreliable)
+    void Multicast_OnDamageReceived(float DamageAmount, FVector HitLocation);
+
 public:
     UFUNCTION(BlueprintPure)
     float GetCurrentHealth() const { return CurrentHealth; }

@@ -17,7 +17,8 @@ class UUserWidget;
 class UTargetingComponent;
 class USphereComponent;
 class AWeapon_Item_Base;
-class  USoulComponent;
+class USoulComponent;
+class UNiagaraSystem;
 struct FInputActionValue;
 
 
@@ -87,6 +88,9 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_EquipWeapon(AWeapon_Item_Base* WeaponToEquip);
 
+	UFUNCTION()
+	void PlayBloodEffect(float DamageAmount, FVector HitLocation);
+
 public:
 	UFUNCTION(Server, Reliable)
 	void Server_SetSprint(bool bIsSprinting);
@@ -133,7 +137,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Test")
 	float InteractRange = 200.0f;
 
-	
+	UPROPERTY(EditDefaultsOnly, Category = "VFX")
+	TObjectPtr<UNiagaraSystem> BloodEffectFX;
 
 	FTimerHandle DeathTimerHandle;
 
@@ -212,5 +217,21 @@ public:
 
 	void AddSubmissionReward();
 #pragma endregion
+
+protected:
+	FString GetEnumText(ENetRole Role);
+
+protected:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+public:
+	/// <summary>
+	/// 컨트롤러 회전값 복제용 -> 클라이언트의 관전에 필요(not server)
+	/// </summary>
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Networking")
+	FRotator RemoteViewRot;
+
+protected:
+		void ReplicateRemoteViewRot();
 
 };

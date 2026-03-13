@@ -61,6 +61,23 @@ bool UDataTableSubsystem::GetItemData(FName ItemID, FItemData& OutItemData) cons
     return false;
 }
 
+bool UDataTableSubsystem::IsItemContainer(FName ItemID) const
+{
+    if (!ItemTable)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ItemDataSubsystem: ItemTable is null"));
+        return false;
+    }
+
+    if (const FItemData* FoundData =
+        ItemTable->FindRow<FItemData>(ItemID, TEXT("GetItemData")))
+    {
+        if(FoundData->Rows.Num()>0) // 복사
+            return true;
+    }
+    return false;
+}
+
 const FItemData* UDataTableSubsystem::GetItemData(FName ItemID) const
 {
     if (!ItemTable)
