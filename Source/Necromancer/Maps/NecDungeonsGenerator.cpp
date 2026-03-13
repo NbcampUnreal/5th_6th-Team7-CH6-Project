@@ -170,6 +170,32 @@ void ANecDungeonsGenerator::SpawnEndRoom()
 	}
 }
 
+void ANecDungeonsGenerator::SpawnBossRoom()
+{
+	if (HasAuthority())
+	{
+		// 랜덤 출구
+		if (ExitsList.Num() == 0)
+		{
+			return;
+		}
+		SelectedExitPoint = RandomArrayItemFromArrow(ExitsList);
+
+		// 스폰 위치 
+		FTransform SpawnTransform = SelectedExitPoint->GetComponentTransform();
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		// 액터 생성하고 변수에 저장
+		LatestRoom = GetWorld()->SpawnActor<AActor>(BossRoom, SpawnTransform, SpawnParams);
+	}
+	else
+	{
+		return;
+	}
+}
+
 void ANecDungeonsGenerator::AddOverlappingRoomToList()
 {
 	if (HasAuthority())
@@ -285,8 +311,8 @@ void ANecDungeonsGenerator::CheckForOverlap()
 		}
 		else
 		{
-
-
+			// 보스 방 생성
+			SpawnBossRoom();
 			// 마지막 방 생성
 			SpawnEndRoom();
 			// 구멍 막기

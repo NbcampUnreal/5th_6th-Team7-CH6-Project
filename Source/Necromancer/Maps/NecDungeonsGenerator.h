@@ -28,6 +28,9 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Room")
 	void SpawnEndRoom();
 
+	UFUNCTION(BlueprintCallable, Category = "Room")
+	void SpawnBossRoom();
+
 	// 겹치는 방 배열에 담기
 	UFUNCTION(BlueprintCallable, Category = "Overlap")
 	void AddOverlappingRoomToList();
@@ -89,6 +92,10 @@ protected:
 	// 마지막 방 담을 변수
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
 	TSubclassOf<AActor> EndRoom;
+
+	// 보스 방 담을 변수
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Rooms")
+	TSubclassOf<AActor> BossRoom;
 
 	// 구멍 막기
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Holes");

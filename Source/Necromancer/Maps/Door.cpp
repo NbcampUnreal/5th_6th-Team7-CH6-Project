@@ -49,6 +49,18 @@ void ADoor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimePro
 	DOREPLIFETIME(ADoor, bDoorOpen);
 }
 
+//FText ADoor::GetInteractText_Implementation() const
+//{
+//	if (!bDoorOpen)
+//	{
+//		return FText::FromString(TEXT("¿­±â"));
+//	}
+//	else
+//	{
+//		return FText::FromString(TEXT("´Ý±â"));
+//	}
+//}
+
 void ADoor::DoorOpenTimeLineFunc(float Output)
 {
 	const FRotator Value = FRotator(0, Output, 0);
