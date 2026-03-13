@@ -51,8 +51,8 @@ EBTNodeResult::Type UBTTask_RangedAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 		return EBTNodeResult::Failed;
 	}
 
-	Character->GetCharacterMovement()->StopMovementImmediately();
-	Character->GetCharacterMovement()->DisableMovement();
+	//Character->GetCharacterMovement()->StopMovementImmediately();
+	//Character->GetCharacterMovement()->DisableMovement();
 
 	AMonsterBase* Monster = Cast<AMonsterBase>(Character);
 	if (Monster)
