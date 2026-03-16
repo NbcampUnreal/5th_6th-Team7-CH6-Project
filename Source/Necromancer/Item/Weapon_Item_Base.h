@@ -34,13 +34,15 @@ public:
 	UAnimMontage* GetAttackMontage() const;
 	UAnimMontage* GetGuardMontage() const;
 
-	float GetDamage() const { return WeaponData ? WeaponData->BaseDamage : 0.0f; }
+	float GetDamage() const { return WeaponData ? WeaponData->BaseDamage * CurrentDamageMultiplier : 0.0f; }
+	float GetPoiseDamage() const { return WeaponData ? WeaponData->BasePoiseDamage * CurrentPoiseDamageMultiplier : 0.0f; }
 	float GetGuardRate() const { return WeaponData ? WeaponData->BaseGuardRate : 0.0f; }
 	
 	const TArray<FComboActionInfo>& GetComboActions() const { return WeaponData ? WeaponData->ComboActions : EmptyComboActions; }
 	int32 GetMaxComboCount() const { return WeaponData ? WeaponData->ComboActions.Num() : 0; }
 	
 	void SetDamageMultiplier(float NewMultiplier) { CurrentDamageMultiplier = NewMultiplier; }
+	void SetPoiseDamageMultiplier(float NewMultiplier) { CurrentPoiseDamageMultiplier = NewMultiplier; }
 
 	void PreloadWeaponAssets();
 
@@ -80,6 +82,8 @@ protected:
 	bool bIsUnarmed;
 
 	float CurrentDamageMultiplier = 1.0f;
+
+	float CurrentPoiseDamageMultiplier = 1.0f;
 
 	bool bIsAttacking = false;
 

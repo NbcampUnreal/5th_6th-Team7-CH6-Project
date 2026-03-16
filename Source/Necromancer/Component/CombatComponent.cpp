@@ -300,8 +300,11 @@ void UCombatComponent::PlayComboAttack()
     {
         StaminaComp->ConsumeStamina_Predictive(StaminaCost);
 
-        float Multiplier = ComboList[CurrentComboIndex].DamageMultiplier;
-        CurrentWeapon->SetDamageMultiplier(Multiplier);
+        float DamageMultiplier = ComboList[CurrentComboIndex].DamageMultiplier;
+        CurrentWeapon->SetDamageMultiplier(DamageMultiplier);
+
+        float PoiseDamageMultplier = ComboList[CurrentComboIndex].PoiseDamageMultiplier;
+        CurrentWeapon->SetPoiseDamageMultiplier(PoiseDamageMultplier);
 
         UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
         FName MontageSectionName = ComboList[CurrentComboIndex].MontageSectionName;
@@ -396,8 +399,11 @@ void UCombatComponent::Server_Attack_Implementation(int32 ComboIndex)
     {
         StaminaComp->ConsumeStamina(StaminaCost);
 
-        float Multiplier = ComboList[CurrentComboIndex].DamageMultiplier;
-        CurrentWeapon->SetDamageMultiplier(Multiplier);
+        float DamageMultiplier = ComboList[CurrentComboIndex].DamageMultiplier;
+        CurrentWeapon->SetDamageMultiplier(DamageMultiplier);
+
+        float PoiseDamageMultplier = ComboList[CurrentComboIndex].PoiseDamageMultiplier;
+        CurrentWeapon->SetPoiseDamageMultiplier(PoiseDamageMultplier);
 
         Multicast_Attack(ComboIndex);
     }

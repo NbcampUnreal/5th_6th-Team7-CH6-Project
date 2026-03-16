@@ -25,6 +25,9 @@ struct FComboActionInfo
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DamageMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float PoiseDamageMultiplier = 1.0f;
 };
 
 UCLASS()
@@ -44,6 +47,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
 	float BaseDamage = 10.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	float BasePoiseDamage = 10.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
 	float BaseGuardRate = 0.5f;

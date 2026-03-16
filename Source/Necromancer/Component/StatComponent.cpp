@@ -11,6 +11,7 @@
 #include "Controller/NecPlayerController.h"
 #include "Game/NecPlayerState.h"
 #include "DamageType/NecDamageType.h"
+#include "AI/MonsterBase.h"
 
 UStatComponent::UStatComponent()
 	: CurrentHealth(0.0f)
@@ -86,7 +87,15 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
     float ActualDamage = Damage;
     float IncomingPoiseDamage = Damage;
 
-    if (const UNecDamageType* NecDamage = Cast<UNecDamageType>(DamageType))
+    if (AWeapon_Item_Base* Weapon = Cast<AWeapon_Item_Base>(DamageCauser))
+    {
+        IncomingPoiseDamage = Weapon->GetPoiseDamage();
+    }
+    //else if (AMonsterBase* Monster = Cast<AMonsterBase>(DamageCauser))
+    //{
+    //    IncomingPoiseDamage = Monster->GetPoiseDamage();
+    //}
+    else if (const UNecDamageType* NecDamage = Cast<UNecDamageType>(DamageType))
     {
         IncomingPoiseDamage = NecDamage->PoiseDamage;
     }
@@ -99,7 +108,9 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
             UCombatComponent* CombatComp = PlayerCharacter->FindComponentByClass<UCombatComponent>();
             if (CombatComp && CombatComp->IsGuarding())
             {
-                ActualDamage *= CombatComp->GetCurrentWeapon()->GetGuardRate();
+                float GuardRate = CombatComp->GetCurrentWeapon()->GetGuardRate();
+                ActualDamage *= GuardRate;
+                //IncomingPoiseDamage *= GuardRate;
 
                 UStaminaComponent* StaminaComp = PlayerCharacter->GetStaminaComponent();
                 if (StaminaComp)
