@@ -254,6 +254,11 @@ void ANecPlayerCharacter::Move(const FInputActionValue& Value)
 		return;
 	}
 
+	if (bIsHit)
+	{
+		return;
+	}
+
 	if (IsValid(PlayerMovementComponent))
 	{
 		PlayerMovementComponent->ProcessMove(Value.Get<FVector2D>());
@@ -544,6 +549,8 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 
 			StatComponent->OnDamageReceived.RemoveDynamic(this, &ANecPlayerCharacter::PlayBloodEffect);
 			StatComponent->OnDamageReceived.AddDynamic(this, &ANecPlayerCharacter::PlayBloodEffect);
+			StatComponent->OnDamageReceived.RemoveDynamic(this, &ANecPlayerCharacter::OnDamageReceived);
+			StatComponent->OnDamageReceived.AddDynamic(this, &ANecPlayerCharacter::OnDamageReceived);
 		}
 		InventoryComponent = PS->GetInventoryComponent();
 		if (InventoryComponent) {
@@ -572,6 +579,63 @@ void ANecPlayerCharacter::PlayBloodEffect(float DamageAmount, FVector HitLocatio
 	}
 
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), BloodEffectFX, HitLocation);
+}
+
+void ANecPlayerCharacter::OnDamageReceived(float DamageAmount, FVector HitLocation)
+{
+	if (DamageAmount <= 0.0f)
+	{
+		return;
+	}
+
+	if (HitMontage || GuardHitMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			if (IsValid(CombatComponent))
+			{
+				CombatComponent->ResetCombatState();
+				CombatComponent->DisableWeaponCollision();
+			}
+
+			bIsHit = true;
+
+			if (!AnimInstance->OnMontageEnded.IsAlreadyBound(this, &ANecPlayerCharacter::OnHitMontageEnded))
+			{
+				AnimInstance->OnMontageEnded.AddDynamic(this, &ANecPlayerCharacter::OnHitMontageEnded);
+			}
+			
+			if (CombatComponent->IsGuarding())
+			{
+				PlayAnimMontage(GuardHitMontage);
+			}
+			else
+			{
+				PlayAnimMontage(HitMontage);
+			}
+		}
+	}
+}
+
+void ANecPlayerCharacter::OnHitMontageEnded(UAnimMontage* Montage, bool bInterupped)
+{
+	if (Montage == HitMontage || Montage == GuardHitMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			if (!AnimInstance->Montage_IsPlaying(HitMontage) || !AnimInstance->Montage_IsPlaying(GuardHitMontage))
+			{
+				bIsHit = false;
+
+				if (IsValid(CombatComponent) && CombatComponent->IsGuarding())
+				{
+					CombatComponent->UpdateGuardVisuals();
+				}
+			}
+		}
+	}
 }
 
 void ANecPlayerCharacter::Server_EquipWeapon_Implementation(AWeapon_Item_Base* WeaponToEquip)

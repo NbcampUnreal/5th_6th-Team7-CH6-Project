@@ -91,6 +91,12 @@ protected:
 	UFUNCTION()
 	void PlayBloodEffect(float DamageAmount, FVector HitLocation);
 
+	UFUNCTION()
+	void OnDamageReceived(float DamageAmount, FVector HitLocation);
+
+	UFUNCTION()
+	void OnHitMontageEnded(UAnimMontage* Montage, bool bInterupped);
+
 public:
 	UFUNCTION(Server, Reliable)
 	void Server_SetSprint(bool bIsSprinting);
@@ -104,7 +110,7 @@ public:
 
 	void SetLockOn(bool bEnable);
 
-	
+	bool IsHit() const { return bIsHit; }
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
@@ -139,6 +145,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "VFX")
 	TObjectPtr<UNiagaraSystem> BloodEffectFX;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> HitMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> GuardHitMontage;
+
+	UPROPERTY(VisibleAnywhere, Category = "Animation")
+	bool bIsHit = false;
 
 	FTimerHandle DeathTimerHandle;
 

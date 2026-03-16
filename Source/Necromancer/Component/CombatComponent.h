@@ -58,6 +58,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void ResetCombatState();
 
+	void UpdateGuardVisuals();
+
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponChangedSignature OnWeaponChanged;
 
@@ -70,8 +72,6 @@ protected:
 
 	UFUNCTION()
 	void OnRep_CurrentWeapon();
-		
-	void UpdateGuardVisuals();
 
 	UFUNCTION(Server, Reliable)
 	void Server_Attack(int32 ComboIndex);
