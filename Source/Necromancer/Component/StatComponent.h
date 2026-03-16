@@ -6,7 +6,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChangedSignature, float, CurrentHealth, float, MaxHealth);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamageReceivedSignature, float, DamageAmount, FVector, HitLocation);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDamageReceivedSignature, float, DamageAmount, FVector, HitLocation, bool, bPoiseBroken);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class NECROMANCER_API UStatComponent : public UActorComponent
@@ -27,7 +27,7 @@ protected:
     void HandleTakeDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
     UFUNCTION(NetMulticast, Unreliable)
-    void Multicast_OnDamageReceived(float DamageAmount, FVector HitLocation);
+    void Multicast_OnDamageReceived(float DamageAmount, FVector HitLocation, bool bPoiseBroken);
 
 public:
     UFUNCTION(BlueprintPure)
@@ -73,6 +73,11 @@ protected:
 
     UPROPERTY(Replicated, EditAnywhere, Category = "Armor", meta = (ClampMin = "0.0"))
     float Armor = 0.0f;
+
+    UPROPERTY(EditAnywhere, Category = "Poise", meta = (ClampMin = "0.0"))
+    float MaxPoiseTest = 100.0f;
+
+    float CurrentPoiseDamage;
 
     UPROPERTY(ReplicatedUsing = OnRep_IsDead)
     bool IsDead = false;

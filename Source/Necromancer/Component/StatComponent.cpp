@@ -10,9 +10,11 @@
 #include "Item/Weapon_Item_Base.h"
 #include "Controller/NecPlayerController.h"
 #include "Game/NecPlayerState.h"
+#include "DamageType/NecDamageType.h"
 
 UStatComponent::UStatComponent()
 	: CurrentHealth(0.0f)
+    , CurrentPoiseDamage(0.0f)
 {
 	SetIsReplicatedByDefault(true);
 }
@@ -82,7 +84,15 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
     }
 
     float ActualDamage = Damage;
-    if (DamagedActor) {
+    float IncomingPoiseDamage = Damage;
+
+    if (const UNecDamageType* NecDamage = Cast<UNecDamageType>(DamageType))
+    {
+        IncomingPoiseDamage = NecDamage->PoiseDamage;
+    }
+
+    if (DamagedActor)
+    {
         ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(DamagedActor);
         if (PlayerCharacter)
         {
@@ -105,8 +115,18 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
 
     SetCurrentHealth(NewHealth);
 
+    // Poise Damage
+    bool bPoiseBroken = false;
+    CurrentPoiseDamage += IncomingPoiseDamage;
+
+    if (CurrentPoiseDamage >= MaxPoiseTest)
+    {
+        bPoiseBroken = true;
+        CurrentPoiseDamage = 0.0f;
+    }
+
     FVector HitLocation = DamagedActor ? DamagedActor->GetActorLocation() : FVector::ZeroVector;
-    Multicast_OnDamageReceived(ActualDamage, HitLocation);
+    Multicast_OnDamageReceived(ActualDamage, HitLocation, bPoiseBroken);
     
     if (DamageCauser)
     {
@@ -147,9 +167,9 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
     }
 }
 
-void UStatComponent::Multicast_OnDamageReceived_Implementation(float DamageAmount, FVector HitLocation)
+void UStatComponent::Multicast_OnDamageReceived_Implementation(float DamageAmount, FVector HitLocation, bool bPoiseBroken)
 {
-    OnDamageReceived.Broadcast(DamageAmount, HitLocation);
+    OnDamageReceived.Broadcast(DamageAmount, HitLocation, bPoiseBroken);
 }
 
 void UStatComponent::SetCurrentHealth(float NewHealth)

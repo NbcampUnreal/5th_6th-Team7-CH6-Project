@@ -42,7 +42,7 @@ void ABossMonsterBase::BeginPlay()
 	}
 }
 
-void ABossMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
+void ABossMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation, bool bPoiseBroken)
 {
 	if (bIsDead)
 	{
@@ -62,7 +62,7 @@ void ABossMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
 	}
 
 	// 기본 피격 처리 (부모 호출)
-	Super::OnDamageReceived(DamageAmount, HitLocation);
+	Super::OnDamageReceived(DamageAmount, HitLocation, bPoiseBroken);
 
 	// 페이즈 전환 체크
 	CheckPhaseTransition();

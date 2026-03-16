@@ -10,6 +10,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Character/NecPlayerCharacter.h"
 #include "Engine/AssetManager.h"
+#include "DamageType/NecDamageType.h"
 
 AWeapon_Item_Base::AWeapon_Item_Base()
 {
@@ -287,7 +288,7 @@ void AWeapon_Item_Base::PerformTrace()
                     FinalDamage,
                     OwnerPawn->GetController(),
                     this,
-                    UDamageType::StaticClass()
+                    UNecDamageType::StaticClass()
                 );
 
                 FVector HitLocation = Hit.ImpactPoint;

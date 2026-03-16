@@ -287,7 +287,7 @@ void AMonsterBase::Multicast_PlayMontage_Implementation(UAnimMontage* Montage)
 	}
 }
 
-void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
+void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation, bool bPoiseBroken)
 {
 	if (bIsDead)
 	{
