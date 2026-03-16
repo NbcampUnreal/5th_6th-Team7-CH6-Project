@@ -104,7 +104,7 @@ public:
 
 	void SetLockOn(bool bEnable);
 
-	
+	bool GetISDead();
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
@@ -197,6 +197,7 @@ private:
 	TWeakObjectPtr<AActor> CurrentTarget;
 	UPROPERTY()
 	TArray<TWeakObjectPtr<AActor>> InteractTargets;
+
 public:
 	UFUNCTION(Server, Reliable)
 	void Server_TryInteract(AActor* Target);

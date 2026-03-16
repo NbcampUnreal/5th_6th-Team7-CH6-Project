@@ -60,7 +60,7 @@ protected:
 	float CurrentHP;
 
 	UPROPERTY(EditAnywhere)
-	float CollisionRadius = 700.0f;
+	float CollisionRadius = 350.0f;
 
 	UFUNCTION(BlueprintCallable)
 	virtual void HandleDestroyed();
