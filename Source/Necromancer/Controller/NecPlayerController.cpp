@@ -1,4 +1,4 @@
-#include "Controller/NecPlayerController.h"
+ï»¿#include "Controller/NecPlayerController.h"
 #include "EnhancedInputSubsystems.h"
 #include "UI/InGameHUDWidget.h"
 #include "UI/ReadyWidget.h"
@@ -188,7 +188,7 @@ void ANecPlayerController::Server_NotifyDeath_Implementation()
 	}
 }
 
-// ÀÌ°Å ÀÌ¸§ ¹Ù²Ù´Â°Ô ³ªÀ»µí? Å¬¶óÀÌ¾ğÆ®_ÇÚµé SetSpectating? 
+// ì´ê±° ì´ë¦„ ë°”ê¾¸ëŠ”ê²Œ ë‚˜ì„ë“¯? í´ë¼ì´ì–¸íŠ¸_í•¸ë“¤ SetSpectating? 
 void ANecPlayerController::Client_HandleDeath_Implementation(AActor* TargetToSpectate)
 {
 	if (!IsLocalController()) return;

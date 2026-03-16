@@ -384,7 +384,7 @@ void ANecPlayerCharacter::ToggleMenu(const FInputActionValue& Value)
 
 void ANecPlayerCharacter::TryInteract()
 {
-	if (StatComponent->GetIsDead()) {
+	if (StatComponent->GetStatus()==ECharacterStatus::Down) {
 		SoulComponent->TryRevive();
 		return;
 	}
@@ -510,6 +510,7 @@ void ANecPlayerCharacter::Multicast_HandleRevive_Implementation()
 	}
 
 	StatComponent->SetCurrentHealth(50.f);
+	StatComponent->SetStatus(ECharacterStatus::Alive);
 }
 
 
@@ -604,13 +605,18 @@ void ANecPlayerCharacter::SetLockOn(bool bEnable)
 
 }
 
+bool ANecPlayerCharacter::GetISDead()
+{
+	return false;
+}
+
 AActor* ANecPlayerCharacter::GetCurrentEquipmentActor(EEquipmentSlot Slot)
 {
 	return InventoryComponent->GetEquipmentActor(Slot);
 }
 
 void ANecPlayerCharacter::AddInteractTarget(AActor* Target) {
-	if (StatComponent->GetIsDead())
+	if (StatComponent->GetStatus()!=ECharacterStatus::Alive)
 		return;
 
 	if (!IsValid(Target)) return;
@@ -747,7 +753,7 @@ void  ANecPlayerCharacter::OnSphereOverlap(UPrimitiveComponent* OverlappedComp, 
 {
 	if (!StatComponent)
 		return;
-	if (!StatComponent->GetIsDead())
+	if (StatComponent->GetStatus() == ECharacterStatus::Alive)
 		return;
 	if (!OtherActor) return;
 	if (ANecPlayerCharacter* Player = Cast<ANecPlayerCharacter>(OtherActor))
@@ -760,7 +766,7 @@ void  ANecPlayerCharacter::OnSphereEnd(UPrimitiveComponent* OverlappedComp, AAct
 {
 	if (!StatComponent)
 		return;
-	if (!StatComponent->GetIsDead())
+	if (StatComponent->GetStatus() == ECharacterStatus::Alive)
 		return;
 	if (!OtherActor) return;
 	if (ANecPlayerCharacter* Player = Cast<ANecPlayerCharacter>(OtherActor))
@@ -787,8 +793,9 @@ void ANecPlayerCharacter::OnCheckEndOverlap(UPrimitiveComponent* OverlappedComp,
 
 void ANecPlayerCharacter::Interact_Implementation(AActor* Interactor)
 {
-	if (!StatComponent->GetIsDead())
+	if (StatComponent->GetStatus() == ECharacterStatus::Alive)
 		return;
+
 	if (!HasAuthority())
 	{
 		ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(Interactor);
@@ -830,7 +837,7 @@ USoulComponent* ANecPlayerCharacter::GetSoulComponent() const
 
 void ANecPlayerCharacter::AddSubmissionReward()
 {
-	if (StatComponent->GetIsDead())
+	if (StatComponent->GetStatus() == ECharacterStatus::Death)
 		return;
 	if (SoulComponent) {
 		SoulComponent->AddReserveBattery(FSoulBattery());
