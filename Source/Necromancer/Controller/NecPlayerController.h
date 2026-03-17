@@ -1,5 +1,4 @@
 ﻿#pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "NecPlayerController.generated.h"
@@ -26,6 +25,7 @@ protected:
 	
 
 	virtual void SetupInputComponent() override;
+
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnRep_PlayerState() override;
 	virtual void OnRep_Pawn() override;
@@ -61,6 +61,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TObjectPtr<UInputAction> WheelAction;
 
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> SpectatingTargetUpAction;
+
+	UFUNCTION()
+	void SpectatingTargetUp();
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> SpectatingTargetDownAction;
+
+	UFUNCTION()
+	void SpectatingTargetDown();
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UInGameHUDWidget> InGameHUDWidgetClass;
@@ -83,6 +95,10 @@ protected:
 public:
 	void OnStartGame();
 
+
+protected:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+public:
 	/// <summary>
 	/// 빙의 해제 및 카메라 이동 시퀀스 수행
 	/// </summary>
@@ -98,7 +114,7 @@ public:
 	void Client_HandleDeath(AActor* TargetToSpectate);
 
 	UFUNCTION(Server, Reliable)
-	void Server_RequestSpectatingTarget();
+	void Server_RequestSpectatingTarget(AActor* InSpectatingTarget, bool bIsUp);
 
 	/// <summary>
 	/// Client_HandleDeath() || UpdateSpectateRotation() 에서 호출
@@ -109,6 +125,7 @@ public:
 	void UpdateSpectateRotation();
 
 protected:
+	UPROPERTY(Replicated)
 	bool bIsSpectating = false;
 
 	FTimerHandle SpectateRotationTimerHandle;

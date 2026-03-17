@@ -112,6 +112,8 @@ public:
 
 	bool IsHit() const { return bIsHit; }
 
+	bool GetISDead();
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
 	TObjectPtr<USpringArmComponent> SpringArmComponent;
@@ -212,6 +214,7 @@ private:
 	TWeakObjectPtr<AActor> CurrentTarget;
 	UPROPERTY()
 	TArray<TWeakObjectPtr<AActor>> InteractTargets;
+
 public:
 	UFUNCTION(Server, Reliable)
 	void Server_TryInteract(AActor* Target);

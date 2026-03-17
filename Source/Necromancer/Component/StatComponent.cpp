@@ -39,7 +39,7 @@ void UStatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
     DOREPLIFETIME(UStatComponent, CurrentHealth);
     DOREPLIFETIME(UStatComponent, MaxHealth);
     DOREPLIFETIME(UStatComponent, Armor);
-    DOREPLIFETIME(UStatComponent, IsDead);
+    DOREPLIFETIME(UStatComponent, Status);
 }
 
 void UStatComponent::OnRep_Health()
@@ -47,30 +47,47 @@ void UStatComponent::OnRep_Health()
     OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 }
 
-void UStatComponent::OnRep_IsDead()
+void UStatComponent::OnRep_Status()
 {
-    if (IsDead == true)
+    switch (Status)
     {
-        // 서버 처리영역: 빙의 해제 -> 나중에 이동필요할 듯(애니메이션 완료후 또는 ...어디론가)
-        APlayerState* PS = Cast<APlayerState>(GetOwner());
-        if (PS == nullptr)
+    case ECharacterStatus::Alive:
+
+        break;
+
+    case ECharacterStatus::Down:
+        if (GetOwner()->HasAuthority())
         {
-            return;
+            GetWorld()->GetTimerManager().SetTimer(
+                DeathTimerHandle,
+                FTimerDelegate::CreateLambda([this]()
+                    {
+                        Status = ECharacterStatus::Death;
+                    }),
+                10.0f,
+                true
+            );
         }
+        break;
+
+    case ECharacterStatus::Death:
+    { 
+        APlayerState* PS = Cast<APlayerState>(GetOwner());
+        if (PS == nullptr) return;
 
         ANecPlayerCharacter* MyCharacter = Cast<ANecPlayerCharacter>(PS->GetPawn());
-        if (MyCharacter == nullptr) 
-        {
-            return;
-        }
+        if (MyCharacter == nullptr) return;
 
         ANecPlayerController* OwnerController = Cast<ANecPlayerController>(MyCharacter->GetController());
-        if (OwnerController == nullptr) 
-        {
-            return;
-        }
+        if (OwnerController == nullptr) return;
 
         OwnerController->OnPlayerDeath();
+        break;
+    }
+
+    default:
+        // 예외 처리
+        break;
     }
 }
 
@@ -140,8 +157,8 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
                 PC->Client_NotifyMonsterKill();
             }
         }
-        IsDead = true;
-        OnRep_IsDead();
+        Status = ECharacterStatus::Down;
+        OnRep_Status();
 
         OnDeath.Broadcast();
     }
@@ -161,7 +178,7 @@ void UStatComponent::SetCurrentHealth(float NewHealth)
 
     CurrentHealth = NewHealth;
     if (CurrentHealth > 0) {
-        IsDead = false;
+        Status = ECharacterStatus::Alive;
     }
     OnRep_Health();
 }

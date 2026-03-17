@@ -48,7 +48,7 @@ void ANecGameMode::OnPlayerDeath(ANecPlayerController* DeadPC)
 }
 
 
-void ANecGameMode::Server_ReqeustSpectatingTarget_Implementation(ANecPlayerController* RequestPC, AActor* CurSpectatingTarget, bool isPositiveDirection)
+void ANecGameMode::Server_ReqeustSpectatingTarget_Implementation(ANecPlayerController* RequestPC, AActor* CurSpectatingTarget, bool bIsUp)
 {
     if (!(PlayerControllers.Num() > 0 && PlayerControllers[0])) 
     {
@@ -56,6 +56,7 @@ void ANecGameMode::Server_ReqeustSpectatingTarget_Implementation(ANecPlayerContr
         return;
     }
 
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("SpectatingTargetUp %d %d"), CurSpectatingTarget == nullptr, PlayerControllers.Num()));
     if (CurSpectatingTarget == nullptr)
     {
         RequestPC->Client_HandleDeath(PlayerControllers[0]->GetPawn());
@@ -77,7 +78,7 @@ void ANecGameMode::Server_ReqeustSpectatingTarget_Implementation(ANecPlayerContr
             int32 NextIdx;
             int32 TotalCount = PlayerControllers.Num();
 
-            if (isPositiveDirection)
+            if (bIsUp)
             {
                 NextIdx = (CurIdx + 1) % TotalCount;
             }

@@ -4,6 +4,14 @@
 #include "Components/ActorComponent.h"
 #include "StatComponent.generated.h"
 
+UENUM(BlueprintType)
+enum class ECharacterStatus : uint8
+{
+    Alive   UMETA(DisplayName = "Alive"),
+    Down    UMETA(DisplayName = "Downed"),
+    Death   UMETA(DisplayName = "Dead")
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChangedSignature, float, CurrentHealth, float, MaxHealth);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamageReceivedSignature, float, DamageAmount, FVector, HitLocation);
@@ -40,7 +48,13 @@ public:
     float GetArmor() const { return Armor; }
 
     UFUNCTION(BlueprintPure)
-    bool GetIsDead() const { return IsDead; }
+    ECharacterStatus GetStatus() const { return Status; }
+
+    UFUNCTION(BlueprintPure)
+    bool GetIsDead() const { return Status == ECharacterStatus::Death; }
+
+    UFUNCTION()
+    void SetStatus(ECharacterStatus NewStatus) { Status = NewStatus; }
 
     UFUNCTION(BlueprintCallable)
     void AddMaxHealth(float Amount);
@@ -74,9 +88,12 @@ protected:
     UPROPERTY(Replicated, EditAnywhere, Category = "Armor", meta = (ClampMin = "0.0"))
     float Armor = 0.0f;
 
-    UPROPERTY(ReplicatedUsing = OnRep_IsDead)
-    bool IsDead = false;
+    UPROPERTY(ReplicatedUsing = OnRep_Status)
+    ECharacterStatus Status =ECharacterStatus::Alive;
 
     UFUNCTION()
-    void OnRep_IsDead();
+    void OnRep_Status();
+
+private:
+    FTimerHandle DeathTimerHandle;
 };

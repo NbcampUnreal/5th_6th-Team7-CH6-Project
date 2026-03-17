@@ -1,6 +1,9 @@
-#include "Controller/NecPlayerController.h"
+癤�#include "Controller/NecPlayerController.h"
+#include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "UI/InGameHUDWidget.h"
+
+#include "Net/UnrealNetwork.h"
 #include "UI/ReadyWidget.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -113,6 +116,19 @@ void ANecPlayerController::SetupInputComponent()
 			}
 		}
 	}
+
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+	{
+		if (SpectatingTargetUpAction)
+		{
+			EnhancedInputComponent->BindAction(SpectatingTargetUpAction, ETriggerEvent::Triggered, this, &ANecPlayerController::SpectatingTargetUp);
+		}
+
+		if (SpectatingTargetDownAction)
+		{
+			EnhancedInputComponent->BindAction(SpectatingTargetDownAction, ETriggerEvent::Triggered, this, &ANecPlayerController::SpectatingTargetDown);
+		}
+	}
 }
 
 void ANecPlayerController::OnPossess(APawn* InPawn)
@@ -153,6 +169,21 @@ void ANecPlayerController::OnRep_Pawn()
 	}
 }
 
+void ANecPlayerController::SpectatingTargetUp()
+{
+	if (!IsLocalController() || !bIsSpectating) return;
+
+	Server_RequestSpectatingTarget(SpectatingTarget, true);
+}
+
+void ANecPlayerController::SpectatingTargetDown()
+{
+	if (!IsLocalController() || !bIsSpectating) return;
+
+	Server_RequestSpectatingTarget(SpectatingTarget, false);
+}
+
+
 /// <summary>
 /// Only Host Can call this Function(Using ReadyWidet)
 /// </summary>
@@ -169,6 +200,13 @@ void ANecPlayerController::OnStartGame()
 		NecGameMode->StartGame();
 		CreateInGameHUD();
 	}
+}
+
+void ANecPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, bIsSpectating);
 }
 
 void ANecPlayerController::OnPlayerDeath()
@@ -188,7 +226,6 @@ void ANecPlayerController::Server_NotifyDeath_Implementation()
 	}
 }
 
-// 이거 이름 바꾸는게 나을듯? 클라이언트_핸들 SetSpectating? 
 void ANecPlayerController::Client_HandleDeath_Implementation(AActor* TargetToSpectate)
 {
 	if (!IsLocalController()) return;
@@ -196,6 +233,8 @@ void ANecPlayerController::Client_HandleDeath_Implementation(AActor* TargetToSpe
 	AGameStateBase* GS = GetWorld()->GetGameState();
 	if (GS)
 	{
+		GetWorldTimerManager().ClearTimer(SpectateRotationTimerHandle);
+
 		GetWorldTimerManager().SetTimer(SpectateRotationTimerHandle, [this, TargetToSpectate]()
 			{
 				SetSpectateTargetInternal(TargetToSpectate);
@@ -203,11 +242,11 @@ void ANecPlayerController::Client_HandleDeath_Implementation(AActor* TargetToSpe
 	}
 }
 
-void ANecPlayerController::Server_RequestSpectatingTarget_Implementation()
+void ANecPlayerController::Server_RequestSpectatingTarget_Implementation(AActor* InSpectatingTarget, bool bIsUp)
 {
 	if (ANecGameMode* NecGM = Cast<ANecGameMode>(GetWorld()->GetAuthGameMode()))
 	{
-		NecGM->Server_ReqeustSpectatingTarget(this, SpectatingTarget, true);
+		NecGM->Server_ReqeustSpectatingTarget(this, InSpectatingTarget, bIsUp);
 	}
 }
 
@@ -266,7 +305,7 @@ void ANecPlayerController::UpdateSpectateRotation()
 
 			GetWorldTimerManager().ClearTimer(SpectateRotationTimerHandle);
 
-			Server_RequestSpectatingTarget();
+			Server_RequestSpectatingTarget(SpectatingTarget, true);
 		}
 	}
 	else
