@@ -32,6 +32,7 @@ public:
 	EWeaponType GetWeaponType() const { return WeaponData ? WeaponData->WeaponType : EWeaponType::Unarmed; }
 
 	UAnimMontage* GetAttackMontage() const;
+	UAnimMontage* GetRunningAttackMontage() const;
 	UAnimMontage* GetGuardMontage() const;
 
 	float GetDamage() const { return WeaponData ? WeaponData->BaseDamage * CurrentDamageMultiplier : 0.0f; }

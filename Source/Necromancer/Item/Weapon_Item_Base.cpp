@@ -108,6 +108,16 @@ UAnimMontage* AWeapon_Item_Base::GetAttackMontage() const
     return WeaponData ? WeaponData->AttackMontage.LoadSynchronous() : nullptr;
 }
 
+UAnimMontage* AWeapon_Item_Base::GetRunningAttackMontage() const
+{
+    if (WeaponData && WeaponData->RunningAttackMontage.IsValid())
+    {
+        return WeaponData->RunningAttackMontage.Get();
+    }
+
+    return WeaponData ? WeaponData->RunningAttackMontage.LoadSynchronous() : nullptr;
+}
+
 UAnimMontage* AWeapon_Item_Base::GetGuardMontage() const
 {
     if (WeaponData && WeaponData->GuardMontage.IsValid())
@@ -130,6 +140,11 @@ void AWeapon_Item_Base::PreloadWeaponAssets()
     if (!WeaponData->AttackMontage.IsNull())
     {
         AssetsToLoad.AddUnique(WeaponData->AttackMontage.ToSoftObjectPath());
+    }
+
+    if (!WeaponData->RunningAttackMontage.IsNull())
+    {
+        AssetsToLoad.AddUnique(WeaponData->RunningAttackMontage.ToSoftObjectPath());
     }
 
     if (!WeaponData->GuardMontage.IsNull())
