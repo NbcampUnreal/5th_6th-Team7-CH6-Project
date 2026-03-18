@@ -177,13 +177,25 @@ public:
 #pragma endregion
 
 #pragma region QuickSlot
-	FGuid SelectItemInstanceID;
-
+	
+	int32 SelectedQuickSlotIndex = 0;
+public:
 	UFUNCTION(BlueprintCallable)
 	void UseItem();
-	UFUNCTION(Server, Reliable)
-	void Server_UseItem();
 
-	void Internal_UseItem();
+	UFUNCTION(BlueprintCallable)
+	int GetSelectedQuickSlotIndex()const {
+		return SelectedQuickSlotIndex;
+	}
+protected:
+	UFUNCTION(Server, Reliable)
+	void Server_UseItem(int32 InSelectedIndex);
+	void Internal_UseItem(int32 InSelectedIndex);
+
+	UFUNCTION(BlueprintCallable)
+	void SelectPrevQuickSlot();
+
+	UFUNCTION(BlueprintCallable)
+	void SelectNextQuickSlot();
 #pragma endregion
 };

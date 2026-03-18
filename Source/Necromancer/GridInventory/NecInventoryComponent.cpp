@@ -723,24 +723,31 @@ void UNecInventoryComponent::UseItem()
 {	
 	if (GetOwnerRole() < ROLE_Authority)
 	{
-		Server_UseItem();
+		Server_UseItem(SelectedQuickSlotIndex);
 	}
 	else
 	{
-		Internal_UseItem();
+		Internal_UseItem(SelectedQuickSlotIndex);
 	}
+
 	return;
 }
 
-void UNecInventoryComponent::Internal_UseItem()
+void UNecInventoryComponent::Internal_UseItem(int32 InSelectedIndex)
 {
-	UItemInstance* currentItem = GetItemsByNumber(5)[0];
-	if (!currentItem) return;
+	TArray<UItemInstance*> QuickItems = GetItemsByNumber(5);
+	if (QuickItems.Num() == 0) return;
+
+	SelectedQuickSlotIndex = FMath::Clamp(SelectedQuickSlotIndex, 0, QuickItems.Num() - 1);
+
+	UItemInstance* CurrentItem = QuickItems[SelectedQuickSlotIndex];
+	if (!CurrentItem) return;
+
 
 	UDataTableSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
 	if (!Subsystem) return;
 
-	const FItemData* ItemData = Subsystem->GetItemData(currentItem->ItemID);
+	const FItemData* ItemData = Subsystem->GetItemData(CurrentItem->ItemID);
 
 	if (!ItemData) return;
 	if (!ItemData->UseActionClass)return;
@@ -756,16 +763,39 @@ void UNecInventoryComponent::Internal_UseItem()
 		{
 			return;
 		}
-		UseAction->Initialize(*ItemData, currentItem);
+		UseAction->Initialize(*ItemData, CurrentItem);
 		UseAction->Use(OwnerActor);
 		if (UseAction->IsBroken()) {
-			RemoveItem(currentItem);
+			RemoveItem(CurrentItem);
 		}
 	}
 }
 
-void UNecInventoryComponent::Server_UseItem_Implementation()
+void UNecInventoryComponent::Server_UseItem_Implementation(int32 InSelectedIndex)
 {
-	Internal_UseItem();
+	Internal_UseItem(InSelectedIndex);
 }
 
+void UNecInventoryComponent::SelectPrevQuickSlot()
+{
+	TArray<UItemInstance*> QuickItems = GetItemsByNumber(5);
+	if (QuickItems.Num() == 0)
+	{
+		SelectedQuickSlotIndex = 0;
+		return;
+	}
+
+	SelectedQuickSlotIndex = (SelectedQuickSlotIndex - 1 + QuickItems.Num()) % QuickItems.Num();
+}
+
+void UNecInventoryComponent::SelectNextQuickSlot()
+{
+	TArray<UItemInstance*> QuickItems = GetItemsByNumber(5);
+	if (QuickItems.Num() == 0)
+	{
+		SelectedQuickSlotIndex = 0;
+		return;
+	}
+
+	SelectedQuickSlotIndex = (SelectedQuickSlotIndex + 1) % QuickItems.Num();
+}

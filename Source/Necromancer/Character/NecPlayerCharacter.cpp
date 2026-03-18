@@ -472,6 +472,8 @@ void ANecPlayerCharacter::HandleRevive()
 	if (HasAuthority())
 	{
 		Multicast_HandleRevive();
+		StatComponent->SetCurrentHealth(50.f);
+		StatComponent->SetStatus(ECharacterStatus::Alive);
 	}
 }
 
@@ -508,9 +510,6 @@ void ANecPlayerCharacter::Multicast_HandleRevive_Implementation()
 		MoveComp->SetMovementMode(EMovementMode::MOVE_Walking);
 		MoveComp->GravityScale = 1.0f;
 	}
-
-	StatComponent->SetCurrentHealth(50.f);
-	StatComponent->SetStatus(ECharacterStatus::Alive);
 }
 
 
