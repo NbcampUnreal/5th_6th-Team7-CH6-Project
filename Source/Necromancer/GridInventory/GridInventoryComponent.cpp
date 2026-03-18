@@ -344,6 +344,28 @@ void UGridInventoryComponent::AddChildItems(TArray<UItemInstance*> NewChildItems
     RebuildItemOwnerMap();
 }
 
+TArray<UItemInstance*> UGridInventoryComponent::GetItemsByNumber(int32 TargetDigit) const
+{
+    TArray<UItemInstance*> Result;
+
+    for (UItemInstance* Item : Items)
+    {
+        if (!IsValid(Item)) continue;
+
+        const FString ItemIDStr = Item->ItemID.ToString();
+        if (ItemIDStr.Len() == 0) continue;
+
+        int32 FirstDigit = ItemIDStr[0] - '0';
+
+        if (FirstDigit == TargetDigit)
+        {
+            Result.Add(Item);
+        }
+    }
+
+    return Result;
+}
+
 bool UGridInventoryComponent::CanAddItemToPos(UItemInstance* NewItem, 
     const FGuid& ContainerGuid,
     int32 InRowIndex,

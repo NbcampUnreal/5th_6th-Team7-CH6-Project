@@ -8,6 +8,7 @@
 #include "GridInventory/BucketInventoryComponent.h"
 #include "Item/DropItemBase.h"
 #include "Item/ItemBass.h"
+#include "Item/Item_Consumption_Base/Item_Consumption_Base.h"
 #include "UI/InventoryHub.h"
 #include "UI/SubmitWidgetHub.h"
 
@@ -716,5 +717,55 @@ void UNecInventoryComponent::ToggleSubmitUI(UBucketInventoryComponent* bucketcom
 			CurrentUIState = EUIState::Submit;
 		}
 	}
+}
+
+void UNecInventoryComponent::UseItem()
+{	
+	if (GetOwnerRole() < ROLE_Authority)
+	{
+		Server_UseItem();
+	}
+	else
+	{
+		Internal_UseItem();
+	}
+	return;
+}
+
+void UNecInventoryComponent::Internal_UseItem()
+{
+	UItemInstance* currentItem = GetItemsByNumber(5)[0];
+	if (!currentItem) return;
+
+	UDataTableSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
+	if (!Subsystem) return;
+
+	const FItemData* ItemData = Subsystem->GetItemData(currentItem->ItemID);
+
+	if (!ItemData) return;
+	if (!ItemData->UseActionClass)return;
+
+	UItem_Consumption_Base* UseAction = nullptr;
+	if (ItemData && ItemData->UseActionClass)
+	{
+		UseAction = NewObject<UItem_Consumption_Base>(this, ItemData->UseActionClass);
+		APlayerState* PS = Cast<APlayerState>(GetOwner());
+		if (!PS) return;
+		ACharacter* OwnerActor = Cast<ACharacter>(PS->GetPawn());
+		if (!OwnerActor)
+		{
+			return;
+		}
+		UseAction->Initialize(*ItemData, currentItem);
+		UseAction->Use(OwnerActor);
+		if (UseAction->IsBroken()) {
+			RemoveItem(currentItem);
+		}
+	}
+}
+
+void UNecInventoryComponent::Server_UseItem_Implementation()
+{
+	Internal_UseItem();
 }
 

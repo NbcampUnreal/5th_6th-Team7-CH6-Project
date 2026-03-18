@@ -73,6 +73,10 @@ public:
 
     UFUNCTION(BlueprintCallable)
     bool FindInventoryContainer(FGuid ContainerId, TArray<UItemInstance*>& OutItems);
+
+    UFUNCTION(BlueprintCallable)
+    TArray<UItemInstance*> GetItemsByNumber(int32 TargetDigit) const;
+
 #pragma region AddItem
 public:
     UFUNCTION(BlueprintCallable)
@@ -97,6 +101,7 @@ public:
     void AddChildItems(
         TArray<UItemInstance*> NewChildItems
     );
+    
 
 protected:
     UFUNCTION(BlueprintCallable)

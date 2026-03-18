@@ -175,4 +175,15 @@ public:
 	USubmitWidgetHub* GetSubmitWidget() { return SubmitWidget; }
 
 #pragma endregion
+
+#pragma region QuickSlot
+	FGuid SelectItemInstanceID;
+
+	UFUNCTION(BlueprintCallable)
+	void UseItem();
+	UFUNCTION(Server, Reliable)
+	void Server_UseItem();
+
+	void Internal_UseItem();
+#pragma endregion
 };
