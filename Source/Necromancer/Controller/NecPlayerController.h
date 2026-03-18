@@ -111,8 +111,18 @@ public:
 	/// 사망시, 관전자를 탐색하여 타겟을 이동 수행
 	/// </summary>
 	UFUNCTION(Client, Reliable)
-	void Client_HandleDeath(AActor* TargetToSpectate);
+	void Client_HandleCameraTarget(AActor* TargetToSpectate);
 
+	UFUNCTION(Server, Reliable)
+	void Server_RequestSpectatingTarget(AActor* InSpectatingTarget, bool bIsUp);
+
+	/// <summary>
+	/// Client_HandleCameraTarget() || UpdateSpectateRotation() 에서 호출
+	/// </summary>
+	/// <param name="TargetToSpectate"></param>
+	void SetSpectateTargetInternal(AActor* TargetToSpectate);
+
+	void UpdateSpectateRotation();
 
 	/// <summary>
 	/// The SoulComponent of the authoritative character will broadcast an event when TryRevive is called
@@ -120,23 +130,6 @@ public:
 	UFUNCTION()
 	void HandleRevive();
 
-	/// <summary>
-	/// 
-	/// </summary>
-	/// <param name="MyBody">MyBody is not a replicated Variable. So When ClientRPC_HandleRevive is called, Server has to send original own body</param>
-	UFUNCTION(Client, Reliable)
-	void Client_HandleRevive(AActor* InMyBody);
-
-	UFUNCTION(Server, Reliable)
-	void Server_RequestSpectatingTarget(AActor* InSpectatingTarget, bool bIsUp);
-
-	/// <summary>
-	/// Client_HandleDeath() || UpdateSpectateRotation() 에서 호출
-	/// </summary>
-	/// <param name="TargetToSpectate"></param>
-	void SetSpectateTargetInternal(AActor* TargetToSpectate);
-
-	void UpdateSpectateRotation();
 
 protected:
 	UPROPERTY(Replicated)

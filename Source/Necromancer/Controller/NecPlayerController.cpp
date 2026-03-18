@@ -224,20 +224,13 @@ void ANecPlayerController::HandleRevive()
 		Possess(MyBody);
 		bIsSpectating = false;
 
+
+
 		// and controller camera view
-		Client_HandleDeath_Implementation(MyBody);
+		Client_HandleCameraTarget(MyBody);
 	}
 }
 
-/// <summary>
-/// Deprecated...
-/// // maybe this func is unnecessary... -> Use Client_HandleDeath_Implementation
-/// </summary>
-/// <param name="MyBody"></param>
-void ANecPlayerController::Client_HandleRevive_Implementation(AActor* InMyBody)
-{
-
-}
 
 void ANecPlayerController::Server_NotifyDeath_Implementation()
 {
@@ -250,7 +243,7 @@ void ANecPlayerController::Server_NotifyDeath_Implementation()
 	}
 }
 
-void ANecPlayerController::Client_HandleDeath_Implementation(AActor* TargetToSpectate)
+void ANecPlayerController::Client_HandleCameraTarget_Implementation(AActor* TargetToSpectate)
 {
 	if (!IsLocalController()) return;
 
@@ -263,14 +256,6 @@ void ANecPlayerController::Client_HandleDeath_Implementation(AActor* TargetToSpe
 			{
 				SetSpectateTargetInternal(TargetToSpectate);
 			}, 0.2f, false);
-	}
-}
-
-void ANecPlayerController::Server_RequestSpectatingTarget_Implementation(AActor* InSpectatingTarget, bool bIsUp)
-{
-	if (ANecGameMode* NecGM = Cast<ANecGameMode>(GetWorld()->GetAuthGameMode()))
-	{
-		NecGM->Server_ReqeustSpectatingTarget(this, InSpectatingTarget, bIsUp);
 	}
 }
 
@@ -336,7 +321,13 @@ void ANecPlayerController::UpdateSpectateRotation()
 	}
 }
 
-
+void ANecPlayerController::Server_RequestSpectatingTarget_Implementation(AActor* InSpectatingTarget, bool bIsUp)
+{
+	if (ANecGameMode* NecGM = Cast<ANecGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		NecGM->Server_ReqeustSpectatingTarget(this, InSpectatingTarget, bIsUp);
+	}
+}
 
 
 

@@ -59,7 +59,7 @@ void ANecGameMode::Server_ReqeustSpectatingTarget_Implementation(ANecPlayerContr
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("SpectatingTargetUp %d %d"), CurSpectatingTarget == nullptr, PlayerControllers.Num()));
     if (CurSpectatingTarget == nullptr)
     {
-        RequestPC->Client_HandleDeath(PlayerControllers[0]->GetPawn());
+        RequestPC->Client_HandleCameraTarget(PlayerControllers[0]->GetPawn());
     }
     else
     {
@@ -89,12 +89,12 @@ void ANecGameMode::Server_ReqeustSpectatingTarget_Implementation(ANecPlayerContr
 
             if (PlayerControllers[NextIdx])
             {
-                RequestPC->Client_HandleDeath(PlayerControllers[NextIdx]->GetPawn());
+                RequestPC->Client_HandleCameraTarget(PlayerControllers[NextIdx]->GetPawn());
             }
         }
         else
         {
-            RequestPC->Client_HandleDeath(PlayerControllers[0]->GetPawn());
+            RequestPC->Client_HandleCameraTarget(PlayerControllers[0]->GetPawn());
         }
     }
 
