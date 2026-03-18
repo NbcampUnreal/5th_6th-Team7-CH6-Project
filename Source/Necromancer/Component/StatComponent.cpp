@@ -61,10 +61,22 @@ void UStatComponent::OnRep_Status()
     case ECharacterStatus::Down:
         if (GetOwner()->HasAuthority())
         {
+            GetWorld()->GetTimerManager().ClearTimer(DeathTimerHandle);
+
             GetWorld()->GetTimerManager().SetTimer(
                 DeathTimerHandle,
                 FTimerDelegate::CreateLambda([this]()
                     {
+                        if (!IsValid(this))
+                        {
+                            return;
+                        }
+
+                        if (Status != ECharacterStatus::Down)
+                        {
+                            return;
+                        }
+
                         Status = ECharacterStatus::Death;
                         OnRep_Status();
                     }),
@@ -76,6 +88,10 @@ void UStatComponent::OnRep_Status()
 
     case ECharacterStatus::Death:
     { 
+        if (GetOwner()->HasAuthority())
+        {
+            GetWorld()->GetTimerManager().ClearTimer(DeathTimerHandle);
+        }
         APlayerState* PS = Cast<APlayerState>(GetOwner());
         if (PS == nullptr) return;
 

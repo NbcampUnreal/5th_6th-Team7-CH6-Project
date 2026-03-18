@@ -4,6 +4,7 @@
 #include "Components/TextBlock.h"
 #include "Component/StatComponent.h"
 #include "Component/StaminaComponent.h"
+#include "GridInventory/GridInventoryComponent.h"
 
 #include "Character/NecPlayerCharacter.h"
 
@@ -77,4 +78,6 @@ void UInGameHUDWidget::InitHUD()
 	{		return;
 	}
 	SoulComponent = Character->GetSoulComponent();
+
+	NecInventoryComponent = Character->GetInventoryComponent();
 }
