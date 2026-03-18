@@ -52,7 +52,10 @@ void UStatComponent::OnRep_Status()
     switch (Status)
     {
     case ECharacterStatus::Alive:
-
+        if (GetOwner()->HasAuthority())
+        {
+            GetWorld()->GetTimerManager().ClearTimer(DeathTimerHandle);
+        }
         break;
 
     case ECharacterStatus::Down:
@@ -63,9 +66,10 @@ void UStatComponent::OnRep_Status()
                 FTimerDelegate::CreateLambda([this]()
                     {
                         Status = ECharacterStatus::Death;
+                        OnRep_Status();
                     }),
                 10.0f,
-                true
+                false
             );
         }
         break;

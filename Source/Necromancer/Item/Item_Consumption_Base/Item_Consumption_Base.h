@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
@@ -7,7 +7,7 @@
 
 class USoundBase;
 class ACharacter;
-class AItemBass;
+class UItemInstance;
 
 UCLASS(Blueprintable, EditInlineNew, DefaultToInstanced)
 class NECROMANCER_API UItem_Consumption_Base : public UObject
@@ -15,7 +15,7 @@ class NECROMANCER_API UItem_Consumption_Base : public UObject
     GENERATED_BODY()
 
 public:
-    void Initialize(const FItemData& InItemData, AItemBass* InOwnerItem);
+    void Initialize(const FItemData& InItemData, UItemInstance* InOwnerItem);
 
     void Use(ACharacter* User);
 
@@ -36,5 +36,5 @@ protected:
     int32 CurrentDurability;
 
     UPROPERTY()
-    AItemBass* OwnerItem;
+    UItemInstance* OwnerItem;
 };

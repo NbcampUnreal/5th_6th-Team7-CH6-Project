@@ -1,4 +1,4 @@
-//Recovery_Item.cpp
+﻿//Recovery_Item.cpp
 
 #include "Recovery_Item.h"
 #include "Component/StatComponent.h"
@@ -20,4 +20,5 @@ void URecovery_Item::Use(ACharacter* User)
 	StatComp->Heal(RecoverAmount);
 
 	DecreaseDurability();
+	SyncToInventory();
 }
