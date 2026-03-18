@@ -66,6 +66,11 @@ void ANecPlayerController::OnPossess(APawn* InPawn)
 		USoulComponent* MySoulComp = MyBody->GetSoulComponent();
 		if (IsValid(MySoulComp))
 		{
+			if (MySoulComp->OnReviveRequested.IsAlreadyBound(this, &ANecPlayerController::HandleRevive))
+			{
+				MySoulComp->OnReviveRequested.RemoveDynamic(this, &ANecPlayerController::HandleRevive);
+			}
+
 			MySoulComp->OnReviveRequested.AddDynamic(this, &ANecPlayerController::HandleRevive);
 		}
 	}
@@ -224,7 +229,10 @@ void ANecPlayerController::HandleRevive()
 		Possess(MyBody);
 		bIsSpectating = false;
 
-
+		if (ANecGameMode* NecGM = Cast<ANecGameMode>(GetWorld()->GetAuthGameMode()))
+		{
+			NecGM->OnPlayerRevive(this);
+		}
 
 		// and controller camera view
 		Client_HandleCameraTarget(MyBody);

@@ -42,9 +42,23 @@ void ANecGameMode::StartGame()
 void ANecGameMode::OnPlayerDeath(ANecPlayerController* DeadPC)
 {
     PlayerControllers.RemoveSingle(DeadPC);
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("OnPlayerDeath: CurPlayerController count : %d"), PlayerControllers.Num()));
 
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("OnPlayerDeath GAMEMODE %d"), PlayerControllers.Num()));
-    Server_ReqeustSpectatingTarget(DeadPC, nullptr, true);
+    if (PlayerControllers.Num() < 1)
+    {
+        // End Game
+    }
+    else
+    {
+        Server_ReqeustSpectatingTarget(DeadPC, nullptr, true);
+    }
+}
+
+void ANecGameMode::OnPlayerRevive(ANecPlayerController* RevivedPlayerController)
+{
+    PlayerControllers.Add(RevivedPlayerController);
+
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("OnPlayerRevive: CurPlayerController count : %d"), PlayerControllers.Num()));
 }
 
 
@@ -56,7 +70,6 @@ void ANecGameMode::Server_ReqeustSpectatingTarget_Implementation(ANecPlayerContr
         return;
     }
 
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("SpectatingTargetUp %d %d"), CurSpectatingTarget == nullptr, PlayerControllers.Num()));
     if (CurSpectatingTarget == nullptr)
     {
         RequestPC->Client_HandleCameraTarget(PlayerControllers[0]->GetPawn());

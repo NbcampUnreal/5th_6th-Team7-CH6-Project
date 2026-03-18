@@ -27,6 +27,7 @@ public:
 	void StartGame();
 
 	void OnPlayerDeath(ANecPlayerController* DeadPlayerController);
+	void OnPlayerRevive(ANecPlayerController* RevivedPlayerController);
 
 	/// <summary>
 	/// 관전 대상을 넘겨줌
