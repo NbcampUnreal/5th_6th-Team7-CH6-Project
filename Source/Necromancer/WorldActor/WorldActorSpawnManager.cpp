@@ -9,6 +9,7 @@
 #include "EngineUtils.h"
 
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
+#include "SaveGame/NecSaveGameSubsystem.h"
 
 static FVector GetRandomSpawnOffset(float Radius)
 {
@@ -49,7 +50,20 @@ void AWorldActorSpawnManager::StartSpawning()
 {
 	CollectAllSpawnEntries();
 	UE_LOG(LogTemp, Warning, TEXT("SpawnQueue Count: %d"), SpawnQueue.Num());
-	CurrentSpawnCost = 0;
+	LevelCurrentCost = 0;
+
+	UNecSaveGameSubsystem* SaveSubsystem = GetGameInstance()->GetSubsystem<UNecSaveGameSubsystem>();
+
+	if (SaveSubsystem)
+	{
+		LevelMaxCost = SaveSubsystem->GetLevelMaxSpawnCost();
+
+		UE_LOG(LogTemp, Warning, TEXT("LevelMaxCost set to: %d"), LevelMaxCost);
+	}
+	else
+	{
+		LevelMaxCost = 500;
+	}
 
 	if (SpawnQueue.Num() == 0)
 	{
@@ -65,6 +79,13 @@ void AWorldActorSpawnManager::StartSpawning()
 		for (int32 i = 0; i < SpawnQueue.Num(); i++)
 		{
 			const FActorSpawnData& Entry = SpawnQueue[i];
+
+			if (LevelCurrentCost >= LevelMaxCost)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Level cost limit reached (%d/%d)"),
+					LevelCurrentCost, LevelMaxCost);
+				break;
+			}
 
 			if (Entry.SpawnPoint)
 			{
@@ -131,14 +152,12 @@ void AWorldActorSpawnManager::StartSpawning()
 						break;
 					}
 
-					if (CurrentSpawnCost + ItemData->SpawnCost > MaxSpawnCost)
-					{
-						UE_LOG(LogTemp, Warning, TEXT("Spawn skipped: Cost limit reached (%d/%d)"),
-							CurrentSpawnCost, MaxSpawnCost);
-
-						CurrentSpawnIndex++;
-						return;
-					}
+if (LevelCurrentCost + ItemData->SpawnCost > LevelMaxCost)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Spawn skipped: Cost limit reached (%d/%d)"),
+			LevelCurrentCost, LevelMaxCost);
+		break;
+	}
 
 					if (!ItemData->DropItemActorClass)
 					{
@@ -157,7 +176,7 @@ void AWorldActorSpawnManager::StartSpawning()
 
 					SubmitActor = World->SpawnActor<AActor>(
 						ItemData->DropItemActorClass,
-						Location,
+						SpawnLocation,
 						Rotation,
 						Params
 					);
@@ -195,6 +214,15 @@ void AWorldActorSpawnManager::CollectAllSpawnEntries()
 
 void AWorldActorSpawnManager::SpawnNextInQueue()
 {
+	if (LevelCurrentCost >= LevelMaxCost)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Level cost limit reached (%d/%d)"),
+			LevelCurrentCost, LevelMaxCost);
+
+		GetWorld()->GetTimerManager().ClearTimer(SpawnTimerHandle);
+		return;
+	}
+
 	if (CurrentSpawnIndex >= SpawnQueue.Num())
 	{
 		GetWorld()->GetTimerManager().ClearTimer(SpawnTimerHandle);
@@ -204,12 +232,6 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 
 	FActorSpawnData& SpawnData = SpawnQueue[CurrentSpawnIndex];
 	const FActorSpawnData& Entry = SpawnQueue[CurrentSpawnIndex];
-
-	if (LastSpawnPoint != Entry.SpawnPoint)
-	{
-		CurrentSpawnCost = 0;
-		LastSpawnPoint = Entry.SpawnPoint;
-	}
 
 	if (Entry.SpawnPoint)
 	{
@@ -264,7 +286,7 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 
 			SubmitActor = World->SpawnActor<AActor>(
 				WorldActorInfo->WorldActorClass,
-				Location,
+				SpawnLocation,
 				Rotation,
 				Params
 			);
@@ -279,10 +301,10 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 				break;
 			}
 
-			if (CurrentSpawnCost + ItemData->SpawnCost > MaxSpawnCost)
+			if (LevelCurrentCost + ItemData->SpawnCost > LevelMaxCost)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Spawn skipped: Cost limit reached (%d/%d)"),
-					CurrentSpawnCost, MaxSpawnCost);
+					LevelCurrentCost, LevelMaxCost);
 				CurrentSpawnIndex++;
 				return;
 			}
@@ -301,7 +323,7 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 			);
 			if (SubmitActor)
 			{
-				CurrentSpawnCost += ItemData->SpawnCost;
+				LevelCurrentCost += ItemData->SpawnCost;
 			}
 			break;
 		}
@@ -314,7 +336,7 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 
 		if (SubmitActor)
 		{
-			UE_LOG(LogTemp, Log, TEXT("Spawned [%d/%d] Cost:%d/%d"),CurrentSpawnIndex + 1,SpawnQueue.Num(),CurrentSpawnCost,MaxSpawnCost);
+			UE_LOG(LogTemp, Log, TEXT("Spawned [%d/%d] Cost:%d/%d"),CurrentSpawnIndex + 1,SpawnQueue.Num(), LevelCurrentCost, LevelMaxCost);
 		}
 	}
 	CurrentSpawnIndex++;

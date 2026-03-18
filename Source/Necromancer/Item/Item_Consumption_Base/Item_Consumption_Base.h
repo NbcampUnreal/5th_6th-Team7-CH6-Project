@@ -17,7 +17,7 @@ class NECROMANCER_API UItem_Consumption_Base : public UObject
 public:
     void Initialize(const FItemData& InItemData, UItemInstance* InOwnerItem);
 
-    void Use(ACharacter* User);
+    virtual void Use(ACharacter* User);
 
     bool IsBroken() const;
 
