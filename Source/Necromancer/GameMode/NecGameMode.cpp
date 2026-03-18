@@ -29,24 +29,47 @@ void ANecGameMode::PostLogin(APlayerController* NewPlayer)
 	}
 }
 
+void ANecGameMode::PostLogout(AController* Exiting)
+{
+    Super::PostLogout(Exiting);
+
+    ANecPlayerController* ExitingNecPC = Cast<ANecPlayerController>(Exiting);
+    if (ExitingNecPC)
+    {
+        if (PlayerControllers.RemoveSingle(ExitingNecPC) > 0)
+        {
+            if (PlayerControllers.Num() == 0)
+            {
+                EndGame();
+            }
+        }
+    }
+}
+
 void ANecGameMode::StartGame()
 {
 	ANecGameState* NecGameState = GetGameState<ANecGameState>();
 	if (NecGameState)
 	{
-		NecGameState->SessionState = ESessionState::Playing;
-		NecGameState->OnRep_SessionState();
+		//NecGameState->SessionState = ESessionState::Playing;
+		//NecGameState->OnRep_SessionState();
+
+        // 별도 관리할 대상이 없음.. 
 	}
+}
+
+void ANecGameMode::EndGame()
+{
+    // UI 출력 및 게임 종료 
 }
 
 void ANecGameMode::OnPlayerDeath(ANecPlayerController* DeadPC)
 {
     PlayerControllers.RemoveSingle(DeadPC);
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("OnPlayerDeath: CurPlayerController count : %d"), PlayerControllers.Num()));
 
     if (PlayerControllers.Num() < 1)
     {
-        // End Game
+        EndGame();
     }
     else
     {
@@ -57,8 +80,6 @@ void ANecGameMode::OnPlayerDeath(ANecPlayerController* DeadPC)
 void ANecGameMode::OnPlayerRevive(ANecPlayerController* RevivedPlayerController)
 {
     PlayerControllers.Add(RevivedPlayerController);
-
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("OnPlayerRevive: CurPlayerController count : %d"), PlayerControllers.Num()));
 }
 
 
