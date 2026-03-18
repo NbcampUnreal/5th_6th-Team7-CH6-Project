@@ -46,10 +46,6 @@ int32 UNecSaveGameSubsystem::GetProfileKillCount()
     return ProfileSaveGame->TotalKillCount;
 }
 
-
-
-
-
 void UNecSaveGameSubsystem::InitSessionSaveGame(int32 SlotIdx = -1)
 {
     // New Game
@@ -87,4 +83,22 @@ void UNecSaveGameSubsystem::IncreaseLvDepth()
 int32 UNecSaveGameSubsystem::GetLvDepth()
 {
     return SessionSaveGame->LvDepth;
+}
+
+float UNecSaveGameSubsystem::GetSpawnCostMultiplier() const
+{
+    if (!SessionSaveGame) return 1.0f;
+
+    int32 Level = SessionSaveGame->LvDepth;
+
+    return 1.0f + (Level * 0.2f);
+}
+
+int32 UNecSaveGameSubsystem::GetLevelMaxSpawnCost() const
+{
+    if (!SessionSaveGame) return 100;
+
+    int32 Level = SessionSaveGame->LvDepth;
+
+    return 100 + (Level * 1000);
 }

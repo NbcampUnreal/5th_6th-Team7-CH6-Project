@@ -65,5 +65,11 @@ public:
 	void IncreaseLvDepth();
 	int32 GetLvDepth();
 
+	UFUNCTION(BlueprintCallable)
+	float GetSpawnCostMultiplier() const;
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetLevelMaxSpawnCost() const;
+
 #pragma endregion
 };
