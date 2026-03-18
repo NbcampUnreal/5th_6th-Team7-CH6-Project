@@ -13,6 +13,7 @@
 #include "Game/NecPlayerState.h"
 #include "Character/NecPlayerCharacter.h"
 #include "Component/StatComponent.h"
+#include "Component/SoulComponent.h"
 
 #include "GameInstance/NecAFGameInstance.h"
 #include "SaveGame/NecSaveGameSubsystem.h"
@@ -53,7 +54,21 @@ void ANecPlayerController::BeginPlay()
 	{
 		CreateInGameHUD();
 	}
+}
 
+void ANecPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	MyBody = Cast<ANecPlayerCharacter>(GetCharacter());
+	if (IsValid(MyBody))
+	{
+		USoulComponent* MySoulComp = MyBody->GetSoulComponent();
+		if (IsValid(MySoulComp))
+		{
+			MySoulComp->OnReviveRequested.AddDynamic(this, &ANecPlayerController::HandleRevive);
+		}
+	}
 }
 
 void ANecPlayerController::CreateReadyWidgetForHost()
@@ -131,20 +146,6 @@ void ANecPlayerController::SetupInputComponent()
 	}
 }
 
-void ANecPlayerController::OnPossess(APawn* InPawn)
-{
-	Super::OnPossess(InPawn);
-
-	if (IsLocalController())
-	{
-		FString MapName = GetWorld()->GetMapName();
-		if (!MapName.Contains("Lobby"))
-		{
-			CreateInGameHUD();
-		}
-	}
-}
-
 void ANecPlayerController::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
@@ -213,6 +214,29 @@ void ANecPlayerController::OnPlayerDeath()
 {
 	bIsSpectating = true;
 	Server_NotifyDeath();
+}
+
+void ANecPlayerController::HandleRevive()
+{
+	if (HasAuthority() && MyBody)
+	{
+		// possess
+		Possess(MyBody);
+		bIsSpectating = false;
+
+		// and controller camera view
+		Client_HandleDeath_Implementation(MyBody);
+	}
+}
+
+/// <summary>
+/// Deprecated...
+/// // maybe this func is unnecessary... -> Use Client_HandleDeath_Implementation
+/// </summary>
+/// <param name="MyBody"></param>
+void ANecPlayerController::Client_HandleRevive_Implementation(AActor* InMyBody)
+{
+
 }
 
 void ANecPlayerController::Server_NotifyDeath_Implementation()
@@ -301,8 +325,6 @@ void ANecPlayerController::UpdateSpectateRotation()
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Current TargetPawnState->GetStatComponent()-> is dead "));
-
 			GetWorldTimerManager().ClearTimer(SpectateRotationTimerHandle);
 
 			Server_RequestSpectatingTarget(SpectatingTarget, true);
@@ -310,7 +332,6 @@ void ANecPlayerController::UpdateSpectateRotation()
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("not IsLocalController() && SpectatingTarget && CurSpectatingTargetState"));
 		GetWorldTimerManager().ClearTimer(SpectateRotationTimerHandle);
 	}
 }

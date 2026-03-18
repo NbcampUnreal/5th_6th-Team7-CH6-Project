@@ -18,15 +18,13 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void OnPossess(APawn* InPawn) override;
 
 	void CreateReadyWidgetForHost();
-
 	void CreateInGameHUD();
-	
 
 	virtual void SetupInputComponent() override;
 
-	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnRep_PlayerState() override;
 	virtual void OnRep_Pawn() override;
 
@@ -98,6 +96,8 @@ public:
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+protected:
+	class ANecPlayerCharacter* MyBody;
 public:
 	/// <summary>
 	/// 빙의 해제 및 카메라 이동 시퀀스 수행
@@ -112,6 +112,20 @@ public:
 	/// </summary>
 	UFUNCTION(Client, Reliable)
 	void Client_HandleDeath(AActor* TargetToSpectate);
+
+
+	/// <summary>
+	/// The SoulComponent of the authoritative character will broadcast an event when TryRevive is called
+	/// </summary>
+	UFUNCTION()
+	void HandleRevive();
+
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="MyBody">MyBody is not a replicated Variable. So When ClientRPC_HandleRevive is called, Server has to send original own body</param>
+	UFUNCTION(Client, Reliable)
+	void Client_HandleRevive(AActor* InMyBody);
 
 	UFUNCTION(Server, Reliable)
 	void Server_RequestSpectatingTarget(AActor* InSpectatingTarget, bool bIsUp);
