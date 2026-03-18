@@ -46,11 +46,6 @@ void UItem_Consumption_Base::DecreaseDurability()
     if (CurrentDurability <= 0)
     {
         CurrentDurability = 0;
-
-        if (OwnerItem)
-        {
-            OwnerItem->Destroy();
-        }
     }
 }
 
