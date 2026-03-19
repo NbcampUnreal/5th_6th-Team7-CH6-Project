@@ -106,6 +106,7 @@ public:
 
 	UStatComponent* GetStatComponent() const { return StatComponent; }
 	UStaminaComponent* GetStaminaComponent() const { return StaminaComponent; }
+	UPlayerMovementComponent* GetPlayerMovementComponent() const { return PlayerMovementComponent; }
 	UNecInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 
 	void SetLockOn(bool bEnable);

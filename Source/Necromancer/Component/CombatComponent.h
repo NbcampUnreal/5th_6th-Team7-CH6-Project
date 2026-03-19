@@ -84,6 +84,14 @@ protected:
 
 	void PlayComboAttack();
 
+	void PlayRunningAttack();
+
+	UFUNCTION(Server, Reliable)
+	void Server_RunningAttack();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_RunningAttack();
+
 protected:
 	UPROPERTY()
 	TObjectPtr<ANecPlayerCharacter> OwnerCharacter;
