@@ -19,7 +19,7 @@ class NECROMANCER_API ANecGameMode : public AGameMode
 protected:
 	virtual void BeginPlay() override;
 	virtual void PostLogin(APlayerController* NewPlayer) override;
-	virtual void PostLogout(AController* Exiting) override;
+	virtual void Logout(AController* Exiting) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<TObjectPtr<ANecPlayerController>> PlayerControllers;

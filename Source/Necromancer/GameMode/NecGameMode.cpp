@@ -29,9 +29,9 @@ void ANecGameMode::PostLogin(APlayerController* NewPlayer)
 	}
 }
 
-void ANecGameMode::PostLogout(AController* Exiting)
+void ANecGameMode::Logout(AController* Exiting)
 {
-    Super::PostLogout(Exiting);
+    Super::Logout(Exiting);
 
     ANecPlayerController* ExitingNecPC = Cast<ANecPlayerController>(Exiting);
     if (ExitingNecPC)
