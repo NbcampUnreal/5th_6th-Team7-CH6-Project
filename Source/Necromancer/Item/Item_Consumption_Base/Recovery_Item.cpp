@@ -1,7 +1,8 @@
-//Recovery_Item.cpp
+﻿//Recovery_Item.cpp
 
 #include "Recovery_Item.h"
 #include "Component/StatComponent.h"
+#include "Character/NecPlayerCharacter.h"
 #include "GameFramework/Character.h"
 
 void URecovery_Item::Use(ACharacter* User)
@@ -10,8 +11,8 @@ void URecovery_Item::Use(ACharacter* User)
 	{
 		return;
 	}
-
-	UStatComponent* StatComp = User->FindComponentByClass<UStatComponent>();
+	ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(User);
+	UStatComponent* StatComp = PlayerCharacter->GetStatComponent();
 	if (!StatComp)
 	{
 		return;
@@ -20,4 +21,5 @@ void URecovery_Item::Use(ACharacter* User)
 	StatComp->Heal(RecoverAmount);
 
 	DecreaseDurability();
+	SyncToInventory();
 }

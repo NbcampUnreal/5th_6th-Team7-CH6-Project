@@ -175,4 +175,27 @@ public:
 	USubmitWidgetHub* GetSubmitWidget() { return SubmitWidget; }
 
 #pragma endregion
+
+#pragma region QuickSlot
+	
+	int32 SelectedQuickSlotIndex = 0;
+public:
+	UFUNCTION(BlueprintCallable)
+	void UseItem();
+
+	UFUNCTION(BlueprintCallable)
+	int GetSelectedQuickSlotIndex()const {
+		return SelectedQuickSlotIndex;
+	}
+protected:
+	UFUNCTION(Server, Reliable)
+	void Server_UseItem(int32 InSelectedIndex);
+	void Internal_UseItem(int32 InSelectedIndex);
+
+	UFUNCTION(BlueprintCallable)
+	void SelectPrevQuickSlot();
+
+	UFUNCTION(BlueprintCallable)
+	void SelectNextQuickSlot();
+#pragma endregion
 };

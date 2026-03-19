@@ -1,4 +1,4 @@
-//Recovery_Item.h
+﻿//Recovery_Item.h
 
 #pragma once
 
@@ -13,7 +13,7 @@ class NECROMANCER_API URecovery_Item : public UItem_Consumption_Base
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Item")
-	virtual void Use(ACharacter* User);
+	virtual void Use(ACharacter* User)override;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recovery")

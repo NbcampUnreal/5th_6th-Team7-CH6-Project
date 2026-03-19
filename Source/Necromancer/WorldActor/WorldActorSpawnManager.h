@@ -40,17 +40,22 @@ private:
 	TArray<FActorSpawnData> SpawnQueue;
 
 	int32 CurrentSpawnIndex = 0;
-	int32 CurrentSpawnCost = 0;
+	//int32 CurrentSpawnCost = 0;
 
-	USceneComponent* LastSpawnPoint = nullptr;
+	//USceneComponent* LastSpawnPoint = nullptr;
 
 	void CheckDungeonComplete();
 	void CollectAllSpawnEntries();
 	void SpawnNextInQueue();
 
 public:
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpawnManager")
+	//int32 MaxSpawnCost = 100;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpawnManager")
-	int32 MaxSpawnCost = 100;
+	int32 LevelMaxCost = 1000;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SpawnManager")
+	int32 LevelCurrentCost = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpawnManager")
 	UDataTable* ItemDataTable;

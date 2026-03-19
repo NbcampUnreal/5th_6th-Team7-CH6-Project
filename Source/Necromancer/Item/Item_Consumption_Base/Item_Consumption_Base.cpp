@@ -1,12 +1,12 @@
-#include "Item/Item_Consumption_Base/Item_Consumption_Base.h"
-#include "Item/ItemBass.h"
+﻿#include "Item/Item_Consumption_Base/Item_Consumption_Base.h"
+#include "GridInventory/ItemInstance/ItemInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 
-void UItem_Consumption_Base::Initialize(const FItemData& InItemData, AItemBass* InOwnerItem)
+void UItem_Consumption_Base::Initialize(const FItemData& InItemData, UItemInstance* InOwnerItem)
 {
     ItemData = InItemData;
-    CurrentDurability = ItemData.MaxDurability;
+    CurrentDurability = InOwnerItem->CurrentDurability;
     OwnerItem = InOwnerItem;
 }
 
@@ -46,11 +46,6 @@ void UItem_Consumption_Base::DecreaseDurability()
     if (CurrentDurability <= 0)
     {
         CurrentDurability = 0;
-
-        if (OwnerItem)
-        {
-            OwnerItem->Destroy();
-        }
     }
 }
 
@@ -59,7 +54,7 @@ void UItem_Consumption_Base::SyncToInventory()
     if (!OwnerItem)
         return;
 
-    OwnerItem->UpdateItemDataDurability(CurrentDurability);
+    OwnerItem->CurrentDurability = CurrentDurability;
 }
 
 void UItem_Consumption_Base::ExecuteUseAction(ACharacter* User)

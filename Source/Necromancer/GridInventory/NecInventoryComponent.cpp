@@ -8,6 +8,7 @@
 #include "GridInventory/BucketInventoryComponent.h"
 #include "Item/DropItemBase.h"
 #include "Item/ItemBass.h"
+#include "Item/Item_Consumption_Base/Item_Consumption_Base.h"
 #include "UI/InventoryHub.h"
 #include "UI/SubmitWidgetHub.h"
 
@@ -718,3 +719,83 @@ void UNecInventoryComponent::ToggleSubmitUI(UBucketInventoryComponent* bucketcom
 	}
 }
 
+void UNecInventoryComponent::UseItem()
+{	
+	if (GetOwnerRole() < ROLE_Authority)
+	{
+		Server_UseItem(SelectedQuickSlotIndex);
+	}
+	else
+	{
+		Internal_UseItem(SelectedQuickSlotIndex);
+	}
+
+	return;
+}
+
+void UNecInventoryComponent::Internal_UseItem(int32 InSelectedIndex)
+{
+	TArray<UItemInstance*> QuickItems = GetItemsByNumber(5);
+	if (QuickItems.Num() == 0) return;
+
+	SelectedQuickSlotIndex = FMath::Clamp(SelectedQuickSlotIndex, 0, QuickItems.Num() - 1);
+
+	UItemInstance* CurrentItem = QuickItems[SelectedQuickSlotIndex];
+	if (!CurrentItem) return;
+
+
+	UDataTableSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
+	if (!Subsystem) return;
+
+	const FItemData* ItemData = Subsystem->GetItemData(CurrentItem->ItemID);
+
+	if (!ItemData) return;
+	if (!ItemData->UseActionClass)return;
+
+	UItem_Consumption_Base* UseAction = nullptr;
+	if (ItemData && ItemData->UseActionClass)
+	{
+		UseAction = NewObject<UItem_Consumption_Base>(this, ItemData->UseActionClass);
+		APlayerState* PS = Cast<APlayerState>(GetOwner());
+		if (!PS) return;
+		ACharacter* OwnerActor = Cast<ACharacter>(PS->GetPawn());
+		if (!OwnerActor)
+		{
+			return;
+		}
+		UseAction->Initialize(*ItemData, CurrentItem);
+		UseAction->Use(OwnerActor);
+		if (UseAction->IsBroken()) {
+			RemoveItem(CurrentItem);
+		}
+	}
+}
+
+void UNecInventoryComponent::Server_UseItem_Implementation(int32 InSelectedIndex)
+{
+	Internal_UseItem(InSelectedIndex);
+}
+
+void UNecInventoryComponent::SelectPrevQuickSlot()
+{
+	TArray<UItemInstance*> QuickItems = GetItemsByNumber(5);
+	if (QuickItems.Num() == 0)
+	{
+		SelectedQuickSlotIndex = 0;
+		return;
+	}
+
+	SelectedQuickSlotIndex = (SelectedQuickSlotIndex - 1 + QuickItems.Num()) % QuickItems.Num();
+}
+
+void UNecInventoryComponent::SelectNextQuickSlot()
+{
+	TArray<UItemInstance*> QuickItems = GetItemsByNumber(5);
+	if (QuickItems.Num() == 0)
+	{
+		SelectedQuickSlotIndex = 0;
+		return;
+	}
+
+	SelectedQuickSlotIndex = (SelectedQuickSlotIndex + 1) % QuickItems.Num();
+}

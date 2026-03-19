@@ -2,6 +2,7 @@
 
 
 #include "GridInventory/ItemInstance/ItemInstance.h"
+#include "GridInventory/ItemData/ItemDataSubsystem.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -34,6 +35,15 @@ void UItemInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 void UItemInstance::InitializeIdentity(const FName& InItemID)
 {
     ItemID = InItemID;
+
+    UDataTableSubsystem* Subsystem = GetWorld()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
+    if (!Subsystem) return;
+
+    const FItemData* ItemData = Subsystem->GetItemData(InItemID);
+
+    if (!ItemData) return;
+
+    CurrentDurability = ItemData->MaxDurability;
 }
 
 void UItemInstance::SetDurability(float NewDurability)

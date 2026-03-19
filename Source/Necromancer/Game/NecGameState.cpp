@@ -9,14 +9,14 @@ void ANecGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ThisClass, SessionState);
+	//DOREPLIFETIME(ThisClass, SessionState);
 	DOREPLIFETIME(ThisClass, PlayerControllerCount);
 }
 
-void ANecGameState::OnRep_SessionState()
-{
-
-}
+//void ANecGameState::OnRep_SessionState()
+//{
+//
+//}
 
 void ANecGameState::OnRep_PlayerControllerCount()
 {
