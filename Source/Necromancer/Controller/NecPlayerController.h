@@ -18,15 +18,13 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void OnPossess(APawn* InPawn) override;
 
 	void CreateReadyWidgetForHost();
-
 	void CreateInGameHUD();
-	
 
 	virtual void SetupInputComponent() override;
 
-	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnRep_PlayerState() override;
 	virtual void OnRep_Pawn() override;
 
@@ -98,6 +96,8 @@ public:
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+protected:
+	class ANecPlayerCharacter* MyBody;
 public:
 	/// <summary>
 	/// 빙의 해제 및 카메라 이동 시퀀스 수행
@@ -111,18 +111,25 @@ public:
 	/// 사망시, 관전자를 탐색하여 타겟을 이동 수행
 	/// </summary>
 	UFUNCTION(Client, Reliable)
-	void Client_HandleDeath(AActor* TargetToSpectate);
+	void Client_HandleCameraTarget(AActor* TargetToSpectate);
 
 	UFUNCTION(Server, Reliable)
 	void Server_RequestSpectatingTarget(AActor* InSpectatingTarget, bool bIsUp);
 
 	/// <summary>
-	/// Client_HandleDeath() || UpdateSpectateRotation() 에서 호출
+	/// Client_HandleCameraTarget() || UpdateSpectateRotation() 에서 호출
 	/// </summary>
 	/// <param name="TargetToSpectate"></param>
 	void SetSpectateTargetInternal(AActor* TargetToSpectate);
 
 	void UpdateSpectateRotation();
+
+	/// <summary>
+	/// The SoulComponent of the authoritative character will broadcast an event when TryRevive is called
+	/// </summary>
+	UFUNCTION()
+	void HandleRevive();
+
 
 protected:
 	UPROPERTY(Replicated)

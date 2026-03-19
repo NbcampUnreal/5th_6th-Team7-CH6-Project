@@ -10,6 +10,8 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISense_Hearing.h"
+#include "GameFramework/PlayerState.h"
+#include "Component/StatComponent.h"
 
 
 
@@ -124,6 +126,21 @@ void AMonsterAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 
 		if (TeamAgent && TeamAgent->GetGenericTeamId() == FGenericTeamId(TEAM_ID_PLAYER))
 		{
+			// 죽은 플레이어는 타겟으로 잡지 않음
+			if (APawn* CandidatePawn = Cast<APawn>(TargetCandidate))
+			{
+				if (APlayerState* PS = CandidatePawn->GetPlayerState())
+				{
+					if (UStatComponent* StatComp = PS->FindComponentByClass<UStatComponent>())
+					{
+						if (StatComp->GetStatus() != ECharacterStatus::Alive)
+						{
+							return;
+						}
+					}
+				}
+			}
+
 			SetTargetActor(TargetCandidate);
 
 			// 귀환 취소

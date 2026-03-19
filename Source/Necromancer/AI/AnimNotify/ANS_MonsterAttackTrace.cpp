@@ -8,6 +8,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "NiagaraFunctionLibrary.h"
+#include "DamageType/NecDamageType.h"
 
 void UANS_MonsterAttackTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
@@ -106,7 +107,7 @@ void UANS_MonsterAttackTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnim
 				UMonsterStatComponent* StatComp = OwnerActor->FindComponentByClass<UMonsterStatComponent>();
 				if (StatComp)
 				{
-					UGameplayStatics::ApplyDamage(HitActor,StatComp->GetAttackPower(),OwnerActor->GetInstigatorController(),OwnerActor,nullptr);
+					UGameplayStatics::ApplyDamage(HitActor,StatComp->GetAttackPower(),OwnerActor->GetInstigatorController(),OwnerActor,UNecDamageType::StaticClass());
 				}
 			}
 

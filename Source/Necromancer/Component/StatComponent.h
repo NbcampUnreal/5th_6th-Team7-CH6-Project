@@ -14,7 +14,7 @@ enum class ECharacterStatus : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChangedSignature, float, CurrentHealth, float, MaxHealth);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamageReceivedSignature, float, DamageAmount, FVector, HitLocation);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDamageReceivedSignature, float, DamageAmount, FVector, HitLocation, bool, bPoiseBroken);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class NECROMANCER_API UStatComponent : public UActorComponent
@@ -35,7 +35,7 @@ protected:
     void HandleTakeDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
     UFUNCTION(NetMulticast, Unreliable)
-    void Multicast_OnDamageReceived(float DamageAmount, FVector HitLocation);
+    void Multicast_OnDamageReceived(float DamageAmount, FVector HitLocation, bool bPoiseBroken);
 
 public:
     UFUNCTION(BlueprintPure)
@@ -90,6 +90,11 @@ protected:
 
     UPROPERTY(ReplicatedUsing = OnRep_Status)
     ECharacterStatus Status =ECharacterStatus::Alive;
+
+    UPROPERTY(EditAnywhere, Category = "Poise", meta = (ClampMin = "0.0"))
+    float MaxPoiseTest = 100.0f;
+
+    float CurrentPoiseDamage;
 
     UFUNCTION()
     void OnRep_Status();

@@ -15,30 +15,6 @@ void UMonsterStatComponent::BeginPlay()
 	BindToOwnerPawn(OwnerPawn);
 }
 
-void UMonsterStatComponent::ApplyPoise(float Amount)
-{
-	if (!GetOwner()->HasAuthority())
-	{
-		return;
-	}
-
-	// 단일 경직 체크
-	if (Amount >= SinglePoiseThreshold)
-	{
-		OnStagger.Broadcast();
-	}
-
-	// 누적
-	CurrentPoise += Amount;
-
-	// 기절 체크
-	if (CurrentPoise >= MaxPoise)
-	{
-		OnStun.Broadcast();
-		CurrentPoise = 0.0f;
-	}
-}
-
 float UMonsterStatComponent::GetAttackPower() const
 {
 	return AttackPower * CurrentDamageMultiplier;
@@ -52,6 +28,16 @@ void UMonsterStatComponent::SetDamageMultiplier(float NewMultiplier)
 void UMonsterStatComponent::ResetDamageMultiplier()
 {
 	CurrentDamageMultiplier = 1.0f;
+}
+
+void UMonsterStatComponent::SetPoiseDamageMultiplier(float NewMultiplier)
+{
+	CurrentPoiseDamageMultiplier = NewMultiplier;
+}
+
+void UMonsterStatComponent::ResetPoiseDamageMultiplier()
+{
+	CurrentPoiseDamageMultiplier = 1.0f;
 }
 
 float UMonsterStatComponent::GetAttackRange() const
@@ -140,6 +126,6 @@ void UMonsterStatComponent::ApplyFloorScaling(int32 FloorLevel)
 
 	if (PoiseScaleCurve)
 	{
-		MaxPoise *= PoiseScaleCurve->GetFloatValue(Level);
+		MaxPoiseTest *= PoiseScaleCurve->GetFloatValue(Level);
 	}
 }

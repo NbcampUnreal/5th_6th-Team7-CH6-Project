@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Necromancer.h"
+#include "DamageType/NecDamageType.h"
 
 AMonsterProjectile::AMonsterProjectile()
 {
@@ -72,7 +73,7 @@ void AMonsterProjectile::OnActorHit(UPrimitiveComponent* HitComponent, AActor* O
 	// Server Only
 	if (HasAuthority())
 	{
-		UGameplayStatics::ApplyDamage(OtherActor, ProjectileDamage, GetInstigatorController(), this, UDamageType::StaticClass());
+		UGameplayStatics::ApplyDamage(OtherActor, ProjectileDamage, GetInstigatorController(), this, UNecDamageType::StaticClass());
 	}
 
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ExplosionEffect, GetActorLocation());

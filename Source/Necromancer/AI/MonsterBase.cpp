@@ -54,6 +54,11 @@ bool AMonsterBase::GetIsDead()
 	return bIsDead;
 }
 
+float AMonsterBase::GetPoiseDamage() const
+{
+	return MonsterStatComponent->GetPoiseDamage();
+}
+
 void AMonsterBase::ForceCleanupAttackState()
 {
 	if (AAIController* AIC = GetController<AAIController>())
@@ -117,10 +122,6 @@ void AMonsterBase::BeginPlay()
 	MonsterStatComponent->OnDamageReceived.AddDynamic(this, &AMonsterBase::OnDamageReceived);
 
 	MonsterStatComponent->OnDeath.AddDynamic(this, &AMonsterBase::OnDeath);
-	MonsterStatComponent->OnStagger.AddUObject(this, &AMonsterBase::OnStagger);
-	MonsterStatComponent->OnStun.AddUObject(this, &AMonsterBase::OnStun);
-
-	
 	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
 	{
 		MoveComp->bOrientRotationToMovement = true;
@@ -137,32 +138,6 @@ void AMonsterBase::BeginPlay()
 		IdleAudioComp->SetSound(IdleSound);
 		IdleAudioComp->SetVolumeMultiplier(IdleSoundVolume);
 		IdleAudioComp->Play();
-	}
-}
-
-void AMonsterBase::OnStagger()
-{
-	StopAnimMontage();
-
-	if (AAIController* AIC = GetController<AAIController>())
-	{
-		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
-		{
-			BB->SetValueAsBool(NAME_IsStaggered, true);
-		}
-	}
-}
-
-void AMonsterBase::OnStun()
-{
-	StopAnimMontage();
-
-	if (AAIController* AIC = GetController<AAIController>())
-	{
-		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
-		{
-			BB->SetValueAsBool(NAME_IsStaggered, true);
-		}
 	}
 }
 
@@ -287,18 +262,26 @@ void AMonsterBase::Multicast_PlayMontage_Implementation(UAnimMontage* Montage)
 	}
 }
 
-void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
+void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation, bool bPoiseBroken)
 {
 	if (bIsDead)
 	{
 		return;
 	}
 
-	// 블로킹 중이면 데미지 감소 + 블록 리액션
+	// 블로킹 중이면 블록 리액션 (포이즈는 HandleTakeDamage에서 이미 감소 적용됨)
 	if (bIsBlocking)
 	{
-		float ReducedDamage = DamageAmount * (1.0f - ShieldGuardRate);
-		MonsterStatComponent->ApplyPoise(ReducedDamage);
+		if (bPoiseBroken)
+		{
+			if (AAIController* AIC = GetController<AAIController>())
+			{
+				if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+				{
+					BB->SetValueAsBool(NAME_IsStaggered, true);
+				}
+			}
+		}
 
 		if (HasAuthority() && BlockReactMontage)
 		{
@@ -319,7 +302,17 @@ void AMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation)
 
 	TryGrantTemporarySlot();
 
-	MonsterStatComponent->ApplyPoise(DamageAmount);
+	// bPoiseBroken이면 경직 상태 설정
+	if (bPoiseBroken)
+	{
+		if (AAIController* AIC = GetController<AAIController>())
+		{
+			if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+			{
+				BB->SetValueAsBool(NAME_IsStaggered, true);
+			}
+		}
+	}
 
 	if (HitReactMontage)
 	{

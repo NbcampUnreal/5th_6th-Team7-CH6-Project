@@ -9,6 +9,7 @@
 #include "DrawDebugHelpers.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Necromancer.h"
+#include "DamageType/NecDamageType.h"
 
 void UAN_MonsterAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,const FAnimNotifyEventReference& EventReference)
 {
@@ -47,7 +48,7 @@ void UAN_MonsterAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBa
 			// Server Only
 			if (OwnerActor->HasAuthority())
 			{
-				UGameplayStatics::ApplyDamage(HitActor,MonsterStatComponent->GetAttackPower(),OwnerActor->GetInstigatorController(),OwnerActor,nullptr);
+				UGameplayStatics::ApplyDamage(HitActor,MonsterStatComponent->GetAttackPower(),OwnerActor->GetInstigatorController(),OwnerActor, UNecDamageType::StaticClass());
 			}
 
 			FVector HitLocation = Hit.ImpactPoint;
