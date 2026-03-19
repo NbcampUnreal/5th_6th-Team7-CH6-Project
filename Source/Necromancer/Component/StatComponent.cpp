@@ -128,10 +128,10 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
     {
         IncomingPoiseDamage = Weapon->GetPoiseDamage();
     }
-    //else if (AMonsterBase* Monster = Cast<AMonsterBase>(DamageCauser))
-    //{
-    //    IncomingPoiseDamage = Monster->GetPoiseDamage();
-    //}
+    else if (AMonsterBase* Monster = Cast<AMonsterBase>(DamageCauser))
+    {
+        IncomingPoiseDamage = Monster->GetPoiseDamage();
+    }
     else if (const UNecDamageType* NecDamage = Cast<UNecDamageType>(DamageType))
     {
         IncomingPoiseDamage = NecDamage->PoiseDamage;
@@ -156,6 +156,14 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
                 }
             }
         }
+    }
+
+    // 몬스터 블로킹 시 데미지 + 포이즈 감소
+    AMonsterBase* MonsterCharacter = Cast<AMonsterBase>(DamagedActor);
+    if (MonsterCharacter && MonsterCharacter->IsBlocking())
+    {
+        ActualDamage *= (1.0f - MonsterCharacter->ShieldGuardRate);
+        IncomingPoiseDamage *= (1.0f - MonsterCharacter->ShieldGuardRate);
     }
 
     ActualDamage = FMath::Max(ActualDamage - Armor, 0.0f);

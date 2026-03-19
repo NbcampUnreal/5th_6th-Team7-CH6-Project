@@ -50,12 +50,18 @@ void ABossMonsterBase::OnDamageReceived(float DamageAmount, FVector HitLocation,
 	}
 
 	// 슈퍼아머: 페이즈 전환 중 또는 특정 패턴 실행 중 (HitReact 스킵, 데미지는 받음)
+	// 포이즈는 부모 HandleTakeDamage에서 이미 처리됨
 	if (bIsTransitioning || bHasSuperArmor)
 	{
-		// Poise만 적용 (경직 판정)
-		if (UMonsterStatComponent* StatComp = FindComponentByClass<UMonsterStatComponent>())
+		if (bPoiseBroken)
 		{
-			StatComp->ApplyPoise(DamageAmount);
+			if (AAIController* AIC = GetController<AAIController>())
+			{
+				if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+				{
+					BB->SetValueAsBool(NAME_IsStaggered, true);
+				}
+			}
 		}
 		CheckPhaseTransition();
 		return;

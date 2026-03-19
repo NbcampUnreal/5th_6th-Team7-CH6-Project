@@ -45,6 +45,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool GetIsDead();
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	float GetPoiseDamage() const;
+
 	// 공격 상태 강제 정리
 	UFUNCTION(BlueprintCallable, Category = "AI")
 	void ForceCleanupAttackState();
@@ -73,14 +76,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	TObjectPtr<UMonsterStatComponent> MonsterStatComponent;
 
-	// 경직 처리
-	UFUNCTION()
-	virtual void OnStagger();
-
-	// 기절 처리
-	UFUNCTION()
-	virtual void OnStun();
-
 	// 사망 처리 (Server Only)
 	UFUNCTION()
 	virtual void OnDeath();
@@ -90,9 +85,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> HitReactMontage;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Animation")
-	TObjectPtr<UAnimMontage> StunMontage;
 
 	// 물리 래그돌 전환
 	void StartRagdoll();

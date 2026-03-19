@@ -4,7 +4,9 @@
 #include "BTService_CheckAttackRange.h"
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "GameFramework/PlayerState.h"
 #include "MonsterStatComponent.h"
+#include "MonsterAIController.h"
 #include "Necromancer.h"
 
 UBTService_CheckAttackRange::UBTService_CheckAttackRange()
@@ -33,7 +35,27 @@ void UBTService_CheckAttackRange::TickNode(UBehaviorTreeComponent& OwnerComp, ui
 		BB->SetValueAsBool(AttackRangeKey.SelectedKeyName, false);
 		return;
 	}
-	
+
+	// 타겟 플레이어 생존 여부 확인 (Down/Death 시 타겟 해제)
+	if (APawn* TargetPawn = Cast<APawn>(TargetActor))
+	{
+		if (APlayerState* PS = TargetPawn->GetPlayerState())
+		{
+			if (UStatComponent* TargetStatComp = PS->FindComponentByClass<UStatComponent>())
+			{
+				if (TargetStatComp->GetStatus() != ECharacterStatus::Alive)
+				{
+					if (AMonsterAIController* MonsterAIC = Cast<AMonsterAIController>(OwnerComp.GetAIOwner()))
+					{
+						MonsterAIC->ClearTargetActor();
+					}
+					BB->SetValueAsBool(AttackRangeKey.SelectedKeyName, false);
+					return;
+				}
+			}
+		}
+	}
+
 	AAIController* AIC = OwnerComp.GetAIOwner();
 	if (!AIC)
 	{
