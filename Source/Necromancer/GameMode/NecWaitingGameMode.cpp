@@ -31,6 +31,6 @@ void ANecWaitingGameMode::PostLogin(APlayerController* NewPlayer)
 
 void ANecWaitingGameMode::StartGame()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::Printf(TEXT("StartGame")));
+	//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::Printf(TEXT("StartGame")));
 	GetWorld()->ServerTravel("/Game/Necromancer/Maps/InDungeonLevel?listen",true );
 }

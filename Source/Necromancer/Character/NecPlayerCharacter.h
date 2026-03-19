@@ -89,7 +89,13 @@ protected:
 	void Server_EquipWeapon(AWeapon_Item_Base* WeaponToEquip);
 
 	UFUNCTION()
-	void PlayBloodEffect(float DamageAmount, FVector HitLocation);
+	void PlayBloodEffect(float DamageAmount, FVector HitLocation, bool bPoiseBroken);
+
+	UFUNCTION()
+	void OnDamageReceived(float DamageAmount, FVector HitLocation, bool bPoiseBroken);
+
+	UFUNCTION()
+	void OnHitMontageEnded(UAnimMontage* Montage, bool bInterupped);
 
 public:
 	UFUNCTION(Server, Reliable)
@@ -100,9 +106,12 @@ public:
 
 	UStatComponent* GetStatComponent() const { return StatComponent; }
 	UStaminaComponent* GetStaminaComponent() const { return StaminaComponent; }
+	UPlayerMovementComponent* GetPlayerMovementComponent() const { return PlayerMovementComponent; }
 	UNecInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 
 	void SetLockOn(bool bEnable);
+
+	bool IsHit() const { return bIsHit; }
 
 	bool GetISDead();
 
@@ -139,6 +148,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "VFX")
 	TObjectPtr<UNiagaraSystem> BloodEffectFX;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> HitMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> GuardHitMontage;
+
+	UPROPERTY(VisibleAnywhere, Category = "Animation")
+	bool bIsHit = false;
 
 	FTimerHandle DeathTimerHandle;
 

@@ -29,22 +29,57 @@ void ANecGameMode::PostLogin(APlayerController* NewPlayer)
 	}
 }
 
+void ANecGameMode::Logout(AController* Exiting)
+{
+    Super::Logout(Exiting);
+
+    ANecPlayerController* ExitingNecPC = Cast<ANecPlayerController>(Exiting);
+    if (ExitingNecPC)
+    {
+        if (PlayerControllers.RemoveSingle(ExitingNecPC) > 0)
+        {
+            if (PlayerControllers.Num() == 0)
+            {
+                EndGame();
+            }
+        }
+    }
+}
+
 void ANecGameMode::StartGame()
 {
 	ANecGameState* NecGameState = GetGameState<ANecGameState>();
 	if (NecGameState)
 	{
-		NecGameState->SessionState = ESessionState::Playing;
-		NecGameState->OnRep_SessionState();
+		//NecGameState->SessionState = ESessionState::Playing;
+		//NecGameState->OnRep_SessionState();
+
+        // 별도 관리할 대상이 없음.. 
 	}
+}
+
+void ANecGameMode::EndGame()
+{
+    // UI 출력 및 게임 종료 
 }
 
 void ANecGameMode::OnPlayerDeath(ANecPlayerController* DeadPC)
 {
     PlayerControllers.RemoveSingle(DeadPC);
 
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("OnPlayerDeath GAMEMODE %d"), PlayerControllers.Num()));
-    Server_ReqeustSpectatingTarget(DeadPC, nullptr, true);
+    if (PlayerControllers.Num() < 1)
+    {
+        EndGame();
+    }
+    else
+    {
+        Server_ReqeustSpectatingTarget(DeadPC, nullptr, true);
+    }
+}
+
+void ANecGameMode::OnPlayerRevive(ANecPlayerController* RevivedPlayerController)
+{
+    PlayerControllers.Add(RevivedPlayerController);
 }
 
 
@@ -56,10 +91,9 @@ void ANecGameMode::Server_ReqeustSpectatingTarget_Implementation(ANecPlayerContr
         return;
     }
 
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("SpectatingTargetUp %d %d"), CurSpectatingTarget == nullptr, PlayerControllers.Num()));
     if (CurSpectatingTarget == nullptr)
     {
-        RequestPC->Client_HandleDeath(PlayerControllers[0]->GetPawn());
+        RequestPC->Client_HandleCameraTarget(PlayerControllers[0]->GetPawn());
     }
     else
     {
@@ -89,12 +123,12 @@ void ANecGameMode::Server_ReqeustSpectatingTarget_Implementation(ANecPlayerContr
 
             if (PlayerControllers[NextIdx])
             {
-                RequestPC->Client_HandleDeath(PlayerControllers[NextIdx]->GetPawn());
+                RequestPC->Client_HandleCameraTarget(PlayerControllers[NextIdx]->GetPawn());
             }
         }
         else
         {
-            RequestPC->Client_HandleDeath(PlayerControllers[0]->GetPawn());
+            RequestPC->Client_HandleCameraTarget(PlayerControllers[0]->GetPawn());
         }
     }
 

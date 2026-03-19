@@ -8,11 +8,6 @@
 #include "Curves/CurveFloat.h"
 #include "MonsterStatComponent.generated.h"
 
-// 경직
-DECLARE_MULTICAST_DELEGATE(FOnStagger);
-// 기절
-DECLARE_MULTICAST_DELEGATE(FOnStun);
-
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class NECROMANCER_API UMonsterStatComponent : public UStatComponent
 {
@@ -21,14 +16,9 @@ class NECROMANCER_API UMonsterStatComponent : public UStatComponent
 public:
 	UMonsterStatComponent();
 
-	// 강인도 누적 (경직/기절 판정)
 	UFUNCTION(BlueprintCallable)
-	void ApplyPoise(float Amount);
+	float GetPoiseDamage() const { return PoiseDamage * CurrentPoiseDamageMultiplier; }
 
-	// Delegate
-	FOnStagger OnStagger;
-	FOnStun OnStun;
-	
 	UFUNCTION(BlueprintCallable)
 	float GetAttackPower() const;
 
@@ -37,6 +27,12 @@ public:
 	void SetDamageMultiplier(float NewMultiplier);
 	UFUNCTION(BlueprintCallable)
 	void ResetDamageMultiplier();
+
+	// 현재 공격의 포이즈 배율 설정/조회 (BTTask에서 공격 전 호출)
+	UFUNCTION(BlueprintCallable)
+	void SetPoiseDamageMultiplier(float NewMultiplier);
+	UFUNCTION(BlueprintCallable)
+	void ResetPoiseDamageMultiplier();
 
 	UFUNCTION(BlueprintCallable)
 	float GetAttackRange() const;
@@ -77,6 +73,10 @@ protected:
 
 private:
 	// 공격
+	// 포이즈 데미지 (플레이어에게 주는 포이즈)
+	UPROPERTY(EditDefaultsOnly, Category = "Poise")
+	float PoiseDamage = 30.0f;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Stat")
 	float AttackPower = 50.0f;
 
@@ -85,15 +85,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Stat")
 	float DetectRange = 200.0f;
-
-	// 경직
-	UPROPERTY(EditDefaultsOnly, Category = "Poise")
-	float MaxPoise = 100.0f;
-
-	float CurrentPoise = 0.0f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Poise")
-	float SinglePoiseThreshold = 30.0f;
 
 	// 원거리 전투
 	UPROPERTY(EditDefaultsOnly, Category = "Stat|Ranged")
@@ -116,6 +107,9 @@ private:
 
 	// 현재 공격의 데미지 배율 (매 공격마다 BTTask에서 설정, 기본 1.0)
 	float CurrentDamageMultiplier = 1.0f;
+
+	// 현재 공격의 포이즈 배율 (매 공격마다 BTTask에서 설정, 기본 1.0)
+	float CurrentPoiseDamageMultiplier = 1.0f;
 
 	// 스킬 레벨 (0~1, 높을수록 회피/블록 확률 증가)
 	UPROPERTY(EditDefaultsOnly, Category = "Stat", meta = (ClampMin = "0.0", ClampMax = "1.0"))

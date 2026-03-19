@@ -10,6 +10,7 @@ class UImage;
 class UStatComponent;
 class UStaminaComponent;
 class USoulComponent;
+class UNecInventoryComponent;
 
 UCLASS()
 class NECROMANCER_API UInGameHUDWidget : public UUserWidget
@@ -43,4 +44,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<USoulComponent> SoulComponent;
+
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<UNecInventoryComponent> NecInventoryComponent;
 };
