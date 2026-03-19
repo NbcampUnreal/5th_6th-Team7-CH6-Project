@@ -298,6 +298,7 @@ void AWorldActorSpawnManager::SpawnNextInQueue()
 			if (!ItemData)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Spawn failed: ItemData is null"));
+
 				break;
 			}
 
