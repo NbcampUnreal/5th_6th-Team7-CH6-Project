@@ -45,6 +45,9 @@ public:
 
 	void ConsumeStamina_Predictive(float Amount);
 
+	UFUNCTION(Client, Reliable)
+	void Client_ConsumeStamina(float Amount);
+
 	bool IsExhausted() const { return bIsExhausted; }
 	void SetExhausted(bool bValue) { bIsExhausted = bValue; }
 
@@ -65,6 +68,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
 	float RecoveryThreshold = 20.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
+	float StaminaRecoveryDelay = 1.5f;
+
+	float LastStaminaComsumeTime = 0.0f;
 
 	UPROPERTY(ReplicatedUsing = OnRep_IsExhausted, VisibleAnywhere, Category = "Stamina")
 	bool bIsExhausted = false;

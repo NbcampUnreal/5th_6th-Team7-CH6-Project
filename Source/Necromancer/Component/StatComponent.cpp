@@ -153,6 +153,7 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
                 if (StaminaComp)
                 {
                     StaminaComp->ConsumeStamina(30.0f);
+                    StaminaComp->Client_ConsumeStamina(30.0f);
                 }
             }
         }
