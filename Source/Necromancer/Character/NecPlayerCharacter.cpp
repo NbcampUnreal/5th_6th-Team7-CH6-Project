@@ -571,7 +571,7 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 	}
 }
 
-void ANecPlayerCharacter::PlayBloodEffect(float DamageAmount, FVector HitLocation)
+void ANecPlayerCharacter::PlayBloodEffect(float DamageAmount, FVector HitLocation, bool bPoiseBroken)
 {
 	if (DamageAmount <= 0.0f || !BloodEffectFX)
 	{
@@ -581,9 +581,14 @@ void ANecPlayerCharacter::PlayBloodEffect(float DamageAmount, FVector HitLocatio
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), BloodEffectFX, HitLocation);
 }
 
-void ANecPlayerCharacter::OnDamageReceived(float DamageAmount, FVector HitLocation)
+void ANecPlayerCharacter::OnDamageReceived(float DamageAmount, FVector HitLocation, bool bPoiseBroken)
 {
 	if (DamageAmount <= 0.0f)
+	{
+		return;
+	}
+
+	if (!bPoiseBroken)
 	{
 		return;
 	}

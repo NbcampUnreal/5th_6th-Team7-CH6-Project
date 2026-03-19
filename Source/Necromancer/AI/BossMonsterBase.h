@@ -46,7 +46,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	virtual void OnDamageReceived(float DamageAmount, FVector HitLocation) override;
+	virtual void OnDamageReceived(float DamageAmount, FVector HitLocation, bool bPoiseBroken) override;
 
 	// 페이즈 전환 체크 (OnDamageReceived 후 호출)
 	void CheckPhaseTransition();

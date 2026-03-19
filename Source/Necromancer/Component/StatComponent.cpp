@@ -10,9 +10,12 @@
 #include "Item/Weapon_Item_Base.h"
 #include "Controller/NecPlayerController.h"
 #include "Game/NecPlayerState.h"
+#include "DamageType/NecDamageType.h"
+#include "AI/MonsterBase.h"
 
 UStatComponent::UStatComponent()
 	: CurrentHealth(0.0f)
+    , CurrentPoiseDamage(0.0f)
 {
 	SetIsReplicatedByDefault(true);
 }
@@ -119,14 +122,32 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
     }
 
     float ActualDamage = Damage;
-    if (DamagedActor) {
+    float IncomingPoiseDamage = Damage;
+
+    if (AWeapon_Item_Base* Weapon = Cast<AWeapon_Item_Base>(DamageCauser))
+    {
+        IncomingPoiseDamage = Weapon->GetPoiseDamage();
+    }
+    //else if (AMonsterBase* Monster = Cast<AMonsterBase>(DamageCauser))
+    //{
+    //    IncomingPoiseDamage = Monster->GetPoiseDamage();
+    //}
+    else if (const UNecDamageType* NecDamage = Cast<UNecDamageType>(DamageType))
+    {
+        IncomingPoiseDamage = NecDamage->PoiseDamage;
+    }
+
+    if (DamagedActor)
+    {
         ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(DamagedActor);
         if (PlayerCharacter)
         {
             UCombatComponent* CombatComp = PlayerCharacter->FindComponentByClass<UCombatComponent>();
             if (CombatComp && CombatComp->IsGuarding())
             {
-                ActualDamage *= CombatComp->GetCurrentWeapon()->GetGuardRate();
+                float GuardRate = CombatComp->GetCurrentWeapon()->GetGuardRate();
+                ActualDamage *= GuardRate;
+                //IncomingPoiseDamage *= GuardRate;
 
                 UStaminaComponent* StaminaComp = PlayerCharacter->GetStaminaComponent();
                 if (StaminaComp)
@@ -142,8 +163,18 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
 
     SetCurrentHealth(NewHealth);
 
+    // Poise Damage
+    bool bPoiseBroken = false;
+    CurrentPoiseDamage += IncomingPoiseDamage;
+
+    if (CurrentPoiseDamage >= MaxPoiseTest)
+    {
+        bPoiseBroken = true;
+        CurrentPoiseDamage = 0.0f;
+    }
+
     FVector HitLocation = DamagedActor ? DamagedActor->GetActorLocation() : FVector::ZeroVector;
-    Multicast_OnDamageReceived(ActualDamage, HitLocation);
+    Multicast_OnDamageReceived(ActualDamage, HitLocation, bPoiseBroken);
     
     if (DamageCauser)
     {
@@ -184,9 +215,9 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
     }
 }
 
-void UStatComponent::Multicast_OnDamageReceived_Implementation(float DamageAmount, FVector HitLocation)
+void UStatComponent::Multicast_OnDamageReceived_Implementation(float DamageAmount, FVector HitLocation, bool bPoiseBroken)
 {
-    OnDamageReceived.Broadcast(DamageAmount, HitLocation);
+    OnDamageReceived.Broadcast(DamageAmount, HitLocation, bPoiseBroken);
 }
 
 void UStatComponent::SetCurrentHealth(float NewHealth)

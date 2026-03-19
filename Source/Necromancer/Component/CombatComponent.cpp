@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Item/Weapon_Item_Base.h"
+#include "Component/PlayerMovementComponent.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -47,6 +48,17 @@ void UCombatComponent::Attack()
 {
     if (!OwnerCharacter || !CurrentWeapon)
     {
+        return;
+    }
+
+    if (OwnerCharacter->GetPlayerMovementComponent()->GetIsSprinting() && !bIsAttacking)
+    {
+        bIsAttacking = true;
+        bSaveAttackInput = false;
+        bComboWindowOpen = false;
+        CurrentComboIndex = 0;
+
+        PlayRunningAttack();
         return;
     }
 
@@ -300,8 +312,11 @@ void UCombatComponent::PlayComboAttack()
     {
         StaminaComp->ConsumeStamina_Predictive(StaminaCost);
 
-        float Multiplier = ComboList[CurrentComboIndex].DamageMultiplier;
-        CurrentWeapon->SetDamageMultiplier(Multiplier);
+        float DamageMultiplier = ComboList[CurrentComboIndex].DamageMultiplier;
+        CurrentWeapon->SetDamageMultiplier(DamageMultiplier);
+
+        float PoiseDamageMultplier = ComboList[CurrentComboIndex].PoiseDamageMultiplier;
+        CurrentWeapon->SetPoiseDamageMultiplier(PoiseDamageMultplier);
 
         UAnimMontage* AttackMontage = CurrentWeapon->GetAttackMontage();
         FName MontageSectionName = ComboList[CurrentComboIndex].MontageSectionName;
@@ -331,6 +346,92 @@ void UCombatComponent::PlayComboAttack()
     else
     {
         ResetCombatState();
+    }
+}
+
+void UCombatComponent::PlayRunningAttack()
+{
+    if (!CurrentWeapon)
+    {
+        return;
+    }
+
+    UAnimMontage* RunningMontage = CurrentWeapon->GetRunningAttackMontage();
+    if (!RunningMontage)
+    {
+        return;
+    }
+
+    float StaminaCost = 20.0f;
+    UStaminaComponent* StaminaComp = OwnerCharacter->GetStaminaComponent();
+
+    if (StaminaComp && StaminaComp->GetCurrentStamina() >= StaminaCost)
+    {
+        StaminaComp->ConsumeStamina_Predictive(StaminaCost);
+
+        CurrentWeapon->SetDamageMultiplier(5.0f);
+        CurrentWeapon->SetPoiseDamageMultiplier(5.0f);
+
+        ActiveAttackMontage = RunningMontage;
+
+        UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+        if (AnimInstance)
+        {
+            if (!AnimInstance->OnMontageEnded.IsAlreadyBound(this, &UCombatComponent::OnAttackMontageEnded))
+            {
+                AnimInstance->OnMontageEnded.AddDynamic(this, &UCombatComponent::OnAttackMontageEnded);
+            }
+
+            OwnerCharacter->PlayAnimMontage(RunningMontage, 1.0f);
+        }
+
+        Server_RunningAttack();
+    }
+    else
+    {
+        ResetCombatState();
+    }
+}
+
+void UCombatComponent::Multicast_RunningAttack_Implementation()
+{
+    if (!OwnerCharacter || !CurrentWeapon)
+    {
+        return;
+    }
+
+    if (OwnerCharacter->IsLocallyControlled())
+    {
+        return;
+    }
+
+    UAnimMontage* RunningMontage = CurrentWeapon->GetRunningAttackMontage();
+    UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+
+    if (RunningMontage && AnimInstance)
+    {
+        OwnerCharacter->PlayAnimMontage(RunningMontage, 1.0f);
+    }
+}
+
+void UCombatComponent::Server_RunningAttack_Implementation()
+{
+    if (!OwnerCharacter || !CurrentWeapon)
+    {
+        return;
+    }
+    
+    float StaminaCost = 50.0f;
+    UStaminaComponent* StaminaComp = OwnerCharacter->GetStaminaComponent();
+
+    if (StaminaComp && StaminaComp->GetCurrentStamina() >= StaminaCost)
+    {
+        StaminaComp->ConsumeStamina(StaminaCost);
+
+        CurrentWeapon->SetDamageMultiplier(5.0f);
+        CurrentWeapon->SetPoiseDamageMultiplier(5.0f);
+
+        Multicast_RunningAttack();
     }
 }
 
@@ -396,8 +497,11 @@ void UCombatComponent::Server_Attack_Implementation(int32 ComboIndex)
     {
         StaminaComp->ConsumeStamina(StaminaCost);
 
-        float Multiplier = ComboList[CurrentComboIndex].DamageMultiplier;
-        CurrentWeapon->SetDamageMultiplier(Multiplier);
+        float DamageMultiplier = ComboList[CurrentComboIndex].DamageMultiplier;
+        CurrentWeapon->SetDamageMultiplier(DamageMultiplier);
+
+        float PoiseDamageMultplier = ComboList[CurrentComboIndex].PoiseDamageMultiplier;
+        CurrentWeapon->SetPoiseDamageMultiplier(PoiseDamageMultplier);
 
         Multicast_Attack(ComboIndex);
     }

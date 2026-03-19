@@ -124,7 +124,7 @@ protected:
 
 	// 피격 리액션 처리
 	UFUNCTION()
-	virtual void OnDamageReceived(float DamageAmount, FVector HitLocation);
+	virtual void OnDamageReceived(float DamageAmount, FVector HitLocation, bool bPoiseBroken);
 
 	void OnHitReactMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
