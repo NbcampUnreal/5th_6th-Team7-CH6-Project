@@ -61,6 +61,7 @@ void ANecGameMode::StartGame()
 void ANecGameMode::EndGame()
 {
     // UI 출력 및 게임 종료 
+    GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("End Game")));
 }
 
 void ANecGameMode::OnPlayerDeath(ANecPlayerController* DeadPC)
