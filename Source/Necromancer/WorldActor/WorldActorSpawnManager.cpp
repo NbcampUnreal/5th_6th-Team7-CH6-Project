@@ -10,6 +10,7 @@
 
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
 #include "SaveGame/NecSaveGameSubsystem.h"
+#include "WorldActor/SubmitBusket.h"
 
 static FVector GetRandomSpawnOffset(float Radius)
 {
@@ -63,6 +64,24 @@ void AWorldActorSpawnManager::StartSpawning()
 	else
 	{
 		LevelMaxCost = 500;
+	}
+
+	int32 RequiredSubmitValue = LevelMaxCost; // fallback
+
+	if (SaveSubsystem)
+	{
+		RequiredSubmitValue = SaveSubsystem->GetRequiredSubmitValue();
+	}
+
+	for (TActorIterator<ASubmitBusket> It(GetWorld()); It; ++It)
+	{
+		ASubmitBusket* Basket = *It;
+		if (Basket)
+		{
+			Basket->SetRequiredCost(RequiredSubmitValue);
+
+			UE_LOG(LogTemp, Warning, TEXT("🔥 Basket RequiredSubmitValue set to: %d"), RequiredSubmitValue);
+		}
 	}
 
 	if (SpawnQueue.Num() == 0)
@@ -152,12 +171,12 @@ void AWorldActorSpawnManager::StartSpawning()
 						break;
 					}
 
-if (LevelCurrentCost + ItemData->SpawnCost > LevelMaxCost)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Spawn skipped: Cost limit reached (%d/%d)"),
-			LevelCurrentCost, LevelMaxCost);
-		break;
-	}
+					if (LevelCurrentCost + ItemData->SpawnCost > LevelMaxCost)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Spawn skipped: Cost limit reached (%d/%d)"),
+						LevelCurrentCost, LevelMaxCost);
+						break;
+					}
 
 					if (!ItemData->DropItemActorClass)
 					{
