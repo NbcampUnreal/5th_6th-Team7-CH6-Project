@@ -20,14 +20,14 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
 
-	void CreateReadyWidgetForHost();
-	void CreateInGameHUD();
 
 	virtual void SetupInputComponent() override;
 
 	virtual void OnRep_PlayerState() override;
 	virtual void OnRep_Pawn() override;
 
+
+#pragma region IA
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;
@@ -70,6 +70,7 @@ public:
 
 	UFUNCTION()
 	void SpectatingTargetDown();
+#pragma endregion
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
@@ -78,21 +79,15 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UInGameHUDWidget> InGameHUDWidgetInstance;
 
-protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UReadyWidget> ReadyWidgetClass;
+	TSubclassOf<UInGameHUDWidget> SpectatorHUDWidgetClass;
 
 	UPROPERTY()
-	TObjectPtr<UReadyWidget> ReadyWidgetInstance;
+	TObjectPtr<UInGameHUDWidget> SpectatorHUDWidgetInstance;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TArray<TSubclassOf<UUserWidget>> WidgetClasses;
-	UPROPERTY()
-	TArray<TObjectPtr<UReadyWidget>> WidgetInstances;
-public:
-	void OnStartGame();
-
+	void CreateInGameHUD();
+	void CreateSpectatorHUD();
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
