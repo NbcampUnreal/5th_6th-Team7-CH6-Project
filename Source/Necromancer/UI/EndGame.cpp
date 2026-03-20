@@ -6,7 +6,7 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 
-#include "SaveGame/NecSaveGameSubsystem.h"
+#include "Game/NecGameState.h"
 
 void UEndGame::NativeConstruct()
 {
@@ -28,22 +28,18 @@ void UEndGame::OnGoLobbyButtonClicked()
 
 void UEndGame::InitGameScore()
 {
-	UNecSaveGameSubsystem* NecSaveGameSubsystem = GetGameInstance()->GetSubsystem<UNecSaveGameSubsystem>();
-	if (NecSaveGameSubsystem)
+    ANecGameState* NecGS = GetWorld()->GetGameState<ANecGameState>();
+	if (NecGS)
 	{
         if (ClearLvDepthText)
         {
-            int32 LvDepth = NecSaveGameSubsystem->GetLvDepth();
-
-            FString CombinedString = FString::Printf(TEXT("총 클리어한 스테이지 수: %d"), LvDepth);
+            FString CombinedString = FString::Printf(TEXT("총 클리어한 스테이지 수: %d"), NecGS->LvDepth);
             ClearLvDepthText->SetText(FText::FromString(CombinedString));
         }
 
         if (TotalKillCountText)
         {
-            int32 KillCount = NecSaveGameSubsystem->GetKillCount();
-
-            FString CombinedString = FString::Printf(TEXT("총 처치한 몬스터 수: %d"), KillCount);
+            FString CombinedString = FString::Printf(TEXT("총 처치한 몬스터 수: %d"), NecGS->KillCount);
             TotalKillCountText->SetText(FText::FromString(CombinedString));
         }
 	}

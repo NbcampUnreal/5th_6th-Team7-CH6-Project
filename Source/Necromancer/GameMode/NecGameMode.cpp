@@ -170,6 +170,7 @@ int32 ANecGameMode::GetLvDepth() const
     {
         return NecGS->LvDepth;
     }
+    return -1;
 }
 
 void ANecGameMode::IncreaseKillCount()
@@ -188,4 +189,5 @@ int32 ANecGameMode::GetKillCount() const
     {
         return NecGS->KillCount;
     }
+    return -1;
 }
