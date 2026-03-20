@@ -78,6 +78,9 @@ protected:
 	UFUNCTION()
 	void HandleRevive();
 
+	UFUNCTION(Server, Reliable)
+	void Server_RequestRevive();
+
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_HandleRevive();
 
