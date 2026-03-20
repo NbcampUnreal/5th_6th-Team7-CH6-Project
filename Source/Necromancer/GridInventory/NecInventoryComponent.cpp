@@ -182,6 +182,7 @@ bool UNecInventoryComponent::AddItemToInventory(UItemInstance* NewItem)
 		UE_LOG(LogTemp, Warning, TEXT("AddNecInventory: ItemInstance is null"));
 		return false;
 	}
+
 	if (BodyItem && AddItemToContainer(NewItem, BodyItem->InstanceID))	{
 	}
 	else if (BagItem && AddItemToContainer(NewItem, BagItem->InstanceID))	{
