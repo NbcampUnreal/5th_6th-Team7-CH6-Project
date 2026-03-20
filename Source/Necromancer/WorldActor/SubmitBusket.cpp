@@ -18,11 +18,8 @@ ASubmitBusket::ASubmitBusket()
     PrimaryActorTick.bCanEverTick = false;
 
     BucketInventory = CreateDefaultSubobject<UBucketInventoryComponent>(TEXT("BucketInventory"));
-    BucketInventory->SetRequircost(500);
-    BucketInventory->OnSubmit.AddDynamic(
-        this,
-        &ASubmitBusket::Submit
-    );
+    //BucketInventory->SetRequircost(500);
+    BucketInventory->OnSubmit.AddDynamic(this,&ASubmitBusket::Submit);
     bReplicates = true;
     bIsActive = true;
 }
@@ -30,6 +27,13 @@ ASubmitBusket::ASubmitBusket()
 void ASubmitBusket::BeginPlay()
 {
     Super::BeginPlay();
+
+    if (BucketInventory)
+    {
+        BucketInventory->SetRequircost(RequiredCost);
+
+        UE_LOG(LogTemp, Warning, TEXT("SubmitBusket Begin RequiredCost: %d"), RequiredCost);
+    }
 }
 
 void ASubmitBusket::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -160,4 +164,16 @@ void ASubmitBusket::OnSphereEnd(UPrimitiveComponent* OverlappedComp,
     if (Inventory->GetSubmitWidget()) {
         Inventory->ToggleSubmitUI(BucketInventory);
     }    
+}
+
+void ASubmitBusket::SetRequiredCost(int32 NewCost)
+{
+    RequiredCost = NewCost;
+
+    if (BucketInventory)
+    {
+        BucketInventory->SetRequircost(RequiredCost);
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("🔥 Updated RequiredCost: %d"), RequiredCost);
 }

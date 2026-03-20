@@ -1,3 +1,4 @@
+#include "NecSaveGameSubsystem.h"
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
@@ -101,4 +102,13 @@ int32 UNecSaveGameSubsystem::GetLevelMaxSpawnCost() const
     int32 Level = SessionSaveGame->LvDepth;
 
     return 100 + (Level * 1000);
+}
+
+int32 UNecSaveGameSubsystem::GetRequiredSubmitValue() const
+{
+    if (!SessionSaveGame) return 500;
+
+    int32 Level = SessionSaveGame->LvDepth;
+
+    return GetLevelMaxSpawnCost() * 1.5f;
 }

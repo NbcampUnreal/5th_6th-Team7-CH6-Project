@@ -71,5 +71,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	int32 GetLevelMaxSpawnCost() const;
 
+	UFUNCTION(BlueprintCallable)
+	int32 GetRequiredSubmitValue() const;
+
 #pragma endregion
 };

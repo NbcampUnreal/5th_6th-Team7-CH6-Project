@@ -35,6 +35,9 @@ protected:
 	UBucketInventoryComponent* BucketInventory;
 	UPROPERTY(ReplicatedUsing = OnRep_IsActive, BlueprintReadOnly, Category = "Submit")
 	bool bIsActive;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Submit")
+	int32 RequiredCost = 500;
 protected:
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps)
 		const override;
@@ -45,4 +48,7 @@ protected:
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
+public:
+	UFUNCTION(BlueprintCallable)
+	void SetRequiredCost(int32 NewCost);
 };
