@@ -26,6 +26,8 @@ protected:
 
 public:
 	void StartGame();
+	void InitGameState();
+
 	void EndGame();
 
 	void OnPlayerDeath(ANecPlayerController* DeadPlayerController);
@@ -44,6 +46,15 @@ public:
 	void Server_ReqeustSpectatingTarget(ANecPlayerController* RequestPC, AActor* CurSpectatingTarget, bool isPositiveDirection);
 
 public:
+
+	/// <summary>
+	/// 레벨간 이동시, 데이터 저장을 위해 해당 함수를 호출
+	/// 다음 레벨도 이동시 게임모드가 자동으로 저장데이터를 가져와서 셋팅함
+	/// </summary>
+	UFUNCTION(BlueprintCallable)
+	void SaveGameStateToSaveGame();
+
+	UFUNCTION(BlueprintCallable)
 	void IncreaseLvDepth();
 	int32 GetLvDepth() const;
 

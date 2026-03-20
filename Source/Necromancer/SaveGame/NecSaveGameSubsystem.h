@@ -23,11 +23,10 @@ public:
 
 
 #pragma region ProfileSaveGame
-public:
+private:
 	UPROPERTY()
 	UNecProfileSaveGame* ProfileSaveGame;
 
-private:
 	const FString ProfileSaveGameSlotName = FString(TEXT("Profile"));
 	
 private:
@@ -41,11 +40,10 @@ public:
 #pragma endregion
 
 #pragma region SessionSaveGame
-public:
+private:
 	UPROPERTY()
 	UNecSessionSaveGame* SessionSaveGame;
 
-private:
 	const FString DefaultSessionSaveGameSlotName = FString(TEXT("Session"));
 
 public:
@@ -57,28 +55,13 @@ public:
 	/// <param name="SlotIdx">
 	/// if SlotIdx == -1 then SaveCurrentSession, else then SaveGameSession to Continue Game
 	/// </param>
-	void InitSessionSaveGame(int32 SlotIdx);
-	void SaveSessionSaveGame(int32 SlotIdx);
+	void InitSessionSaveGame(int32 SlotIdx = -1);
+	void SaveSessionSaveGame(int32 SlotIdx = -1);
 
 public:
-	void IncreaseLvDepth();
 	int32 GetLvDepth();
-
-	void IncreaseKillCount();
 	int32 GetKillCount() const;
 
 
 #pragma endregion
-
-
-
-
-	UFUNCTION(BlueprintCallable)
-	float GetSpawnCostMultiplier() const;
-
-	UFUNCTION(BlueprintCallable)
-	int32 GetLevelMaxSpawnCost() const;
-
-	UFUNCTION(BlueprintCallable)
-	int32 GetRequiredSubmitValue() const;
 };
