@@ -85,6 +85,16 @@ int32 UNecSaveGameSubsystem::GetLvDepth()
     return SessionSaveGame->LvDepth;
 }
 
+void UNecSaveGameSubsystem::IncreaseKillCount()
+{
+    SessionSaveGame->KillCount++;
+}
+
+int32 UNecSaveGameSubsystem::GetKillCount() const
+{
+    return SessionSaveGame->KillCount;
+}
+
 float UNecSaveGameSubsystem::GetSpawnCostMultiplier() const
 {
     if (!SessionSaveGame) return 1.0f;

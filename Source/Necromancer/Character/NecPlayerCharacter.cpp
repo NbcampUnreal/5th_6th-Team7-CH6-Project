@@ -390,7 +390,14 @@ void ANecPlayerCharacter::ToggleMenu(const FInputActionValue& Value)
 void ANecPlayerCharacter::TryInteract()
 {
 	if (StatComponent->GetStatus()==ECharacterStatus::Down) {
-		SoulComponent->TryRevive();
+		if (HasAuthority())
+		{
+			SoulComponent->TryRevive();
+		}
+		else
+		{
+			Server_RequestRevive();
+		}
 		return;
 	}
 
@@ -405,9 +412,6 @@ void ANecPlayerCharacter::TryInteract()
 	}
 	else
 	{
-		if (!Target) return;
-		if (!Target->Implements<UInteractable>()) return;
-
 		//IInteractable::Execute_Interact(Target, this);
 		Server_TryInteract(Target);
 
@@ -476,10 +480,16 @@ void ANecPlayerCharacter::HandleRevive()
 {
 	if (HasAuthority())
 	{
-		Multicast_HandleRevive();
-		StatComponent->SetCurrentHealth(50.f);
-		StatComponent->SetStatus(ECharacterStatus::Alive);
+		
+		Server_RequestRevive();
 	}
+}
+
+void ANecPlayerCharacter::Server_RequestRevive_Implementation()
+{
+	Multicast_HandleRevive();
+	StatComponent->SetCurrentHealth(50.f);
+	StatComponent->SetStatus(ECharacterStatus::Alive);
 }
 
 void ANecPlayerCharacter::Multicast_HandleRevive_Implementation()

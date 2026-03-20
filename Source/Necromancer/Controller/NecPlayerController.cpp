@@ -42,18 +42,7 @@ void ANecPlayerController::BeginPlay()
 		return;
 	}
 
-	FString MapName = GetWorld()->GetMapName();
-	if (MapName.Contains("Lobby"))
-	{
-		if (GetWorld()->GetNetMode() == NM_ListenServer)
-		{
-			CreateReadyWidgetForHost();
-		}
-	}
-	else
-	{
-		CreateInGameHUD();
-	}
+	CreateInGameHUD();
 }
 
 void ANecPlayerController::OnPossess(APawn* InPawn)
@@ -72,24 +61,6 @@ void ANecPlayerController::OnPossess(APawn* InPawn)
 			}
 
 			MySoulComp->OnReviveRequested.AddDynamic(this, &ANecPlayerController::HandleRevive);
-		}
-	}
-}
-
-void ANecPlayerController::CreateReadyWidgetForHost()
-{
-	if (IsValid(ReadyWidgetClass))
-	{
-		ReadyWidgetInstance = CreateWidget<UReadyWidget>(this, ReadyWidgetClass);
-		if (IsValid(ReadyWidgetInstance))
-		{
-			ReadyWidgetInstance->AddToViewport();
-
-			FInputModeUIOnly Mode;
-			Mode.SetWidgetToFocus(ReadyWidgetInstance->GetCachedWidget());
-			SetInputMode(Mode);
-
-			bShowMouseCursor = true;
 		}
 	}
 }
@@ -118,6 +89,30 @@ void ANecPlayerController::CreateInGameHUD()
 		{
 			InGameHUDWidgetInstance->AddToViewport(1);
 			InGameHUDWidgetInstance->InitHUD();
+		}
+	}
+}
+
+void ANecPlayerController::CreateSpectatorHUD()
+{
+	if (IsValid(SpectatorHUDWidgetInstance) == false)
+	{
+		if (IsValid(SpectatorHUDWidgetClass))
+		{
+			SpectatorHUDWidgetInstance = CreateWidget<UInGameHUDWidget>(this, SpectatorHUDWidgetClass);
+		}
+	}
+
+	if (IsValid(SpectatorHUDWidgetInstance) == true)
+	{
+		if (IsValid(InGameHUDWidgetInstance) && InGameHUDWidgetInstance->IsInViewport())
+		{
+			InGameHUDWidgetInstance->RemoveFromParent();
+		}
+
+		if (!SpectatorHUDWidgetInstance->IsInViewport())
+		{
+			SpectatorHUDWidgetInstance->AddToViewport(1);
 		}
 	}
 }
@@ -190,23 +185,6 @@ void ANecPlayerController::SpectatingTargetDown()
 }
 
 
-/// <summary>
-/// Only Host Can call this Function(Using ReadyWidet)
-/// </summary>
-void ANecPlayerController::OnStartGame()
-{
-	if (ReadyWidgetInstance)
-	{
-		ReadyWidgetInstance->RemoveFromParent();
-	}
-
-	ANecGameMode* NecGameMode = Cast<ANecGameMode>(UGameplayStatics::GetGameMode(this));
-	if (NecGameMode)
-	{
-		NecGameMode->StartGame();
-		CreateInGameHUD();
-	}
-}
 
 void ANecPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -219,26 +197,9 @@ void ANecPlayerController::OnPlayerDeath()
 {
 	bIsSpectating = true;
 	Server_NotifyDeath();
+
+	CreateSpectatorHUD();
 }
-
-void ANecPlayerController::HandleRevive()
-{
-	if (HasAuthority() && MyBody)
-	{
-		// possess
-		Possess(MyBody);
-		bIsSpectating = false;
-
-		if (ANecGameMode* NecGM = Cast<ANecGameMode>(GetWorld()->GetAuthGameMode()))
-		{
-			NecGM->OnPlayerRevive(this);
-		}
-
-		// and controller camera view
-		Client_HandleCameraTarget(MyBody);
-	}
-}
-
 
 void ANecPlayerController::Server_NotifyDeath_Implementation()
 {
@@ -337,7 +298,23 @@ void ANecPlayerController::Server_RequestSpectatingTarget_Implementation(AActor*
 	}
 }
 
+void ANecPlayerController::HandleRevive()
+{
+	if (HasAuthority() && MyBody)
+	{
+		// possess
+		Possess(MyBody);
+		bIsSpectating = false;
 
+		if (ANecGameMode* NecGM = Cast<ANecGameMode>(GetWorld()->GetAuthGameMode()))
+		{
+			NecGM->OnPlayerRevive(this);
+		}
+
+		// and controller camera view
+		Client_HandleCameraTarget(MyBody);
+	}
+}
 
 void ANecPlayerController::Client_NotifyMonsterKill_Implementation()
 {
