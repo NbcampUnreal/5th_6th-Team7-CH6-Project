@@ -100,7 +100,6 @@ void ANecGameMode::OnPlayerRevive(ANecPlayerController* RevivedPlayerController)
     PlayerControllers.Add(RevivedPlayerController);
 }
 
-
 void ANecGameMode::Server_ReqeustSpectatingTarget_Implementation(ANecPlayerController* RequestPC, AActor* CurSpectatingTarget, bool bIsUp)
 {
     if (!(PlayerControllers.Num() > 0 && PlayerControllers[0])) 
@@ -153,3 +152,40 @@ void ANecGameMode::Server_ReqeustSpectatingTarget_Implementation(ANecPlayerContr
 }
 
 
+
+
+void ANecGameMode::IncreaseLvDepth()
+{
+    ANecGameState* NecGS = GetGameState<ANecGameState>();
+    if (NecGS)
+    {
+        NecGS->LvDepth++;
+    }
+}
+
+int32 ANecGameMode::GetLvDepth() const
+{
+    ANecGameState* NecGS = GetGameState<ANecGameState>();
+    if (NecGS)
+    {
+        return NecGS->LvDepth;
+    }
+}
+
+void ANecGameMode::IncreaseKillCount()
+{
+    ANecGameState* NecGS = GetGameState<ANecGameState>();
+    if (NecGS)
+    {
+        NecGS->KillCount++;
+    }
+}
+
+int32 ANecGameMode::GetKillCount() const
+{
+    ANecGameState* NecGS = GetGameState<ANecGameState>();
+    if (NecGS)
+    {
+        return NecGS->KillCount;
+    }
+}

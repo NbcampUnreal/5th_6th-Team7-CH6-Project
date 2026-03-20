@@ -51,4 +51,12 @@ public:
 public:
 	UFUNCTION()
 	void OnRep_PlayerControllerCount();
+
+
+/// <summary>
+/// 호스트의 게임세션 정보를 GameMode 를 이용하여 저장
+/// </summary>
+public:
+	int32 LvDepth = 0;
+	int32 KillCount = 0;
 };

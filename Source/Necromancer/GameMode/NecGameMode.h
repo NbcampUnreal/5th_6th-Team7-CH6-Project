@@ -44,8 +44,9 @@ public:
 	void Server_ReqeustSpectatingTarget(ANecPlayerController* RequestPC, AActor* CurSpectatingTarget, bool isPositiveDirection);
 
 public:
-
+	void IncreaseLvDepth();
+	int32 GetLvDepth() const;
 
 	void IncreaseKillCount();
-	void GetKillCount();
+	int32 GetKillCount() const;
 };
