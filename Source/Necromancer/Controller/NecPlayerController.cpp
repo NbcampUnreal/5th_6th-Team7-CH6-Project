@@ -1,10 +1,14 @@
 ﻿#include "Controller/NecPlayerController.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "UI/InGameHUDWidget.h"
 
 #include "Net/UnrealNetwork.h"
+
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Blueprint/UserWidget.h"
 #include "UI/ReadyWidget.h"
+#include "UI/InGameHUDWidget.h"
+#include "UI/EndGame.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "GameMode/NecGameMode.h"
@@ -65,6 +69,34 @@ void ANecPlayerController::OnPossess(APawn* InPawn)
 	}
 }
 
+void ANecPlayerController::Client_CreateEndGameWidget_Implementation()
+{
+	TArray<UUserWidget*> FoundWidgets;
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UUserWidget::StaticClass(), false);
+
+	for (UUserWidget* Widget : FoundWidgets)
+	{
+		if (Widget && Widget->IsInViewport())
+		{
+			Widget->RemoveFromParent();
+		}
+	}
+
+	if (EndGameWidgetClass)
+	{
+		EndGameWidgetInstance = CreateWidget<UEndGame>(this, EndGameWidgetClass);
+		if (EndGameWidgetInstance)
+		{
+			EndGameWidgetInstance->AddToViewport();
+			EndGameWidgetInstance->InitGameScore();
+
+			FInputModeUIOnly InputMode;
+			SetInputMode(InputMode);
+			bShowMouseCursor = true;
+		}
+	}
+}
+
 void ANecPlayerController::CreateInGameHUD()
 {
 	FInputModeGameOnly GameOnly;
@@ -110,7 +142,8 @@ void ANecPlayerController::CreateSpectatorHUD()
 			InGameHUDWidgetInstance->RemoveFromParent();
 		}
 
-		if (!SpectatorHUDWidgetInstance->IsInViewport())
+		if (!SpectatorHUDWidgetInstance->IsInViewport() && 
+			(EndGameWidgetInstance != nullptr && !EndGameWidgetInstance->IsInViewport()))
 		{
 			SpectatorHUDWidgetInstance->AddToViewport(1);
 		}

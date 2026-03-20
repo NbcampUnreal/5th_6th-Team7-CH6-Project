@@ -42,4 +42,10 @@ public:
 	/// <param name="isPositiveDirection">다음 플레이어를 반환할지, CurSpectatingTarget이 nullptr이면 해당 값은 의미가 없음</param>
 	UFUNCTION(Server, Unreliable)
 	void Server_ReqeustSpectatingTarget(ANecPlayerController* RequestPC, AActor* CurSpectatingTarget, bool isPositiveDirection);
+
+public:
+
+
+	void IncreaseKillCount();
+	void GetKillCount();
 };

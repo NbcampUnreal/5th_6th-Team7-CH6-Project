@@ -1,14 +1,21 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "GameMode/NecGameMode.h"
 
+#include "SaveGame/NecSaveGameSubsystem.h"
 #include "Game/NecGameState.h"
+
 #include "Controller/NecPlayerController.h"
 
 void ANecGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+
+    UNecSaveGameSubsystem* NecSaveGameSubsystem = GetGameInstance()->GetSubsystem<UNecSaveGameSubsystem>();
+    if (NecSaveGameSubsystem)
+    {
+        NecSaveGameSubsystem->InitSessionSaveGame(-1);
+    }
 }
 
 void ANecGameMode::PostLogin(APlayerController* NewPlayer)
@@ -60,8 +67,18 @@ void ANecGameMode::StartGame()
 
 void ANecGameMode::EndGame()
 {
-    // UI 출력 및 게임 종료 
-    GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("End Game")));
+    for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+    {
+        APlayerController* PC = It->Get();
+        if (PC)
+        {
+            ANecPlayerController* NecPC = Cast<ANecPlayerController>(PC);
+            if (NecPC)
+            {
+                NecPC->Client_CreateEndGameWidget();
+            }
+        }
+    }
 }
 
 void ANecGameMode::OnPlayerDeath(ANecPlayerController* DeadPC)

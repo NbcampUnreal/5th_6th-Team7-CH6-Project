@@ -7,6 +7,7 @@ class UInputMappingContext;
 class UInputAction;
 class UInGameHUDWidget;
 class UReadyWidget;
+class UEndGame;
 
 UCLASS()
 class NECROMANCER_API ANecPlayerController : public APlayerController
@@ -72,6 +73,8 @@ public:
 	void SpectatingTargetDown();
 #pragma endregion
 
+
+#pragma region User Widget
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UInGameHUDWidget> InGameHUDWidgetClass;
@@ -85,9 +88,22 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UInGameHUDWidget> SpectatorHUDWidgetInstance;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UEndGame> EndGameWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<UEndGame> EndGameWidgetInstance;
+
+
+public:
+	UFUNCTION(Client, Reliable)
+	void Client_CreateEndGameWidget();
+
 protected:
 	void CreateInGameHUD();
 	void CreateSpectatorHUD();
+
+#pragma endregion
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

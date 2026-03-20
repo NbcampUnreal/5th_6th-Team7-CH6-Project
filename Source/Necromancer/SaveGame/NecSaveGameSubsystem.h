@@ -48,7 +48,7 @@ public:
 private:
 	const FString DefaultSessionSaveGameSlotName = FString(TEXT("Session"));
 
-private:
+public:
 	/// <summary>
 	/// -1: NewGame (SlotName = Session) -> If Player doesn't save, this SessionSaveGame is gone)
 	/// 0~2: Saved Game (SlotName = FString::Printf("Session_%d", SaveIdx))
