@@ -18,4 +18,10 @@ public:
 	UPROPERTY()
 	int32 LvDepth = 0;
 
+	/// <summary>
+	/// 팀 전체가 사냥한 몹 수
+	/// </summary>
+	UPROPERTY()
+	int32 KillCount = 0;
+
 };

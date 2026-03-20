@@ -55,7 +55,6 @@ private:
 	/// </summary>
 	/// 
 	/// <param name="SlotIdx">
-	/// 게임 세션을 생성 또는 저장 결정
 	/// if SlotIdx == -1 then SaveCurrentSession, else then SaveGameSession to Continue Game
 	/// </param>
 	void InitSessionSaveGame(int32 SlotIdx);
@@ -65,6 +64,15 @@ public:
 	void IncreaseLvDepth();
 	int32 GetLvDepth();
 
+	void IncreaseKillCount();
+	int32 GetKillCount() const;
+
+
+#pragma endregion
+
+
+
+
 	UFUNCTION(BlueprintCallable)
 	float GetSpawnCostMultiplier() const;
 
@@ -73,6 +81,4 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	int32 GetRequiredSubmitValue() const;
-
-#pragma endregion
 };
