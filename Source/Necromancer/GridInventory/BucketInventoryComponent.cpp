@@ -7,6 +7,7 @@
 #include "GridInventory/ItemInstance/ItemInstanceComponent.h"
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
 #include "Engine/ActorChannel.h"
+#include "GameMode/NecGameMode.h"
 
 UBucketInventoryComponent::UBucketInventoryComponent()
 {
@@ -52,7 +53,11 @@ void UBucketInventoryComponent::RebuildItemOwnerMap()
     int32 PreviousTotalCost = CurBucketTotalCost;
     int32 TotalCost = GetBucketTotalCost();
 
-    UE_LOG(LogTemp, Error, TEXT("rebuild itemr owern map: %d"), TotalCost - PreviousTotalCost);
+    ANecGameMode* NecGM = GetWorld()->GetAuthGameMode<ANecGameMode>();
+    if (NecGM)
+    {
+        NecGM->AddSubmiitedItemValue(TotalCost - PreviousTotalCost);
+    }
 
     CurBucketTotalCost = TotalCost;
     if (RequirCost < TotalCost) {
