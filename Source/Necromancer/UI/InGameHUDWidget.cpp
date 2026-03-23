@@ -15,11 +15,35 @@ void UInGameHUDWidget::NativeConstruct()
 	InitHUD();
 }
 
+void UInGameHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	if (HealthTickDownBar && CurrentHealthTickDownPercent > TargetHealthPercent)
+	{
+		CurrentHealthTickDownPercent = FMath::FInterpTo(CurrentHealthTickDownPercent, TargetHealthPercent, InDeltaTime, HealthTickDownBarInterpSpeed);
+		HealthTickDownBar->SetPercent(CurrentHealthTickDownPercent);
+	}
+
+	if (StaminaTickDownBar && CurrentStaminaTickDownPercent > TargetStaminaPercent)
+	{
+		CurrentStaminaTickDownPercent = FMath::FInterpTo(CurrentStaminaTickDownPercent, TargetStaminaPercent, InDeltaTime, StaminaTickDownBarInterpSpeed);
+		StaminaTickDownBar->SetPercent(CurrentStaminaTickDownPercent);
+	}
+}
+
 void UInGameHUDWidget::UpdateHealth(float CurrentHealth, float MaxHealth)
 {
 	if (HealthBar && MaxHealth > 0.0f)
 	{
-		HealthBar->SetPercent(FMath::Clamp(CurrentHealth / MaxHealth, 0.0f, 1.0f));
+		TargetHealthPercent = FMath::Clamp(CurrentHealth / MaxHealth, 0.0f, 1.0f);
+		HealthBar->SetPercent(TargetHealthPercent);
+
+		if (HealthTickDownBar && CurrentHealthTickDownPercent < TargetHealthPercent)
+		{
+			CurrentHealthTickDownPercent = TargetHealthPercent;
+			HealthTickDownBar->SetPercent(CurrentHealthTickDownPercent);
+		}
 	}
 }
 
@@ -27,7 +51,14 @@ void UInGameHUDWidget::UpdateStamina(float CurrentStamina, float MaxStamina)
 {
 	if (StaminaBar && MaxStamina > 0.0f)
 	{
-		StaminaBar->SetPercent(FMath::Clamp(CurrentStamina / MaxStamina, 0.0f, 1.0f));
+		TargetStaminaPercent = FMath::Clamp(CurrentStamina / MaxStamina, 0.0f, 1.0f);
+		StaminaBar->SetPercent(TargetStaminaPercent);
+
+		if (StaminaTickDownBar && CurrentStaminaTickDownPercent < TargetStaminaPercent)
+		{
+			CurrentStaminaTickDownPercent = TargetStaminaPercent;
+			StaminaTickDownBar->SetPercent(CurrentStaminaTickDownPercent);
+		}
 	}
 }
 

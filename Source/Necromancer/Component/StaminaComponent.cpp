@@ -58,7 +58,10 @@ void UStaminaComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
     }
     else
     {
-        NewStamina += StaminaRecoveryRate * DeltaTime;
+        if (GetWorld()->GetTimeSeconds() - LastStaminaComsumeTime >= StaminaRecoveryDelay)
+        {
+            NewStamina += StaminaRecoveryRate * DeltaTime;
+        }
     }
 
     NewStamina = FMath::Clamp(NewStamina, 0.0f, MaxStamina);
@@ -144,6 +147,8 @@ bool UStaminaComponent::ConsumeStamina(float Amount)
     {
         SetStamina(CurrentStamina - Amount);
 
+        LastStaminaComsumeTime = GetWorld()->GetTimeSeconds();
+
         return true;
     }
 
@@ -176,8 +181,15 @@ void UStaminaComponent::ConsumeStamina_Predictive(float Amount)
     {
         CurrentStamina -= Amount;
 
+        LastStaminaComsumeTime = GetWorld()->GetTimeSeconds();
+
         OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
     }
+}
+
+void UStaminaComponent::Client_ConsumeStamina_Implementation(float Amount)
+{
+    ConsumeStamina_Predictive(Amount);
 }
 
 void UStaminaComponent::SetStamina(float NewStamina)

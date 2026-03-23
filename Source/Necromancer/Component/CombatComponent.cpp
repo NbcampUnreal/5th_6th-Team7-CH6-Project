@@ -51,7 +51,9 @@ void UCombatComponent::Attack()
         return;
     }
 
-    if (OwnerCharacter->GetPlayerMovementComponent()->GetIsSprinting() && !bIsAttacking)
+    bool bIsMoving = OwnerCharacter->GetVelocity().Size() > 5.0f;
+
+    if (OwnerCharacter->GetPlayerMovementComponent()->GetIsSprinting() && !bIsAttacking && bIsMoving)
     {
         bIsAttacking = true;
         bSaveAttackInput = false;
