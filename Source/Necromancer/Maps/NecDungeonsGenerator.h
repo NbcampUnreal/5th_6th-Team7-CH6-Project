@@ -66,6 +66,9 @@ protected:
 	UPROPERTY(BlueprintReadWrite);
 	bool bIsDungeonComplete = false;
 
+	UPROPERTY(BlueprintReadWrite);
+	bool bIsSpecialList = false;
+
 	UPROPERTY(BlueprintReadWrite, Category = "Rooms");
 	AActor* LatestRoom;
 

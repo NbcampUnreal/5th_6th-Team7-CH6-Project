@@ -115,12 +115,26 @@ void ANecDungeonsGenerator::SpawnNextRoom()
 			SelectedExitPoint = RandomArrayItemFromArrow(ExitsList);
 		}
 
-		TSubclassOf<AActor>NextRoom = RandomArrayItemFromRoom(RoomList);
+		TSubclassOf<AActor>NextRoom = nullptr;
 
-		if (RoomList == SpecialRoomList)
+		if (bIsSpecialList)
 		{
-			NextRoom = RoomList[SpecialCount];
-			SpecialCount++;
+			// SpecialRoomList 소진 시 RoomListBase로 복귀
+			if (!RoomList.IsValidIndex(SpecialCount))
+			{
+				RoomList = RoomListBase;
+				SpecialCount = 0;
+				NextRoom = RandomArrayItemFromRoom(RoomList);
+			}
+			else
+			{
+				NextRoom = RoomList[SpecialCount];
+				SpecialCount++;
+			}
+		}
+		else
+		{
+			NextRoom = RandomArrayItemFromRoom(RoomList);
 		}
 
 		FTransform SpawnTransform = SelectedExitPoint->GetComponentTransform();
@@ -215,6 +229,13 @@ void ANecDungeonsGenerator::CheckForOverlap()
 		{
 			OverlappedList.Empty();
 			LatestRoom->Destroy();
+
+			// 스페셜 방이 거부됐으면 카운트 되돌리기
+			if (RoomList == SpecialRoomList && SpecialCount > 0)
+			{
+				SpecialCount--;
+			}
+
 			SpawnNextRoom();
 
 			return;
@@ -267,6 +288,7 @@ void ANecDungeonsGenerator::CheckForOverlap()
 			if (RoomCount % ((RoomAmount / SpecialRoomList.Num()) - 1) == 0)
 			{
 				RoomList = SpecialRoomList;
+				bIsSpecialList = true;
 			}
 			else
 			{
