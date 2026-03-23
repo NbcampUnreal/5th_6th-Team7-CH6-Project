@@ -6,13 +6,13 @@
 #include "Components/ActorComponent.h"
 #include "SoulComponent.generated.h"
 
-
-enum class ESoulState
+UENUM(BlueprintType)
+enum class ESoulState : uint8
 {
-    Normal,
-    LowPower,
-    Depleted,
-    Down
+    Normal     UMETA(DisplayName = "Normal"),
+    LowPower   UMETA(DisplayName = "LowPower"),
+    Depleted   UMETA(DisplayName = "Depleted"),
+    Down       UMETA(DisplayName = "Down")
 };
 
 USTRUCT(BlueprintType)
@@ -68,18 +68,19 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 private:
 
     /* ===== Batteries ===== */
 
-    UPROPERTY(VisibleAnywhere)
+    UPROPERTY(VisibleAnywhere, Replicated)
     FSoulBattery ActiveBattery;
 
-    UPROPERTY(VisibleAnywhere)
+    UPROPERTY(VisibleAnywhere, Replicated)
     TArray<FSoulBattery> ReserveBatteries;
 
     UPROPERTY(EditAnywhere)
-    int32 MaxReserveSlots = 3;
+    int32 MaxReserveSlots = 4;
 
     /* ===== Drain ===== */
 
@@ -113,6 +114,7 @@ private:
     FTimerHandle DownTimer;
     FTimerHandle InvincibleTimer;
 
+    UPROPERTY(Replicated)
     ESoulState CurrentState = ESoulState::Normal;
 
     bool bIsInvincible = false;

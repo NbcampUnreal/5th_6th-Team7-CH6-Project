@@ -25,6 +25,7 @@ void ANecDungeonsGenerator::BeginPlay()
 	{
 		RoomList = RoomListBase;
 		RoomCount = 0;
+		SpecialCount = 0;
 		SpawnStartRoom();
 		StartDungeonTimer();
 		SpawnNextRoom();
@@ -39,7 +40,7 @@ TSubclassOf<AActor> ANecDungeonsGenerator::RandomArrayItemFromRoom(const TArray<
 {
 	if (Array.Num() == 0)
 	{
-		return nullptr; // 占썩본占쏙옙 占쏙옙환
+		return nullptr;
 	}
 
 	int32 OutIndex = FMath::RandRange(0, Array.Num() - 1);
@@ -50,7 +51,7 @@ USceneComponent* ANecDungeonsGenerator::RandomArrayItemFromArrow(const TArray<US
 {
 	if (Array.Num() == 0)
 	{
-		return nullptr; // 占썩본占쏙옙 占쏙옙환
+		return nullptr;
 	}
 
 	int32 OutIndex = FMath::RandRange(0, Array.Num() - 1);
@@ -71,24 +72,18 @@ void ANecDungeonsGenerator::SpawnStartRoom()
 
 		if (LatestRoom)
 		{
-			// 諛??꾩튂 湲곕줉 (蹂댁뒪 ?쒖같??
 			RoomLocations.Add(LatestRoom->GetActorLocation());
 
-			// 占쏙옙占쏙옙占쏙옙 占쏙옙占쏙옙 占쏙옙占쏙옙占쏙옙트 占쏙옙占?
 			TArray<USceneComponent*> Components;
 			LatestRoom->GetComponents<USceneComponent>(Components);
 
-			// 占쏙옙占쏙옙占쏙옙트占쏙옙  탐占쏙옙
 			for (USceneComponent* comp : Components)
 			{
-				// 占쏙옙占쌩울옙 占썩구 占쏙옙占쏙옙獵占?占쏙옙 占쏙옙占쏙옙占쏙옙트
 				if (comp && comp->ComponentHasTag(FName("Exits Folder")))
 				{
-					// 占쏙옙 占쏙옙占쏙옙占쏙옙트 占싣뤄옙 占쏙옙占쏙옙占쏙옙트占쏙옙 占썼열占쏙옙 占쏙옙占쏙옙
 					const TArray<USceneComponent*>ChildCom = comp->GetAttachChildren();
 					for (USceneComponent* Child : ChildCom)
 					{
-						// 占썩구 占쌩곤옙
 						ExitsList.Add(Child);
 					}
 					break;
@@ -107,38 +102,36 @@ void ANecDungeonsGenerator::SpawnNextRoom()
 {
 	if (HasAuthority())
 	{
-		// 占쏙옙占쏙옙 占썩구
 		if (ExitsList.Num() == 0 && SecondFExitsList.Num() == 0)
 		{
 			return;
 		}
-		// 2占쏙옙 占쏙옙占쏙옙 占쏙옙占쏙옙 占쏙옙占?
 		else if (SecondFExitsList.Num() != 0)
 		{
 			SelectedExitPoint = SecondFExitsList[0];
 		}
-		// 2占쏙옙 占쏙옙占쏙옙 占쏙옙占쏙옙 占쏙옙占?1占쏙옙占쏙옙占쏙옙 占쏙옙占쏙옙
 		else
 		{
 			SelectedExitPoint = RandomArrayItemFromArrow(ExitsList);
 		}
 
-		// 占쏙옙占쏙옙占쏙옙
 		TSubclassOf<AActor>NextRoom = RandomArrayItemFromRoom(RoomList);
 
-		// 占쏙옙占쏙옙 占쏙옙치 
+		if (RoomList == SpecialRoomList)
+		{
+			NextRoom = RoomList[SpecialCount];
+			SpecialCount++;
+		}
+
 		FTransform SpawnTransform = SelectedExitPoint->GetComponentTransform();
 
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		// 占쏙옙占쏙옙 占쏙옙占쏙옙占싹곤옙 占쏙옙占쏙옙占쏙옙 占쏙옙占쏙옙
 		LatestRoom = GetWorld()->SpawnActor<AActor>(NextRoom, SpawnTransform, SpawnParams);
 
-		// 2占쏙옙 Arrow 占쏙옙占쏙옙
 		SecondFExitsList.Empty();
 
-		//占쏙옙占쏙옙占쏙옙
 		StartDelay();
 	}
 	else
@@ -151,55 +144,19 @@ void ANecDungeonsGenerator::SpawnEndRoom()
 {
 	if (HasAuthority())
 	{
-		// 占쏙옙占쏙옙 占썩구
 		if (ExitsList.Num() == 0)
 		{
 			return;
 		}
 		SelectedExitPoint = RandomArrayItemFromArrow(ExitsList);
 
-		// 占쏙옙占쏙옙 占쏙옙치 
 		FTransform SpawnTransform = SelectedExitPoint->GetComponentTransform();
 
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		// 占쏙옙占쏙옙 占쏙옙占쏙옙占싹곤옙 占쏙옙占쏙옙占쏙옙 占쏙옙占쏙옙
 		LatestRoom = GetWorld()->SpawnActor<AActor>(EndRoom, SpawnTransform, SpawnParams);
 
-		// 諛??꾩튂 湲곕줉 (蹂댁뒪 ?쒖같??
-		if (LatestRoom)
-		{
-			RoomLocations.Add(LatestRoom->GetActorLocation());
-		}
-	}
-	else
-	{
-		return;
-	}
-}
-
-void ANecDungeonsGenerator::SpawnBossRoom()
-{
-	if (HasAuthority())
-	{
-		// 랜덤 출구
-		if (ExitsList.Num() == 0)
-		{
-			return;
-		}
-		SelectedExitPoint = RandomArrayItemFromArrow(ExitsList);
-
-		// 스폰 위치 
-		FTransform SpawnTransform = SelectedExitPoint->GetComponentTransform();
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		// 액터 생성하고 변수에 저장
-		LatestRoom = GetWorld()->SpawnActor<AActor>(BossRoom, SpawnTransform, SpawnParams);
-
-		// 보스방 위치도 RoomLocations에 등록 (보스 순찰 경로에 포함)
 		if (LatestRoom)
 		{
 			RoomLocations.Add(LatestRoom->GetActorLocation());
@@ -227,10 +184,8 @@ void ANecDungeonsGenerator::AddOverlappingRoomToList()
 					const TArray<USceneComponent*> ChildCom = Comp->GetAttachChildren();
 					for (USceneComponent* Child : ChildCom)
 					{
-						// 占쌘식듸옙 占쌩울옙 占쌘쏙옙 占쌥몌옙占쏙옙占싱몌옙
 						if (UPrimitiveComponent* PrimitiveChild = Cast<UPrimitiveComponent>(Child))
 						{
-							// 占쌩곤옙
 							TArray<UPrimitiveComponent*> OverlappingComponents;
 							PrimitiveChild->GetOverlappingComponents(OverlappingComponents);
 							if (!OverlappingComponents.IsEmpty())
@@ -256,23 +211,19 @@ void ANecDungeonsGenerator::CheckForOverlap()
 	{
 		AddOverlappingRoomToList();
 
-		// 占쏙옙占쏙옙占쏙옙 占쏙옙占쏙옙트占쏙옙 占쏙옙占쏙옙占쏙옙占?占십다몌옙 占쏙옙占?占쏙옙占쏙옙占쏙옙 占쏙옙占쏙옙 占쌕몌옙 占쏙옙占?占쏙옙침 
 		if (!OverlappedList.IsEmpty())
 		{
-			// 占쏙옙占쏙옙占쏙옙 占쏙옙占쏙옙트 占쏙옙占쏙옙占쌍곤옙, 占쏙옙 占쏙옙占쏙옙占쌍곤옙 占쌕쏙옙 占쏙옙占쏙옙
 			OverlappedList.Empty();
 			LatestRoom->Destroy();
 			SpawnNextRoom();
 
 			return;
 		}
-		// 占쏙옙占?占쏙옙占쏙옙占쏙옙 占쏙옙 占쏙옙치占쏙옙 占쏙옙占쏙옙
 		else
 		{
 			OverlappedList.Empty();
 			RoomCount += 1;
 
-			// 諛??꾩튂 湲곕줉 (蹂댁뒪 ?쒖같??
 			if (LatestRoom)
 			{
 				RoomLocations.Add(LatestRoom->GetActorLocation());
@@ -285,27 +236,22 @@ void ANecDungeonsGenerator::CheckForOverlap()
 				TArray<USceneComponent*> Components;
 				LatestRoom->GetComponents<USceneComponent>(Components);
 
-				// 占쏙옙占쏙옙占쏙옙트占쏙옙  탐占쏙옙
 				for (USceneComponent* comp : Components)
 				{
-					// 占쏙옙占쌩울옙 占썩구 占쏙옙占쏙옙獵占?占쏙옙 占쏙옙占쏙옙占쏙옙트
 					if (comp && comp->ComponentHasTag(FName("2F Exits Folder")))
 					{
 						const TArray<USceneComponent*>ChildCom = comp->GetAttachChildren();
 						for (USceneComponent* Child : ChildCom)
 						{
-							// 占썩구 占쌩곤옙
 							SecondFExitsList.Add(Child);
 						}
 						break;
 					}
 					else if (comp && comp->ComponentHasTag(FName("Exits Folder")))
 					{
-						// 占쏙옙 占쏙옙占쏙옙占쏙옙트 占싣뤄옙 占쏙옙占쏙옙占쏙옙트占쏙옙 占썼열占쏙옙 占쏙옙占쏙옙
 						const TArray<USceneComponent*>ChildCom = comp->GetAttachChildren();
 						for (USceneComponent* Child : ChildCom)
 						{
-							// 占썩구 占쌩곤옙
 							ExitsList.Add(Child);
 						}
 						break;
@@ -313,15 +259,12 @@ void ANecDungeonsGenerator::CheckForOverlap()
 				}
 			}
 
-			// 占쏙옙 占쏙옙치占쏙옙 占쏙옙 占쏙옙占쏙옙트占쏙옙 占쏙옙占?
 			DoorList.Add(SelectedExitPoint);
 		}
 
-		// 占쏙옙占쏙옙 占쏙옙 占쏙옙치 占쏙옙占쏙옙占싹몌옙 占썸설치
 		if (RoomCount < RoomAmount)
 		{
-			// 占쏙옙 10占쏙옙 占쏙옙占쏙옙占쏙옙 占쏙옙占쏙옙占쏙옙 특占쏙옙占쏙옙 占쏙옙 占쌩곤옙
-			if (RoomCount % 10 == 0)
+			if (RoomCount % ((RoomAmount / SpecialRoomList.Num()) - 1) == 0)
 			{
 				RoomList = SpecialRoomList;
 			}
@@ -333,23 +276,17 @@ void ANecDungeonsGenerator::CheckForOverlap()
 		}
 		else
 		{
-
-
-			// 占쏙옙占쏙옙占쏙옙 占쏙옙 占쏙옙占쏙옙
-			// 보스 방 생성
-			SpawnBossRoom();
 			// 마지막 방 생성
 			SpawnEndRoom();
-			// 占쏙옙占쏙옙 占쏙옙占쏙옙
+			// 구멍 막기
 			CloseHoles();
-			// 占쏙옙 占쏙옙占쏙옙
+			// 문 생성
 			SpawnDoor();
-			// 타占싱몌옙 占쏙옙占쏙옙
+
 			GetWorld()->GetTimerManager().ClearTimer(DungeonTimerHandle);
 
 
 			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Blue, TEXT("Dungeon Complete"));
-			// 占쏙옙占쏙옙 占쏙옙占쏙옙 占싹뤄옙
 			bIsDungeonComplete = true;
 		}
 	}
@@ -363,7 +300,6 @@ void ANecDungeonsGenerator::CloseHoles()
 {
 	if (ExitsList.Num() > 0)
 	{
-		// 占쏙옙占쏙옙占쏙옙 占썸돌 占쏙옙占시뤄옙
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
@@ -392,27 +328,23 @@ void ANecDungeonsGenerator::SpawnDoor()
 
 void ANecDungeonsGenerator::StartDungeonTimer()
 {
-	// 占쏙옙占쏙옙 占시곤옙 占쏙옙占?
 	DungeonStartTime = GetWorld()->GetTimeSeconds();
 
-	// 占쏙옙占쏙옙占쏙옙占쏙옙트占쏙옙 占쏙옙占쏙옙占싹깍옙 占쏙옙占쏙옙 타占싱몌옙
 	GetWorld()->GetTimerManager().SetTimer(
 		DungeonTimerHandle,
 		this,
 		&ANecDungeonsGenerator::CheckForDungeonComplete,
-		1.0f, // 1占십몌옙占쏙옙 체크
-		true // 占쏙옙占쏙옙
+		1.0f,
+		true
 	);
 }
 
 void ANecDungeonsGenerator::CheckForDungeonComplete()
 {
-	// 占쏙옙占쏙옙챨占?占쏙옙占?
 	float RunningTime = GetWorld()->GetTimeSeconds() - DungeonStartTime;
 
 	if (RunningTime >= MaxDungeonTime)
 	{
-		// 占쏙옙占쏙옙 占쏙옙占쏙옙占?
 		UGameplayStatics::OpenLevel(this, LevelName);
 	}
 }
@@ -426,5 +358,5 @@ void ANecDungeonsGenerator::StartDelay()
 void ANecDungeonsGenerator::OnDelayComplete()
 {
 	CheckForOverlap();
-	UE_LOG(LogTemp, Log, TEXT("占쏙옙占쏙옙占쏙옙 占쏙옙"));
+	UE_LOG(LogTemp, Log, TEXT("딜레이 끝"));
 }
