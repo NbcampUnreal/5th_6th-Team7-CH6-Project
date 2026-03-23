@@ -198,6 +198,12 @@ void ANecDungeonsGenerator::SpawnBossRoom()
 
 		// 액터 생성하고 변수에 저장
 		LatestRoom = GetWorld()->SpawnActor<AActor>(BossRoom, SpawnTransform, SpawnParams);
+
+		// 보스방 위치도 RoomLocations에 등록 (보스 순찰 경로에 포함)
+		if (LatestRoom)
+		{
+			RoomLocations.Add(LatestRoom->GetActorLocation());
+		}
 	}
 	else
 	{
