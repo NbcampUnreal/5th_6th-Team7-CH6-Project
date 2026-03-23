@@ -86,6 +86,7 @@ void UNecSaveGameSubsystem::SaveSessionSaveGame(int32 SlotIdx)
     if (NecGS)
     {
         SessionSaveGame->LvDepth = NecGS->LvDepth;
+        SessionSaveGame->SubmittedItemValue = NecGS->SubmiitedItemValue;
         SessionSaveGame->KillCount = NecGS->KillCount;
 
         if (SlotIdx == -1)

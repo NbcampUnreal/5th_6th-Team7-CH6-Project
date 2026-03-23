@@ -58,5 +58,6 @@ public:
 /// </summary>
 public:
 	int32 LvDepth = 0;
+	int32 SubmiitedItemValue = 0;
 	int32 KillCount = 0;
 };

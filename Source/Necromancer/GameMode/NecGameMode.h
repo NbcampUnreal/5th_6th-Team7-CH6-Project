@@ -58,6 +58,9 @@ public:
 	void IncreaseLvDepth();
 	int32 GetLvDepth() const;
 
+	void AddSubmiitedItemValue(int32 Value);
+	int32 GetSubmiitedItemValue() const;
+
 	void IncreaseKillCount();
 	int32 GetKillCount() const;
 };

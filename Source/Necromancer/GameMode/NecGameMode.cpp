@@ -188,6 +188,25 @@ int32 ANecGameMode::GetLvDepth() const
     return -1;
 }
 
+void ANecGameMode::AddSubmiitedItemValue(int32 Value)
+{
+    ANecGameState* NecGS = GetGameState<ANecGameState>();
+    if (NecGS)
+    {
+        NecGS->SubmiitedItemValue += Value;
+    }
+}
+
+int32 ANecGameMode::GetSubmiitedItemValue() const
+{
+    ANecGameState* NecGS = GetGameState<ANecGameState>();
+    if (NecGS)
+    {
+        return NecGS->SubmiitedItemValue;
+    }
+    return -1;
+}
+
 void ANecGameMode::IncreaseKillCount()
 {
     ANecGameState* NecGS = GetGameState<ANecGameState>();
