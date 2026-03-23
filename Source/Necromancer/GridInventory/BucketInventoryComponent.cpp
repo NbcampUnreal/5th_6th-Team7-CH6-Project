@@ -7,6 +7,7 @@
 #include "GridInventory/ItemInstance/ItemInstanceComponent.h"
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
 #include "Engine/ActorChannel.h"
+#include "GameMode/NecGameMode.h"
 
 UBucketInventoryComponent::UBucketInventoryComponent()
 {
@@ -48,7 +49,18 @@ UItemInstance* UBucketInventoryComponent::GetDefaultContainer() const
 void UBucketInventoryComponent::RebuildItemOwnerMap()
 {
     Super::RebuildItemOwnerMap();
-    if (RequirCost < GetBucketTotalCost()) {
+
+    int32 PreviousTotalCost = CurBucketTotalCost;
+    int32 TotalCost = GetBucketTotalCost();
+
+    ANecGameMode* NecGM = GetWorld()->GetAuthGameMode<ANecGameMode>();
+    if (NecGM)
+    {
+        NecGM->AddSubmiitedItemValue(TotalCost - PreviousTotalCost);
+    }
+
+    CurBucketTotalCost = TotalCost;
+    if (RequirCost < TotalCost) {
         OnInventoryUpdated.Broadcast();
         OnSubmit.Broadcast();
     }

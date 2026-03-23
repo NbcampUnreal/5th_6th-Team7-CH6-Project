@@ -7,6 +7,7 @@
 #include "Components/TextBlock.h"
 
 #include "Game/NecGameState.h"
+#include "GameInstance/NecAFGameInstance.h"
 
 void UEndGame::NativeConstruct()
 {
@@ -18,12 +19,26 @@ void UEndGame::NativeConstruct()
 
 void UEndGame::OnRestartGameButtonClicked()
 {
-	// 연결 다끊고 시작
+    UNecAFGameInstance* NecAFGameInstance = Cast<UNecAFGameInstance>(GetGameInstance());
+    if (NecAFGameInstance)
+    {
+        NecAFGameInstance->CreateSession();
+    }
 }
 
 void UEndGame::OnGoLobbyButtonClicked()
 {
-	// 연결 끊고 로비로
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC) return;
+
+    if (PC->HasAuthority())
+    {
+        PC->ClientReturnToMainMenuWithTextReason(FText::FromString(TEXT("Host has ended the session.")));
+    }
+    else
+    {
+        PC->ClientReturnToMainMenuWithTextReason(FText::FromString(TEXT("Leaving the game.")));
+    }
 }
 
 void UEndGame::InitGameScore()

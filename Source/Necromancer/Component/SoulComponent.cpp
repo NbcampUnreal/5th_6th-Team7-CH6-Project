@@ -4,22 +4,25 @@
 #include "Component/SoulComponent.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
+
+#include "Engine/Engine.h"
 
 USoulComponent::USoulComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
-
     CurrentHPDrain = BaseHPDrain;
 
     ReserveBatteries.Empty();
 
-    for (int32 i = 0; i < MaxReserveSlots; ++i)
+    for (int32 i = 0; i <2; ++i)
     {
         FSoulBattery TestBattery;
         TestBattery.MaxCapacity = 100.f;
         TestBattery.CurrentCapacity = 100.f;
         AddReserveBattery(TestBattery);
     }
+
     FSoulBattery TestBattery;
     TestBattery.MaxCapacity = 100.f;
     TestBattery.CurrentCapacity = 100.f;
@@ -29,13 +32,28 @@ USoulComponent::USoulComponent()
 void USoulComponent::BeginPlay()
 {
     Super::BeginPlay();
+
+    SetComponentTickEnabled(GetOwner() && GetOwner()->HasAuthority());
 }
 
 void USoulComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+    if (!GetOwner() || !GetOwner()->HasAuthority())
+        return;
+
     HandleDrain(DeltaTime);
 }
 
+void USoulComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(USoulComponent, ActiveBattery);
+    DOREPLIFETIME(USoulComponent, ReserveBatteries);
+    DOREPLIFETIME(USoulComponent, CurrentState);
+}
 
 void USoulComponent::HandleDrain(float DeltaTime)
 {
@@ -73,8 +91,6 @@ void USoulComponent::SwapReserveToActive()
         return;
 
     ActiveBattery = ReserveBatteries.Pop();
-
-    //CurrentState = ESoulState::LowPower;
 }
 
 void USoulComponent::EnterDepletedState()
@@ -92,7 +108,6 @@ void USoulComponent::IncreaseHPDrain(float DeltaTime)
     if (CurrentState != ESoulState::Depleted)
         return;
 
-    // 가속도에도 DeltaTime 적용
     CurrentHPDrain = FMath::Min(
         CurrentHPDrain + (DrainAcceleration * DeltaTime),
         MaxHPDrain
@@ -141,30 +156,102 @@ void USoulComponent::EnterDownState()
 
 void USoulComponent::TryRevive()
 {
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("[TryRevive] Called"));
+    }
+
     if (CurrentState != ESoulState::Down)
+    {
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(
+                -1,
+                5.f,
+                FColor::Red,
+                FString::Printf(TEXT("[TryRevive] Fail: CurrentState != Down (%d)"), (uint8)CurrentState)
+            );
+        }
         return;
+    }
+
+    if (!GetOwner())
+    {
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("[TryRevive] Fail: Owner is null"));
+        }
+        return;
+    }
+
     if (!GetOwner()->HasAuthority())
+    {
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("[TryRevive] Fail: No Authority (Client called)"));
+        }
         return;
+    }
+
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(
+            -1,
+            5.f,
+            FColor::Cyan,
+            FString::Printf(TEXT("[TryRevive] Reserve Num BEFORE: %d"), ReserveBatteries.Num())
+        );
+    }
 
     if (ReserveBatteries.Num() <= 0)
+    {
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("[TryRevive] Fail: No Reserve Batteries"));
+        }
         return;
+    }
 
-    //ActiveBattery = ReserveBatteries[0];
     ActiveBattery = ReserveBatteries.Pop();
     ActiveBattery.SetHalf();
 
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(
+            -1,
+            5.f,
+            FColor::Green,
+            FString::Printf(TEXT("[TryRevive] Reserve Num AFTER: %d"), ReserveBatteries.Num())
+        );
+    }
+
     CurrentState = ESoulState::Normal;
     CurrentHPDrain = BaseHPDrain;
+
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("[TryRevive] Success: State -> Normal"));
+    }
 
     OnReviveRequested.Broadcast();
 
     bIsInvincible = true;
     OnInvincibleStart.Broadcast();
 
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("[TryRevive] Invincible Start"));
+    }
+
     GetWorld()->GetTimerManager().SetTimer(
         InvincibleTimer,
         [this]()
         {
+            if (GEngine)
+            {
+                GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("[TryRevive] Invincible End"));
+            }
+
             bIsInvincible = false;
             OnInvincibleEnd.Broadcast();
         },
