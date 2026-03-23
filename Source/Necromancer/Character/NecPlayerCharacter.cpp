@@ -694,6 +694,7 @@ AActor* ANecPlayerCharacter::GetCurrentEquipmentActor(EEquipmentSlot Slot)
 }
 
 void ANecPlayerCharacter::AddInteractTarget(AActor* Target) {
+	if (!StatComponent) return;
 	if (StatComponent->GetStatus()!=ECharacterStatus::Alive)
 		return;
 
