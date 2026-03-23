@@ -13,6 +13,8 @@
 #include "DamageType/NecDamageType.h"
 #include "AI/MonsterBase.h"
 
+#include "GameMode/NecGameMode.h"
+
 UStatComponent::UStatComponent()
 	: CurrentHealth(0.0f)
     , CurrentPoiseDamage(0.0f)
@@ -215,6 +217,12 @@ void UStatComponent::HandleTakeDamage(AActor* DamagedActor, float Damage, const 
             if (PC)
             {
                 PC->Client_NotifyMonsterKill();
+
+                ANecGameMode* NecGM = Cast<ANecGameMode>(GetWorld()->GetAuthGameMode());
+                if (NecGM)
+                {
+                    NecGM->IncreaseKillCount();
+                }
             }
         }
         Status = ECharacterStatus::Down;

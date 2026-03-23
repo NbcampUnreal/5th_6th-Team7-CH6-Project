@@ -7,6 +7,7 @@ class UInputMappingContext;
 class UInputAction;
 class UInGameHUDWidget;
 class UReadyWidget;
+class UEndGame;
 
 UCLASS()
 class NECROMANCER_API ANecPlayerController : public APlayerController
@@ -20,14 +21,14 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
 
-	void CreateReadyWidgetForHost();
-	void CreateInGameHUD();
 
 	virtual void SetupInputComponent() override;
 
 	virtual void OnRep_PlayerState() override;
 	virtual void OnRep_Pawn() override;
 
+
+#pragma region IA
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TObjectPtr<UInputMappingContext> InputMappingContext;
@@ -70,7 +71,10 @@ public:
 
 	UFUNCTION()
 	void SpectatingTargetDown();
+#pragma endregion
 
+
+#pragma region User Widget
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UInGameHUDWidget> InGameHUDWidgetClass;
@@ -78,21 +82,28 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UInGameHUDWidget> InGameHUDWidgetInstance;
 
-protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UReadyWidget> ReadyWidgetClass;
+	TSubclassOf<UInGameHUDWidget> SpectatorHUDWidgetClass;
 
 	UPROPERTY()
-	TObjectPtr<UReadyWidget> ReadyWidgetInstance;
+	TObjectPtr<UInGameHUDWidget> SpectatorHUDWidgetInstance;
 
-protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TArray<TSubclassOf<UUserWidget>> WidgetClasses;
+	TSubclassOf<UEndGame> EndGameWidgetClass;
+
 	UPROPERTY()
-	TArray<TObjectPtr<UReadyWidget>> WidgetInstances;
+	TObjectPtr<UEndGame> EndGameWidgetInstance;
+
+
 public:
-	void OnStartGame();
+	UFUNCTION(Client, Reliable)
+	void Client_CreateEndGameWidget();
 
+protected:
+	void CreateInGameHUD();
+	void CreateSpectatorHUD();
+
+#pragma endregion
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
