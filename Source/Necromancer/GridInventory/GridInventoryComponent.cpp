@@ -659,13 +659,97 @@ void UGridInventoryComponent::Implement_RemoveItem(UItemInstance*& Item)
     Item->OnItemUpdated.Clear();
     Items.Remove(Item);
 
-    Item->OwnerItemGuid.Invalidate();
-    Item->SectionIndex = INDEX_NONE;
-    Item->RowIndex = INDEX_NONE;
-    Item->PosX = 0;
-    Item->PosY = 0;
-
     MarkInventoryDirty();
+}
+
+void UGridInventoryComponent::RequestAddItemToOther(
+    UGridInventoryComponent* OtherComp,
+    UItemInstance* NewItem,
+    const FGuid& ContainerGuid,
+    int32 InRowIndex,
+    int32 InSectionIndex,
+    int32 InPosX,
+    int32 InPosY)
+{
+    if (!IsValid(OtherComp) || !IsValid(NewItem))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("RequestAddItemToOther: OtherComp or NewItem is invalid"));
+        return;
+    }
+
+    if (GetOwnerRole() < ROLE_Authority)
+    {
+        Server_RequestAddItemToOther(
+            OtherComp,
+            NewItem,
+            ContainerGuid,
+            InRowIndex,
+            InSectionIndex,
+            InPosX,
+            InPosY
+        );
+       
+    }
+    else {
+
+        Implement_RequestAddItemToOther(
+            OtherComp,
+            NewItem,
+            ContainerGuid,
+            InRowIndex,
+            InSectionIndex,
+            InPosX,
+            InPosY
+        );
+    }
+    RebuildItemOwnerMap();
+    OnInventoryUpdated.Broadcast();
+}
+
+void UGridInventoryComponent::Implement_RequestAddItemToOther(
+    UGridInventoryComponent* OtherComp,
+    UItemInstance* NewItem,
+    const FGuid& ContainerGuid,
+    int32 InRowIndex,
+    int32 InSectionIndex,
+    int32 InPosX,
+    int32 InPosY)
+{
+    if (!IsValid(OtherComp) || !IsValid(NewItem))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Implement_RequestAddItemToOther: OtherComp or NewItem is invalid"));
+        return;
+    }
+
+    // 서버에서 대상 인벤토리에 실제 추가 요청
+    OtherComp->AddItemToPos(
+        NewItem,
+        ContainerGuid,
+        InRowIndex,
+        InSectionIndex,
+        InPosX,
+        InPosY
+    );
+}
+
+void UGridInventoryComponent::Server_RequestAddItemToOther_Implementation(
+    UGridInventoryComponent* OtherComp,
+    UItemInstance* NewItem,
+    FGuid ContainerGuid,
+    int32 InRowIndex,
+    int32 InSectionIndex,
+    int32 InPosX,
+    int32 InPosY)
+{
+    Implement_RequestAddItemToOther(
+        OtherComp,
+        NewItem,
+        ContainerGuid,
+        InRowIndex,
+        InSectionIndex,
+        InPosX,
+        InPosY
+    );
 }
 
 void UGridInventoryComponent::GetAllChildrenRecursive(const FGuid& ParentGuid, TArray<UItemInstance*>& OutChildren) const
