@@ -82,28 +82,38 @@ void UNecSaveGameSubsystem::SaveSessionSaveGame(int32 SlotIdx)
         InitSessionSaveGame(SlotIdx);
     }
 
+    SaveSessionData();
+
+    if (SlotIdx == -1)
+    {
+        UGameplayStatics::SaveGameToSlot(SessionSaveGame, DefaultSessionSaveGameSlotName, 0);
+    }
+    else
+    {
+        FString SessionSaveGameSlotName = FString::Printf(TEXT("Session_%d"), SlotIdx);
+        UGameplayStatics::SaveGameToSlot(SessionSaveGame, SessionSaveGameSlotName, 0);
+    }
+}
+
+void UNecSaveGameSubsystem::SaveSessionData()
+{
     ANecGameState* NecGS = GetWorld()->GetGameState<ANecGameState>();
     if (NecGS)
     {
         SessionSaveGame->LvDepth = NecGS->LvDepth;
         SessionSaveGame->SubmittedItemValue = NecGS->SubmittedItemValue;
         SessionSaveGame->KillCount = NecGS->KillCount;
-
-        if (SlotIdx == -1)
-        {
-            UGameplayStatics::SaveGameToSlot(SessionSaveGame, DefaultSessionSaveGameSlotName, 0);
-        }
-        else
-        {
-            FString SessionSaveGameSlotName = FString::Printf(TEXT("Session_%d"), SlotIdx);
-            UGameplayStatics::SaveGameToSlot(SessionSaveGame, SessionSaveGameSlotName, 0);
-        }
     }
 }
 
-int32 UNecSaveGameSubsystem::GetLvDepth()
+int32 UNecSaveGameSubsystem::GetLvDepth() const
 {
     return SessionSaveGame ? SessionSaveGame->LvDepth : 0;
+}
+
+int32 UNecSaveGameSubsystem::GetSubmittedItemValue() const
+{
+    return SessionSaveGame ? SessionSaveGame->SubmittedItemValue : 0;
 }
 
 int32 UNecSaveGameSubsystem::GetKillCount() const

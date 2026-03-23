@@ -67,12 +67,14 @@ void ANecGameMode::InitGameState()
     if (NecGameState && NecSaveGameSubsystem)
     {
         NecGameState->LvDepth = NecSaveGameSubsystem->GetLvDepth();
+        NecGameState->SubmittedItemValue = NecSaveGameSubsystem->GetSubmittedItemValue();
         NecGameState->KillCount = NecSaveGameSubsystem->GetKillCount();
     }
 }
 
 void ANecGameMode::EndGame()
 {
+    UE_LOG(LogTemp, Display, TEXT("EndGame Player %d"), GetWorld()->GetNumPlayerControllers());
     for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
     {
         APlayerController* PC = It->Get();
@@ -90,7 +92,7 @@ void ANecGameMode::EndGame()
 void ANecGameMode::OnPlayerDeath(ANecPlayerController* DeadPC)
 {
     PlayerControllers.RemoveSingle(DeadPC);
-
+    
     if (PlayerControllers.Num() < 1)
     {
         EndGame();
@@ -103,7 +105,10 @@ void ANecGameMode::OnPlayerDeath(ANecPlayerController* DeadPC)
 
 void ANecGameMode::OnPlayerRevive(ANecPlayerController* RevivedPlayerController)
 {
-    PlayerControllers.Add(RevivedPlayerController);
+    if (RevivedPlayerController)
+    {
+        PlayerControllers.AddUnique(RevivedPlayerController);
+    }
 }
 
 void ANecGameMode::Server_ReqeustSpectatingTarget_Implementation(ANecPlayerController* RequestPC, AActor* CurSpectatingTarget, bool bIsUp)
