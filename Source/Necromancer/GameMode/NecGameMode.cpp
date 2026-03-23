@@ -11,7 +11,6 @@ void ANecGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-    UE_LOG(LogTemp, Error, TEXT("ANecGameMode:: BeginPlay ----"));
     // if GameInstance-> GameSlotIdx != -1 then 
     // NecSaveGameSubsystem->InitSessionSaveGame(SlotIdx); 를 호출하여 게임을 SaveGame을 초기화한다
     // else
@@ -28,13 +27,10 @@ void ANecGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-    UE_LOG(LogTemp, Error, TEXT("ANecGameMode::Post Login"));
 	ANecPlayerController* NewNecPlayerController = Cast<ANecPlayerController>(NewPlayer);
 	if (NewNecPlayerController)
 	{
 		PlayerControllers.Add(NewNecPlayerController);
-        //GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Yellow, FString::Printf(TEXT("PostLogin : %d"), PlayerControllers.Num()));
-        UE_LOG(LogTemp, Error, TEXT("Post Login %d"), PlayerControllers.Num());
 
 		ANecGameState* NecGameState = GetGameState<ANecGameState>();
 		if (NecGameState)
