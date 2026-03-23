@@ -153,6 +153,7 @@ void UBTTask_MonsterComboAttack::FinishCombo(EBTNodeResult::Type Result)
     if (AMonsterBase* Monster = Cast<AMonsterBase>(CachedCharacter))
     {
         Monster->OnNextComboRequested.Unbind();
+        Monster->ClearWarpTarget(FName("AttackTarget"));
     }
 
     if (CachedOwnerComp)
@@ -235,6 +236,22 @@ void UBTTask_MonsterComboAttack::PlayNextCombo()
     }
 
     AMonsterBase* Monster = Cast<AMonsterBase>(CachedCharacter);
+
+    // 콤보 각 타격마다 워프 타겟 업데이트
+    if (Monster && CachedOwnerComp)
+    {
+        if (UBlackboardComponent* BB = CachedOwnerComp->GetBlackboardComponent())
+        {
+            AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
+            if (TargetActor)
+            {
+                FVector TargetLoc = TargetActor->GetActorLocation();
+                FRotator LookAtRot = (TargetLoc - CachedCharacter->GetActorLocation()).Rotation();
+                Monster->SetWarpTarget(FName("AttackTarget"), TargetLoc, LookAtRot);
+            }
+        }
+    }
+
     if (Monster)
     {
         Monster->Multicast_PlayMontage(AttackData->AttackMontage);

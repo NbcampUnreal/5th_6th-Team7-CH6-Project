@@ -69,6 +69,10 @@ struct FBossActionEntry
 	// 타겟으로부터의 순간이동 거리
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Teleport", meta = (ClampMin = "0.0", EditCondition = "ActionType == EBossActionType::Teleport", EditConditionHides))
 	float TeleportDistance = 200.0f;
+
+	// 텔레포트 발동 최소 거리 (타겟이 이 거리 이상 멀어져야 텔레포트 선택됨)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Teleport", meta = (ClampMin = "0.0", EditCondition = "ActionType == EBossActionType::Teleport", EditConditionHides))
+	float MinTeleportTriggerDistance = 800.0f;
 };
 
 UCLASS(BlueprintType)

@@ -6,6 +6,7 @@
 #include "GenericTeamAgentInterface.h"
 #include "GameFramework/Character.h"
 #include "Components/AudioComponent.h"
+#include "MotionWarpingComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "MonsterBase.generated.h"
 
@@ -76,6 +77,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	TObjectPtr<UMonsterStatComponent> MonsterStatComponent;
 
+	// Motion Warping 컴포넌트 (공격 시 타겟 위치로 루트모션 보정)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+	TObjectPtr<UMotionWarpingComponent> MotionWarpingComp;
+
 	// 사망 처리 (Server Only)
 	UFUNCTION()
 	virtual void OnDeath();
@@ -143,6 +148,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	bool IsBlocking() const { return bIsBlocking; }
+
+	// Motion Warping 타겟 설정 (공격 시 타겟 위치로 루트모션 보정)
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetWarpTarget(FName WarpTargetName, FVector TargetLocation, FRotator TargetRotation);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void ClearWarpTarget(FName WarpTargetName);
 
 	// 대기 사운드 제어 (전투 시 중지, 순찰/대기 시 재개)
 	void SetIdleSoundActive(bool bActive);

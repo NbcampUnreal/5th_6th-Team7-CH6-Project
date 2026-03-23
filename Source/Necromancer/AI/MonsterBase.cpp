@@ -18,6 +18,7 @@
 AMonsterBase::AMonsterBase()
 {
 	MonsterStatComponent = CreateDefaultSubobject<UMonsterStatComponent>(TEXT("MonsterStatComponent"));
+	MotionWarpingComp = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarping"));
 	SetRVOAvoidanceEnabled(true);
 
 	bReplicates = true;
@@ -397,6 +398,23 @@ void AMonsterBase::SetBlockingState(bool bBlock)
 
 void AMonsterBase::OnRep_IsBlocking()
 {
+}
+
+void AMonsterBase::SetWarpTarget(FName WarpTargetName, FVector TargetLocation, FRotator TargetRotation)
+{
+	if (MotionWarpingComp)
+	{
+		MotionWarpingComp->AddOrUpdateWarpTargetFromLocationAndRotation(
+			WarpTargetName, TargetLocation, FRotator(0.f, TargetRotation.Yaw, 0.f));
+	}
+}
+
+void AMonsterBase::ClearWarpTarget(FName WarpTargetName)
+{
+	if (MotionWarpingComp)
+	{
+		MotionWarpingComp->RemoveWarpTarget(WarpTargetName);
+	}
 }
 
 void AMonsterBase::SetIdleSoundActive(bool bActive)

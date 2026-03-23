@@ -120,6 +120,18 @@ void UBTTask_BossAction::ExecuteMeleeAction(ABossMonsterBase* Boss, const FBossA
 	AIC->StopMovement();
 	Boss->GetCharacterMovement()->StopMovementImmediately();
 
+	// Melee 워프 타겟 설정 (타겟 위치로 루트모션 보정)
+	if (UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent())
+	{
+		AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
+		if (TargetActor)
+		{
+			FVector TargetLoc = TargetActor->GetActorLocation();
+			FRotator LookAtRot = (TargetLoc - Boss->GetActorLocation()).Rotation();
+			Boss->SetWarpTarget(FName("AttackTarget"), TargetLoc, LookAtRot);
+		}
+	}
+
 	PlayActionMontage(Boss, Action.ActionMontage, OwnerComp);
 }
 
@@ -153,9 +165,15 @@ void UBTTask_BossAction::ExecuteTeleportAction(ABossMonsterBase* Boss, const FBo
 		Boss->Multicast_Teleport(TeleportLocation, TeleportRotation);
 	}
 
-	// 순간이동 후 몽타주가 있으면 재생, 없으면 즉시 완료
+	// 순간이동 후 몽타주가 있으면 워프 타겟 설정 후 재생
 	if (Action.ActionMontage)
 	{
+		if (TargetActor)
+		{
+			FVector TargetLoc = TargetActor->GetActorLocation();
+			FRotator LookAtRot = (TargetLoc - Boss->GetActorLocation()).Rotation();
+			Boss->SetWarpTarget(FName("AttackTarget"), TargetLoc, LookAtRot);
+		}
 		PlayActionMontage(Boss, Action.ActionMontage, OwnerComp);
 	}
 	else
@@ -328,6 +346,7 @@ void UBTTask_BossAction::CleanupAttackState(UBehaviorTreeComponent* OwnerComp)
 		{
 			if (ABossMonsterBase* Boss = Cast<ABossMonsterBase>(Pawn))
 			{
+				Boss->ClearWarpTarget(FName("AttackTarget"));
 				Boss->RestoreMovementIfAlive();
 				Boss->SetSuperArmor(false);
 				Boss->SetIdleSoundActive(true);

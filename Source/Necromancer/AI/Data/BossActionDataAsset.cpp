@@ -25,6 +25,15 @@ const FBossActionEntry* UBossActionDataAsset::SelectAction(int32 CurrentPhase, f
 			}
 		}
 
+		// Teleport 타입: 최소 거리 필터 (타겟이 충분히 멀 때만 텔레포트)
+		if (Entry.ActionType == EBossActionType::Teleport)
+		{
+			if (DistanceToTarget < Entry.MinTeleportTriggerDistance)
+			{
+				continue;
+			}
+		}
+
 		// 쿨타임 필터
 		if (Entry.Cooldown > 0.0f)
 		{

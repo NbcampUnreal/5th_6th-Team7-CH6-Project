@@ -89,6 +89,16 @@ EBTNodeResult::Type UBTTask_MonsterAttack::ExecuteTask(UBehaviorTreeComponent& O
 	Character->GetCharacterMovement()->StopMovementImmediately();
 
 	AMonsterBase* Monster = Cast<AMonsterBase>(Character);
+
+	// 워프 타겟 설정 (타겟이 있을 때만, 루트모션+AnimNotify로 자연스러운 돌진)
+	AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
+	if (Monster && TargetActor)
+	{
+		FVector TargetLoc = TargetActor->GetActorLocation();
+		FRotator LookAtRot = (TargetLoc - Character->GetActorLocation()).Rotation();
+		Monster->SetWarpTarget(FName("AttackTarget"), TargetLoc, LookAtRot);
+	}
+
 	if (Monster)
 	{
 		Monster->SetIdleSoundActive(false);
@@ -170,6 +180,7 @@ void UBTTask_MonsterAttack::CleanupAttackState(UBehaviorTreeComponent* OwnerComp
 		{
 			if (AMonsterBase* Monster = Cast<AMonsterBase>(Pawn))
 			{
+				Monster->ClearWarpTarget(FName("AttackTarget"));
 				Monster->RestoreMovementIfAlive();
 				Monster->SetIdleSoundActive(true);
 			}
