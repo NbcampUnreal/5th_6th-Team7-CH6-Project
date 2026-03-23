@@ -53,23 +53,22 @@ void AWorldActorSpawnManager::StartSpawning()
 	CollectAllSpawnEntries();
 	UE_LOG(LogTemp, Warning, TEXT("SpawnQueue Count: %d"), SpawnQueue.Num());
 	LevelCurrentCost = 0;
-	int32 RequiredSubmitValue;
+	int32 RequiredSubmitValue = 0;
 
 	ANecGameState* NecGS = GetWorld()->GetGameState<ANecGameState>();
 	if (NecGS)
 	{
-		// 우빈님 아래 두줄 지우고, 주석처리된 곳에서 값 가공하시면돼요 
-		LevelMaxCost = -1;
-		RequiredSubmitValue = -1;
+		int32 Level = NecGS->LvDepth;
 
-		//LevelMaxCost = NecGS->LvDepth * ;
-		//RequiredSubmitValue = NecGS->LvDepth * ;
+		LevelMaxCost = 100 + (Level * 1000);
+
+		RequiredSubmitValue = LevelMaxCost * 1.5f;
 		UE_LOG(LogTemp, Warning, TEXT("LevelMaxCost set to: %d"), LevelMaxCost);
 	}
 	else
 	{
 		LevelMaxCost = 500;
-		RequiredSubmitValue = LevelMaxCost;
+		RequiredSubmitValue = 500;
 	}
 
 	for (TActorIterator<ASubmitBusket> It(GetWorld()); It; ++It)
@@ -79,7 +78,7 @@ void AWorldActorSpawnManager::StartSpawning()
 		{
 			Basket->SetRequiredCost(RequiredSubmitValue);
 
-			UE_LOG(LogTemp, Warning, TEXT("🔥 Basket RequiredSubmitValue set to: %d"), RequiredSubmitValue);
+			UE_LOG(LogTemp, Warning, TEXT("Basket RequiredSubmitValue set to: %d"), RequiredSubmitValue);
 		}
 	}
 
