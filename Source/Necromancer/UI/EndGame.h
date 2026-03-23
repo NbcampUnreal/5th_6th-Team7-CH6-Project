@@ -44,6 +44,9 @@ protected:
 	TObjectPtr<UTextBlock> ClearLvDepthText;
 
 	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> TotalSubmittedItemValueText;
+
+	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> TotalKillCountText;
 
 };

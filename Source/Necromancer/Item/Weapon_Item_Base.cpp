@@ -46,6 +46,11 @@ void AWeapon_Item_Base::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
 
+    if (bIsUnarmed || !WeaponMesh || !WeaponMesh->GetSkeletalMeshAsset())
+    {
+        return;
+    }
+
     if (WeaponMesh && WeaponMesh->DoesSocketExist(StartSocketName) && WeaponMesh->DoesSocketExist(EndSocketName))
     {
         const FVector StartPos = WeaponMesh->GetSocketLocation(StartSocketName);
@@ -70,10 +75,26 @@ void AWeapon_Item_Base::StartAttack()
     bIsAttacking = true;
     HitActors.Empty();
 
-    FVector StartPos = WeaponMesh->GetSocketLocation(StartSocketName);
-    FVector EndPos = WeaponMesh->GetSocketLocation(EndSocketName);
+    USkeletalMeshComponent* TargetMesh = WeaponMesh;
 
-    LastCenterLocation = (StartPos + EndPos) * 0.5f;
+    if (bIsUnarmed)
+    {
+        if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
+        {
+            if (ANecPlayerCharacter* OwnerChar = Cast<ANecPlayerCharacter>(OwnerPawn))
+            {
+                TargetMesh = OwnerChar->GetMesh();
+            }
+        }
+    }
+
+    if (TargetMesh)
+    {
+        FVector StartPos = TargetMesh->GetSocketLocation(StartSocketName);
+        FVector EndPos = TargetMesh->GetSocketLocation(EndSocketName);
+
+        LastCenterLocation = (StartPos + EndPos) * 0.5f;
+    }
 
     SetActorTickEnabled(true);
 
@@ -219,7 +240,7 @@ void AWeapon_Item_Base::PerformTrace()
             {
                 TraceMesh = OwnerChar->GetMesh();
             }
-        }       
+        }
     }
 
     if (!TraceMesh)

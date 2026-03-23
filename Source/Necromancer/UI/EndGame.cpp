@@ -37,6 +37,12 @@ void UEndGame::InitGameScore()
             ClearLvDepthText->SetText(FText::FromString(CombinedString));
         }
 
+        if (TotalSubmittedItemValueText)
+        {
+            FString CombinedString = FString::Printf(TEXT("총 제출한 아이템 가치: %d"), NecGS->SubmittedItemValue);
+            TotalSubmittedItemValueText->SetText(FText::FromString(CombinedString));
+        }
+
         if (TotalKillCountText)
         {
             FString CombinedString = FString::Printf(TEXT("총 처치한 몬스터 수: %d"), NecGS->KillCount);
