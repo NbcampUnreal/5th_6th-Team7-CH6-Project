@@ -48,7 +48,14 @@ UItemInstance* UBucketInventoryComponent::GetDefaultContainer() const
 void UBucketInventoryComponent::RebuildItemOwnerMap()
 {
     Super::RebuildItemOwnerMap();
-    if (RequirCost < GetBucketTotalCost()) {
+
+    int32 PreviousTotalCost = CurBucketTotalCost;
+    int32 TotalCost = GetBucketTotalCost();
+
+    UE_LOG(LogTemp, Error, TEXT("rebuild itemr owern map: %d"), TotalCost - PreviousTotalCost);
+
+    CurBucketTotalCost = TotalCost;
+    if (RequirCost < TotalCost) {
         OnInventoryUpdated.Broadcast();
         OnSubmit.Broadcast();
     }
