@@ -51,7 +51,7 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	TargetingComponent = CreateDefaultSubobject<UTargetingComponent>(TEXT("TargetingComponent"));
 	InventoryComponent = CreateDefaultSubobject<UNecInventoryComponent>(TEXT("NecInventoryComponent"));
-	SoulComponent = CreateDefaultSubobject<USoulComponent>(TEXT("SoulComponent"));
+	//SoulComponent = CreateDefaultSubobject<USoulComponent>(TEXT("SoulComponent"));
 
 	InteractionCheckCollision = CreateDefaultSubobject<USphereComponent>(TEXT("InteractionCollision"));
 	InteractionCheckCollision->SetSphereRadius(CollisionRadius);
@@ -479,17 +479,16 @@ void ANecPlayerCharacter::Multicast_HandleDeath_Implementation()
 void ANecPlayerCharacter::HandleRevive()
 {
 	if (HasAuthority())
-	{
-		
-		Server_RequestRevive();
+	{		
+		Multicast_HandleRevive();
+		StatComponent->SetCurrentHealth(50.f);
+		StatComponent->SetStatus(ECharacterStatus::Alive);
 	}
 }
 
 void ANecPlayerCharacter::Server_RequestRevive_Implementation()
 {
-	Multicast_HandleRevive();
-	StatComponent->SetCurrentHealth(50.f);
-	StatComponent->SetStatus(ECharacterStatus::Alive);
+	SoulComponent->TryRevive();
 }
 
 void ANecPlayerCharacter::Multicast_HandleRevive_Implementation()
@@ -572,6 +571,7 @@ void ANecPlayerCharacter::LinkPlayerStateComponents()
 			{
 			}
 		}
+		SoulComponent = PS->GetSoulComponent();
 		if (SoulComponent) {
 			SoulComponent->OnReviveRequested.AddDynamic(
 				this,
