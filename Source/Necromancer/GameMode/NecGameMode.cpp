@@ -193,7 +193,7 @@ void ANecGameMode::AddSubmiitedItemValue(int32 Value)
     ANecGameState* NecGS = GetGameState<ANecGameState>();
     if (NecGS)
     {
-        NecGS->SubmiitedItemValue += Value;
+        NecGS->SubmittedItemValue += Value;
     }
 }
 
@@ -202,7 +202,7 @@ int32 ANecGameMode::GetSubmiitedItemValue() const
     ANecGameState* NecGS = GetGameState<ANecGameState>();
     if (NecGS)
     {
-        return NecGS->SubmiitedItemValue;
+        return NecGS->SubmittedItemValue;
     }
     return -1;
 }
