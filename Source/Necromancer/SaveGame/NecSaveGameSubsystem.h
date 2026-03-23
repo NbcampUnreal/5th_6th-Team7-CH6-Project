@@ -23,11 +23,10 @@ public:
 
 
 #pragma region ProfileSaveGame
-public:
+private:
 	UPROPERTY()
 	UNecProfileSaveGame* ProfileSaveGame;
 
-private:
 	const FString ProfileSaveGameSlotName = FString(TEXT("Profile"));
 	
 private:
@@ -41,35 +40,31 @@ public:
 #pragma endregion
 
 #pragma region SessionSaveGame
-public:
+private:
 	UPROPERTY()
 	UNecSessionSaveGame* SessionSaveGame;
 
-private:
 	const FString DefaultSessionSaveGameSlotName = FString(TEXT("Session"));
 
-private:
+public:
 	/// <summary>
 	/// -1: NewGame (SlotName = Session) -> If Player doesn't save, this SessionSaveGame is gone)
 	/// 0~2: Saved Game (SlotName = FString::Printf("Session_%d", SaveIdx))
 	/// </summary>
 	/// 
 	/// <param name="SlotIdx">
-	/// 게임 세션을 생성 또는 저장 결정
 	/// if SlotIdx == -1 then SaveCurrentSession, else then SaveGameSession to Continue Game
 	/// </param>
-	void InitSessionSaveGame(int32 SlotIdx);
-	void SaveSessionSaveGame(int32 SlotIdx);
+	void InitSessionSaveGame(int32 SlotIdx = -1);
+	void SaveSessionSaveGame(int32 SlotIdx = -1);
+
+	void SaveSessionData();
 
 public:
-	void IncreaseLvDepth();
-	int32 GetLvDepth();
+	int32 GetLvDepth() const;
+	int32 GetSubmittedItemValue() const;
+	int32 GetKillCount() const;
 
-	UFUNCTION(BlueprintCallable)
-	float GetSpawnCostMultiplier() const;
-
-	UFUNCTION(BlueprintCallable)
-	int32 GetLevelMaxSpawnCost() const;
 
 #pragma endregion
 };

@@ -31,6 +31,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	EWeaponType GetWeaponType() const { return WeaponData ? WeaponData->WeaponType : EWeaponType::Unarmed; }
 
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	bool GetIsUnarmed() const { return bIsUnarmed; }
+
 	UAnimMontage* GetAttackMontage() const;
 	UAnimMontage* GetRunningAttackMontage() const;
 	UAnimMontage* GetGuardMontage() const;

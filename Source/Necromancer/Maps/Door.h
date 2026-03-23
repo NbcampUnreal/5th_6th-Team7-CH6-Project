@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "WorldActor/InteractableActor.h"
 #include "Components/TimelineComponent.h"
+#include "NavLinkCustomComponent.h"
 #include "Door.generated.h"
 
 UCLASS()
@@ -27,19 +28,19 @@ protected:
 	UFUNCTION()
 	virtual void DoorOpenTimeLineFunc(float Output);
 
-	//¹®¿­¸² ¿©ºÎ
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(ReplicatedUsing = OnRep_DoorState, EditAnywhere, BlueprintReadWrite)
 	bool bDoorOpen = false;
 
 private:
-	//¹®¿­¸² ¿¬Ãâ ½ÇÇà
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	FOnTimelineFloat UpdateFunctionFloat;
 
-	//¹®¿­¸² ¿¬Ãâ¿ë CurveFloat
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ CurveFloat
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	UCurveFloat* DoorTimelineCurveFloat;
 
-	//¹®¿­¸² ¿¬Ãâ¿ë Timeline
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ Timeline
 	UPROPERTY(EditDefaultsOnly, Category = "Door Action", meta = (AllowPrivateAccess = true))
 	UTimelineComponent* DoorTimeline;
 
@@ -48,5 +49,19 @@ private:
 
 	UFUNCTION()
 	void OnRep_DoorState();
-	
+
+	// NavLink (ë³´ìŠ¤ ë¬¸ í†µê³¼)
+	UPROPERTY(VisibleAnywhere, Category = "Navigation", meta = (AllowPrivateAccess = true))
+	TObjectPtr<UNavLinkCustomComponent> NavLinkComp;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Navigation", meta = (AllowPrivateAccess = true))
+	float NavLinkOffset = 250.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Navigation", meta = (AllowPrivateAccess = true))
+	float AIOpenDuration = 4.0f;
+
+	FTimerHandle AICloseTimerHandle;
+
+	void OnMoveReachedLink(UNavLinkCustomComponent* LinkComp, UObject* PathComp, const FVector& DestPoint);
+	void CloseDoorForAI();
 };

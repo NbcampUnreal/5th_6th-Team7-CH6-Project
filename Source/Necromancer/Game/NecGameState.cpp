@@ -11,6 +11,9 @@ void ANecGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 	//DOREPLIFETIME(ThisClass, SessionState);
 	DOREPLIFETIME(ThisClass, PlayerControllerCount);
+	DOREPLIFETIME(ThisClass, LvDepth);
+	DOREPLIFETIME(ThisClass, SubmittedItemValue);
+	DOREPLIFETIME(ThisClass, KillCount);
 }
 
 //void ANecGameState::OnRep_SessionState()

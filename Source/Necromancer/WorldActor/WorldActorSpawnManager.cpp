@@ -10,6 +10,8 @@
 
 #include "GridInventory/ItemData/ItemDataSubsystem.h"
 #include "SaveGame/NecSaveGameSubsystem.h"
+#include "Game/NecGameState.h"
+#include "WorldActor/SubmitBusket.h"
 
 static FVector GetRandomSpawnOffset(float Radius)
 {
@@ -51,18 +53,33 @@ void AWorldActorSpawnManager::StartSpawning()
 	CollectAllSpawnEntries();
 	UE_LOG(LogTemp, Warning, TEXT("SpawnQueue Count: %d"), SpawnQueue.Num());
 	LevelCurrentCost = 0;
+	int32 RequiredSubmitValue = 0;
 
-	UNecSaveGameSubsystem* SaveSubsystem = GetGameInstance()->GetSubsystem<UNecSaveGameSubsystem>();
-
-	if (SaveSubsystem)
+	ANecGameState* NecGS = GetWorld()->GetGameState<ANecGameState>();
+	if (NecGS)
 	{
-		LevelMaxCost = SaveSubsystem->GetLevelMaxSpawnCost();
+		int32 Level = NecGS->LvDepth;
 
+		LevelMaxCost = 100 + (Level * 1000);
+
+		RequiredSubmitValue = LevelMaxCost * 1.5f;
 		UE_LOG(LogTemp, Warning, TEXT("LevelMaxCost set to: %d"), LevelMaxCost);
 	}
 	else
 	{
 		LevelMaxCost = 500;
+		RequiredSubmitValue = 500;
+	}
+
+	for (TActorIterator<ASubmitBusket> It(GetWorld()); It; ++It)
+	{
+		ASubmitBusket* Basket = *It;
+		if (Basket)
+		{
+			Basket->SetRequiredCost(RequiredSubmitValue);
+
+			UE_LOG(LogTemp, Warning, TEXT("Basket RequiredSubmitValue set to: %d"), RequiredSubmitValue);
+		}
 	}
 
 	if (SpawnQueue.Num() == 0)
@@ -152,12 +169,12 @@ void AWorldActorSpawnManager::StartSpawning()
 						break;
 					}
 
-if (LevelCurrentCost + ItemData->SpawnCost > LevelMaxCost)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Spawn skipped: Cost limit reached (%d/%d)"),
-			LevelCurrentCost, LevelMaxCost);
-		break;
-	}
+					if (LevelCurrentCost + ItemData->SpawnCost > LevelMaxCost)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Spawn skipped: Cost limit reached (%d/%d)"),
+						LevelCurrentCost, LevelMaxCost);
+						break;
+					}
 
 					if (!ItemData->DropItemActorClass)
 					{

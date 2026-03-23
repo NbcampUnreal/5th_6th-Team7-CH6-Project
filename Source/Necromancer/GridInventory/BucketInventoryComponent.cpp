@@ -19,7 +19,7 @@ void UBucketInventoryComponent::BeginPlay()
 	{
 		DefaultContainer = NewObject<UItemInstance>(this);
 		DefaultContainer->InitializeIdentity(
-			FName("BucketBag")
+			FName("TempBag")
 		);
 
 		AddRootItem(DefaultContainer);
