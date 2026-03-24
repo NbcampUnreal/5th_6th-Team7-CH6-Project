@@ -19,6 +19,8 @@ class NECROMANCER_API ANecGameMode : public AGameMode
 protected:
 	virtual void BeginPlay() override;
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
+
 	virtual void Logout(AController* Exiting) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -57,6 +59,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void IncreaseLvDepth();
 	int32 GetLvDepth() const;
+
+	void AddSubmiitedItemValue(int32 Value);
+	int32 GetSubmiitedItemValue() const;
 
 	void IncreaseKillCount();
 	int32 GetKillCount() const;

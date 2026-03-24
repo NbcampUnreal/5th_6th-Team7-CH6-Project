@@ -40,6 +40,8 @@ public:
 private:
 	UPROPERTY(Replicated)
 	int32 RequirCost;
+
+	int32 CurBucketTotalCost;
 public:
 	UFUNCTION(BlueprintCallable)
 	void SetRequircost(int32 rcost);

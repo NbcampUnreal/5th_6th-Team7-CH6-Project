@@ -58,8 +58,11 @@ public:
 	void InitSessionSaveGame(int32 SlotIdx = -1);
 	void SaveSessionSaveGame(int32 SlotIdx = -1);
 
+	void SaveSessionData();
+
 public:
-	int32 GetLvDepth();
+	int32 GetLvDepth() const;
+	int32 GetSubmittedItemValue() const;
 	int32 GetKillCount() const;
 
 

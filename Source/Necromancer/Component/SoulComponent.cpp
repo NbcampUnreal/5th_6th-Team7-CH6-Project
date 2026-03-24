@@ -4,22 +4,25 @@
 #include "Component/SoulComponent.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
+
+#include "Engine/Engine.h"
 
 USoulComponent::USoulComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
-
     CurrentHPDrain = BaseHPDrain;
 
     ReserveBatteries.Empty();
 
-    for (int32 i = 0; i < MaxReserveSlots; ++i)
+    for (int32 i = 0; i <2; ++i)
     {
         FSoulBattery TestBattery;
         TestBattery.MaxCapacity = 100.f;
         TestBattery.CurrentCapacity = 100.f;
         AddReserveBattery(TestBattery);
     }
+
     FSoulBattery TestBattery;
     TestBattery.MaxCapacity = 100.f;
     TestBattery.CurrentCapacity = 100.f;
@@ -29,13 +32,28 @@ USoulComponent::USoulComponent()
 void USoulComponent::BeginPlay()
 {
     Super::BeginPlay();
+
+    SetComponentTickEnabled(GetOwner() && GetOwner()->HasAuthority());
 }
 
 void USoulComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+    if (!GetOwner() || !GetOwner()->HasAuthority())
+        return;
+
     HandleDrain(DeltaTime);
 }
 
+void USoulComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(USoulComponent, ActiveBattery);
+    DOREPLIFETIME(USoulComponent, ReserveBatteries);
+    DOREPLIFETIME(USoulComponent, CurrentState);
+}
 
 void USoulComponent::HandleDrain(float DeltaTime)
 {
@@ -73,8 +91,6 @@ void USoulComponent::SwapReserveToActive()
         return;
 
     ActiveBattery = ReserveBatteries.Pop();
-
-    //CurrentState = ESoulState::LowPower;
 }
 
 void USoulComponent::EnterDepletedState()
@@ -92,7 +108,6 @@ void USoulComponent::IncreaseHPDrain(float DeltaTime)
     if (CurrentState != ESoulState::Depleted)
         return;
 
-    // 가속도에도 DeltaTime 적용
     CurrentHPDrain = FMath::Min(
         CurrentHPDrain + (DrainAcceleration * DeltaTime),
         MaxHPDrain
@@ -141,15 +156,27 @@ void USoulComponent::EnterDownState()
 
 void USoulComponent::TryRevive()
 {
+
     if (CurrentState != ESoulState::Down)
+    {
         return;
+    }
+
+    if (!GetOwner())
+    {
+        return;
+    }
+
     if (!GetOwner()->HasAuthority())
+    {
         return;
+    }
 
     if (ReserveBatteries.Num() <= 0)
+    {
         return;
+    }
 
-    //ActiveBattery = ReserveBatteries[0];
     ActiveBattery = ReserveBatteries.Pop();
     ActiveBattery.SetHalf();
 
@@ -165,6 +192,7 @@ void USoulComponent::TryRevive()
         InvincibleTimer,
         [this]()
         {
+
             bIsInvincible = false;
             OnInvincibleEnd.Broadcast();
         },

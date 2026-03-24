@@ -7,6 +7,7 @@
 #include "Components/TextBlock.h"
 
 #include "Game/NecGameState.h"
+#include "GameInstance/NecAFGameInstance.h"
 
 void UEndGame::NativeConstruct()
 {
@@ -18,12 +19,26 @@ void UEndGame::NativeConstruct()
 
 void UEndGame::OnRestartGameButtonClicked()
 {
-	// 연결 다끊고 시작
+    UNecAFGameInstance* NecAFGameInstance = Cast<UNecAFGameInstance>(GetGameInstance());
+    if (NecAFGameInstance)
+    {
+        NecAFGameInstance->CreateSession();
+    }
 }
 
 void UEndGame::OnGoLobbyButtonClicked()
 {
-	// 연결 끊고 로비로
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC) return;
+
+    if (PC->HasAuthority())
+    {
+        PC->ClientReturnToMainMenuWithTextReason(FText::FromString(TEXT("Host has ended the session.")));
+    }
+    else
+    {
+        PC->ClientReturnToMainMenuWithTextReason(FText::FromString(TEXT("Leaving the game.")));
+    }
 }
 
 void UEndGame::InitGameScore()
@@ -33,8 +48,14 @@ void UEndGame::InitGameScore()
 	{
         if (ClearLvDepthText)
         {
-            FString CombinedString = FString::Printf(TEXT("총 클리어한 스테이지 수: %d"), NecGS->LvDepth);
+            FString CombinedString = FString::Printf(TEXT("총 내려간 지하 깊이: %d"), NecGS->LvDepth * -100);
             ClearLvDepthText->SetText(FText::FromString(CombinedString));
+        }
+
+        if (TotalSubmittedItemValueText)
+        {
+            FString CombinedString = FString::Printf(TEXT("총 제출한 아이템 가치: %d"), NecGS->SubmittedItemValue);
+            TotalSubmittedItemValueText->SetText(FText::FromString(CombinedString));
         }
 
         if (TotalKillCountText)
