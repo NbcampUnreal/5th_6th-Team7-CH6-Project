@@ -172,6 +172,11 @@ public:
         int32 InPosX,
         int32 InPosY
     );
+    UFUNCTION(BlueprintCallable)
+    void RequestRemoveItemToOther(
+        UGridInventoryComponent* OtherComp,
+        UItemInstance* TargetItem
+    );
 protected:
     UFUNCTION(Server, Reliable)
     void Server_RequestAddItemToOther(
@@ -183,6 +188,11 @@ protected:
         int32 InPosX,
         int32 InPosY
     );
+    UFUNCTION(Server, Reliable)
+    void  Server_RequestRemoveItemToOther(
+        UGridInventoryComponent* OtherComp,
+        UItemInstance* TargetItem
+    );
 private:
     void Implement_RequestAddItemToOther(
         UGridInventoryComponent* OtherComp,
@@ -192,6 +202,10 @@ private:
         int32 InSectionIndex,
         int32 InPosX,
         int32 InPosY
+    );
+    void Implement_RequestRemoveItemToOther(
+        UGridInventoryComponent* OtherComp,
+        UItemInstance* TargetItem
     );
 #pragma endregion
 };
