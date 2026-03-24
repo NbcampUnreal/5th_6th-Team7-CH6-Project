@@ -159,4 +159,53 @@ protected:
 private:
     void Implement_RemoveItem(UItemInstance*& Item);
 #pragma endregion
+
+#pragma region OtherInventoryComponent
+public:
+    UFUNCTION(BlueprintCallable)
+    void RequestAddItemToOther(
+        UGridInventoryComponent* OtherComp,
+        UItemInstance* NewItem,
+        const FGuid& ContainerGuid,
+        int32 InRowIndex,
+        int32 InSectionIndex,
+        int32 InPosX,
+        int32 InPosY
+    );
+    UFUNCTION(BlueprintCallable)
+    void RequestRemoveItemToOther(
+        UGridInventoryComponent* OtherComp,
+        UItemInstance* TargetItem
+    );
+protected:
+    UFUNCTION(Server, Reliable)
+    void Server_RequestAddItemToOther(
+        UGridInventoryComponent* OtherComp,
+        UItemInstance* NewItem,
+        FGuid ContainerGuid,
+        int32 InRowIndex,
+        int32 InSectionIndex,
+        int32 InPosX,
+        int32 InPosY
+    );
+    UFUNCTION(Server, Reliable)
+    void  Server_RequestRemoveItemToOther(
+        UGridInventoryComponent* OtherComp,
+        UItemInstance* TargetItem
+    );
+private:
+    void Implement_RequestAddItemToOther(
+        UGridInventoryComponent* OtherComp,
+        UItemInstance* NewItem,
+        const FGuid& ContainerGuid,
+        int32 InRowIndex,
+        int32 InSectionIndex,
+        int32 InPosX,
+        int32 InPosY
+    );
+    void Implement_RequestRemoveItemToOther(
+        UGridInventoryComponent* OtherComp,
+        UItemInstance* TargetItem
+    );
+#pragma endregion
 };
