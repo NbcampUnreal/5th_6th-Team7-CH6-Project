@@ -51,9 +51,6 @@ EBTNodeResult::Type UBTTask_RangedAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 		return EBTNodeResult::Failed;
 	}
 
-	//Character->GetCharacterMovement()->StopMovementImmediately();
-	//Character->GetCharacterMovement()->DisableMovement();
-
 	AMonsterBase* Monster = Cast<AMonsterBase>(Character);
 	if (Monster)
 	{
@@ -64,11 +61,11 @@ EBTNodeResult::Type UBTTask_RangedAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 	if (Duration <= 0.0f)
 	{
 		Character->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-		BB->SetValueAsBool(FName(NAME_IsAttacking), false);
+		BB->SetValueAsBool(NAME_IsAttacking, false);
 		return EBTNodeResult::Failed;
 	}
 
-	BB->SetValueAsBool(FName(NAME_IsAttacking), true);
+	BB->SetValueAsBool(NAME_IsAttacking, true);
 	bTaskActive = true;
 
 	FOnMontageEnded EndDelegate;
@@ -114,7 +111,7 @@ void UBTTask_RangedAttack::OnSafetyTimeout(UBehaviorTreeComponent* OwnerComp)
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[BTTask_RangedAttack] Safety timeout - forcing cleanup"));
+	UE_LOG(LogMonsterAI, Warning, TEXT("[BTTask_RangedAttack] Safety timeout - forcing cleanup"));
 	CleanupAttackState(OwnerComp);
 	FinishLatentTask(*OwnerComp, EBTNodeResult::Failed);
 }
@@ -126,7 +123,7 @@ void UBTTask_RangedAttack::CleanupAttackState(UBehaviorTreeComponent* OwnerComp)
 	UBlackboardComponent* BB = OwnerComp->GetBlackboardComponent();
 	if (BB)
 	{
-		BB->SetValueAsBool(FName(NAME_IsAttacking), false);
+		BB->SetValueAsBool(NAME_IsAttacking, false);
 	}
 
 	if (AAIController* AIC = OwnerComp->GetAIOwner())

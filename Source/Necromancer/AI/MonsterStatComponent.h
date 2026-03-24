@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Component/StatComponent.h"
-#include "GameplayTagContainer.h"
 #include "Curves/CurveFloat.h"
 #include "MonsterStatComponent.generated.h"
 
@@ -114,10 +113,6 @@ private:
 	// 스킬 레벨 (0~1, 높을수록 회피/블록 확률 증가)
 	UPROPERTY(EditDefaultsOnly, Category = "Stat", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float SkillLevel = 0.5f;
-
-	// 등급
-	UPROPERTY(EditDefaultsOnly, Category = "Stat")
-	FGameplayTag MonsterGrade;
 
 	// 층별 스케일링 (X=Floor, Y=Multiplier)
 	UPROPERTY(EditDefaultsOnly, Category = "Stat|FloorScaling")

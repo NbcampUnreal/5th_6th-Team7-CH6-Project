@@ -7,7 +7,6 @@
 #include "GameFramework/Character.h"
 #include "Components/AudioComponent.h"
 #include "MotionWarpingComponent.h"
-#include "Net/UnrealNetwork.h"
 #include "MonsterBase.generated.h"
 
 class UMonsterStatComponent;
@@ -129,11 +128,8 @@ protected:
 	void TryGrantTemporarySlot();
 
 	// 블로킹 상태 (방패 막기)
-	UPROPERTY(ReplicatedUsing = OnRep_IsBlocking)
+	UPROPERTY(Replicated)
 	bool bIsBlocking = false;
-
-	UFUNCTION()
-	void OnRep_IsBlocking();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> BlockReactMontage;

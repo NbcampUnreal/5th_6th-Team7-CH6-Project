@@ -65,11 +65,8 @@ protected:
 	TObjectPtr<UBossPhaseDataAsset> PhaseData;
 
 	// 현재 페이즈 (1~3)
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentPhase)
+	UPROPERTY(Replicated)
 	int32 CurrentPhase = 1;
-
-	UFUNCTION()
-	void OnRep_CurrentPhase();
 
 	// 페이즈 전환 중 (슈퍼아머 상태)
 	UPROPERTY(Replicated)

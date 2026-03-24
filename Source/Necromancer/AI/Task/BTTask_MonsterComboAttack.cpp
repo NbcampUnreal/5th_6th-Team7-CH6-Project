@@ -271,7 +271,7 @@ void UBTTask_MonsterComboAttack::PlayNextCombo()
 
 void UBTTask_MonsterComboAttack::OnSafetyTimeout()
 {
-    UE_LOG(LogTemp, Warning, TEXT("[BTTask_MonsterComboAttack] Safety timeout - forcing cleanup"));
+    UE_LOG(LogMonsterAI, Warning, TEXT("[BTTask_MonsterComboAttack] Safety timeout - forcing cleanup"));
     FinishCombo(EBTNodeResult::Failed);
 }
 

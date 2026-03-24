@@ -194,7 +194,7 @@ void AMonsterBase::SpawnDropItems()
 		const FItemData* Data = ItemSubsystem->GetItemData(ItemID);
 		if (!Data || !Data->DropItemActorClass)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[MonsterBase] DropItem failed: ItemID=%s - Data or DropItemActorClass is null"), *ItemID.ToString());
+			UE_LOG(LogMonsterAI, Warning, TEXT("[MonsterBase] DropItem failed: ItemID=%s - Data or DropItemActorClass is null"), *ItemID.ToString());
 			continue;
 		}
 
@@ -394,10 +394,6 @@ void AMonsterBase::OnHitReactMontageEnded(UAnimMontage* Montage, bool bInterrupt
 void AMonsterBase::SetBlockingState(bool bBlock)
 {
 	bIsBlocking = bBlock;
-}
-
-void AMonsterBase::OnRep_IsBlocking()
-{
 }
 
 void AMonsterBase::SetWarpTarget(FName WarpTargetName, FVector TargetLocation, FRotator TargetRotation)

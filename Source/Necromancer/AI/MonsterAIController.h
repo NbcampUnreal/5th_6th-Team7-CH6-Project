@@ -33,10 +33,10 @@ public:
 
 	// 타겟 마지막 위치 저장
 	UFUNCTION(BlueprintCallable, Category = "AI")
-	void SetlastLocation(FVector LastLocation);
+	void SetLastLocation(FVector LastLocation);
 
 	UFUNCTION(BlueprintCallable, Category = "AI")
-	FVector GetlastLocation() const;
+	FVector GetLastLocation() const;
 
 protected:
 	virtual void BeginPlay() override;

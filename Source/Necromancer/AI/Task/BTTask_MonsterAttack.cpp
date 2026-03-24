@@ -150,7 +150,7 @@ void UBTTask_MonsterAttack::OnSafetyTimeout(UBehaviorTreeComponent* OwnerComp)
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[BTTask_MonsterAttack] Safety timeout - forcing cleanup"));
+	UE_LOG(LogMonsterAI, Warning, TEXT("[BTTask_MonsterAttack] Safety timeout - forcing cleanup"));
 	CleanupAttackState(OwnerComp);
 	FinishLatentTask(*OwnerComp, EBTNodeResult::Failed);
 }

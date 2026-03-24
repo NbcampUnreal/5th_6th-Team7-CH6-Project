@@ -166,7 +166,7 @@ void ABossMonsterBase::TransitionToPhase(int32 NewPhase)
 
 	OnPhaseChanged(OldPhase, NewPhase);
 
-	UE_LOG(LogTemp, Log, TEXT("[BossMonsterBase] Phase transition: %d -> %d"), OldPhase, NewPhase);
+	UE_LOG(LogMonsterAI, Log, TEXT("[BossMonsterBase] Phase transition: %d -> %d"), OldPhase, NewPhase);
 }
 
 void ABossMonsterBase::OnPhaseChanged(int32 OldPhase, int32 NewPhase)
@@ -178,11 +178,6 @@ void ABossMonsterBase::OnTransitionMontageEnded(UAnimMontage* Montage, bool bInt
 {
 	bIsTransitioning = false;
 	RestoreMovementIfAlive();
-}
-
-void ABossMonsterBase::OnRep_CurrentPhase()
-{
-	// 클라이언트에서 페이즈 변경 시 처리 (UI 업데이트 등)
 }
 
 void ABossMonsterBase::Multicast_Teleport_Implementation(FVector NewLocation, FRotator NewRotation)

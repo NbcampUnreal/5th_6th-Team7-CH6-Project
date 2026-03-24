@@ -60,7 +60,7 @@ EBTNodeResult::Type UBTTask_BossRoomPatrol::ExecuteTask(UBehaviorTreeComponent& 
 	{
 		ShuffleRooms();
 		CurrentRoomIndex = 0;
-		UE_LOG(LogTemp, Log, TEXT("[BossRoomPatrol] All rooms visited, reshuffling. Total rooms: %d"), ShuffledRoomLocations.Num());
+		UE_LOG(LogMonsterAI, Log, TEXT("[BossRoomPatrol] All rooms visited, reshuffling. Total rooms: %d"), ShuffledRoomLocations.Num());
 	}
 
 	// 현재 인덱스의 방 위치 가져오기
@@ -89,7 +89,7 @@ EBTNodeResult::Type UBTTask_BossRoomPatrol::ExecuteTask(UBehaviorTreeComponent& 
 	// BB에 이동 목표 위치 설정
 	BB->SetValueAsVector(NAME_PatrolLocation, RoomLocation);
 
-	UE_LOG(LogTemp, Log, TEXT("[BossRoomPatrol] Moving to room %d/%d at location: %s"),
+	UE_LOG(LogMonsterAI, Log, TEXT("[BossRoomPatrol] Moving to room %d/%d at location: %s"),
 		CurrentRoomIndex + 1, ShuffledRoomLocations.Num(), *RoomLocation.ToString());
 
 	// 다음 방으로 인덱스 진행
@@ -111,14 +111,14 @@ bool UBTTask_BossRoomPatrol::InitializeRoomLocations(UWorld* World)
 
 	if (!Generator)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[BossRoomPatrol] NecDungeonsGenerator not found!"));
+		UE_LOG(LogMonsterAI, Warning, TEXT("[BossRoomPatrol] NecDungeonsGenerator not found!"));
 		return false;
 	}
 
 	// 던전 생성 완료 확인
 	if (!Generator->GetbIsDungeonComplete())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[BossRoomPatrol] Dungeon generation not complete yet!"));
+		UE_LOG(LogMonsterAI, Warning, TEXT("[BossRoomPatrol] Dungeon generation not complete yet!"));
 		return false;
 	}
 
@@ -126,7 +126,7 @@ bool UBTTask_BossRoomPatrol::InitializeRoomLocations(UWorld* World)
 	const TArray<FVector>& RoomLocs = Generator->GetRoomLocations();
 	if (RoomLocs.Num() == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[BossRoomPatrol] No room locations available!"));
+		UE_LOG(LogMonsterAI, Warning, TEXT("[BossRoomPatrol] No room locations available!"));
 		return false;
 	}
 
@@ -135,7 +135,7 @@ bool UBTTask_BossRoomPatrol::InitializeRoomLocations(UWorld* World)
 	CurrentRoomIndex = 0;
 	bRoomsInitialized = true;
 
-	UE_LOG(LogTemp, Log, TEXT("[BossRoomPatrol] Initialized with %d rooms"), ShuffledRoomLocations.Num());
+	UE_LOG(LogMonsterAI, Log, TEXT("[BossRoomPatrol] Initialized with %d rooms"), ShuffledRoomLocations.Num());
 	return true;
 }
 
