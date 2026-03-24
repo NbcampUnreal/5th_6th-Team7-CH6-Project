@@ -659,13 +659,144 @@ void UGridInventoryComponent::Implement_RemoveItem(UItemInstance*& Item)
     Item->OnItemUpdated.Clear();
     Items.Remove(Item);
 
-    Item->OwnerItemGuid.Invalidate();
-    Item->SectionIndex = INDEX_NONE;
-    Item->RowIndex = INDEX_NONE;
-    Item->PosX = 0;
-    Item->PosY = 0;
-
     MarkInventoryDirty();
+}
+
+void UGridInventoryComponent::RequestAddItemToOther(
+    UGridInventoryComponent* OtherComp,
+    UItemInstance* NewItem,
+    const FGuid& ContainerGuid,
+    int32 InRowIndex,
+    int32 InSectionIndex,
+    int32 InPosX,
+    int32 InPosY)
+{
+    if (!IsValid(OtherComp) || !IsValid(NewItem))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("RequestAddItemToOther: OtherComp or NewItem is invalid"));
+        return;
+    }
+
+    if (GetOwnerRole() < ROLE_Authority)
+    {
+        Server_RequestAddItemToOther(
+            OtherComp,
+            NewItem,
+            ContainerGuid,
+            InRowIndex,
+            InSectionIndex,
+            InPosX,
+            InPosY
+        );
+       
+    }
+    else {
+
+        Implement_RequestAddItemToOther(
+            OtherComp,
+            NewItem,
+            ContainerGuid,
+            InRowIndex,
+            InSectionIndex,
+            InPosX,
+            InPosY
+        );
+    }
+    RebuildItemOwnerMap();
+    OnInventoryUpdated.Broadcast();
+}
+
+void UGridInventoryComponent::RequestRemoveItemToOther(UGridInventoryComponent* OtherComp, UItemInstance* TargetItem)
+{
+    if (!IsValid(OtherComp) || !IsValid(TargetItem))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("RequestAddItemToOther: OtherComp or NewItem is invalid"));
+        return;
+    }
+
+    if (GetOwnerRole() < ROLE_Authority)
+    {
+        Server_RequestRemoveItemToOther(
+            OtherComp,
+            TargetItem
+        );
+
+    }
+    else {
+
+        Implement_RequestRemoveItemToOther(
+            OtherComp,
+            TargetItem
+        );
+    }
+    RebuildItemOwnerMap();
+    OnInventoryUpdated.Broadcast();
+}
+
+void UGridInventoryComponent::Server_RequestRemoveItemToOther_Implementation(UGridInventoryComponent* OtherComp, UItemInstance* TargetItem)
+{
+    Implement_RequestRemoveItemToOther(
+        OtherComp,
+        TargetItem
+    );
+}
+
+void UGridInventoryComponent::Implement_RequestAddItemToOther(
+    UGridInventoryComponent* OtherComp,
+    UItemInstance* NewItem,
+    const FGuid& ContainerGuid,
+    int32 InRowIndex,
+    int32 InSectionIndex,
+    int32 InPosX,
+    int32 InPosY)
+{
+    if (!IsValid(OtherComp) || !IsValid(NewItem))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Implement_RequestAddItemToOther: OtherComp or NewItem is invalid"));
+        return;
+    }
+    TArray<UItemInstance*> Childrens;
+    GetAllChildrenRecursive(NewItem->InstanceID, Childrens);
+    OtherComp->AddItemToPos(
+        NewItem,
+        ContainerGuid,
+        InRowIndex,
+        InSectionIndex,
+        InPosX,
+        InPosY
+    );
+    OtherComp->AddChildItems(Childrens);
+
+}
+
+void UGridInventoryComponent::Implement_RequestRemoveItemToOther(UGridInventoryComponent* OtherComp, UItemInstance* TargetItem)
+{
+    if (!IsValid(OtherComp) || !IsValid(TargetItem))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("RequestAddItemToOther: OtherComp or NewItem is invalid"));
+        return;
+    }
+    OtherComp->RemoveItem(TargetItem);
+}
+
+void UGridInventoryComponent::Server_RequestAddItemToOther_Implementation(
+    UGridInventoryComponent* OtherComp,
+    UItemInstance* NewItem,
+    FGuid ContainerGuid,
+    int32 InRowIndex,
+    int32 InSectionIndex,
+    int32 InPosX,
+    int32 InPosY)
+{
+    Implement_RequestAddItemToOther(
+        OtherComp,
+        NewItem,
+        ContainerGuid,
+        InRowIndex,
+        InSectionIndex,
+        InPosX,
+        InPosY
+    );
 }
 
 void UGridInventoryComponent::GetAllChildrenRecursive(const FGuid& ParentGuid, TArray<UItemInstance*>& OutChildren) const

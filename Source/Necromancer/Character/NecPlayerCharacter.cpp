@@ -406,16 +406,18 @@ void ANecPlayerCharacter::TryInteract()
 	if (!Target) return;
 	if (!Target->Implements<UInteractable>()) return;
 
-	if (HasAuthority())
-	{
-		IInteractable::Execute_Interact(Target, this);
-	}
-	else
-	{
-		//IInteractable::Execute_Interact(Target, this);
-		Server_TryInteract(Target);
+	IInteractable::Execute_Interact(Target, this);
 
-	}
+	//if (HasAuthority())
+	//{
+	//	IInteractable::Execute_Interact(Target, this);
+	//}
+	//else
+	//{
+	//	//IInteractable::Execute_Interact(Target, this);
+	//	Server_TryInteract(Target);
+
+	//}
 	CleanupInvalidTargets();
 
 }

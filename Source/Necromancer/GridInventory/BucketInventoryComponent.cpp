@@ -11,6 +11,7 @@
 
 UBucketInventoryComponent::UBucketInventoryComponent()
 {
+    SetIsReplicatedByDefault(true);
 }
 
 void UBucketInventoryComponent::BeginPlay()

@@ -156,101 +156,42 @@ void USoulComponent::EnterDownState()
 
 void USoulComponent::TryRevive()
 {
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("[TryRevive] Called"));
-    }
 
     if (CurrentState != ESoulState::Down)
     {
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(
-                -1,
-                5.f,
-                FColor::Red,
-                FString::Printf(TEXT("[TryRevive] Fail: CurrentState != Down (%d)"), (uint8)CurrentState)
-            );
-        }
         return;
     }
 
     if (!GetOwner())
     {
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("[TryRevive] Fail: Owner is null"));
-        }
         return;
     }
 
     if (!GetOwner()->HasAuthority())
     {
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("[TryRevive] Fail: No Authority (Client called)"));
-        }
         return;
-    }
-
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(
-            -1,
-            5.f,
-            FColor::Cyan,
-            FString::Printf(TEXT("[TryRevive] Reserve Num BEFORE: %d"), ReserveBatteries.Num())
-        );
     }
 
     if (ReserveBatteries.Num() <= 0)
     {
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("[TryRevive] Fail: No Reserve Batteries"));
-        }
         return;
     }
 
     ActiveBattery = ReserveBatteries.Pop();
     ActiveBattery.SetHalf();
 
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(
-            -1,
-            5.f,
-            FColor::Green,
-            FString::Printf(TEXT("[TryRevive] Reserve Num AFTER: %d"), ReserveBatteries.Num())
-        );
-    }
-
     CurrentState = ESoulState::Normal;
     CurrentHPDrain = BaseHPDrain;
-
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("[TryRevive] Success: State -> Normal"));
-    }
 
     OnReviveRequested.Broadcast();
 
     bIsInvincible = true;
     OnInvincibleStart.Broadcast();
 
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("[TryRevive] Invincible Start"));
-    }
-
     GetWorld()->GetTimerManager().SetTimer(
         InvincibleTimer,
         [this]()
         {
-            if (GEngine)
-            {
-                GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("[TryRevive] Invincible End"));
-            }
 
             bIsInvincible = false;
             OnInvincibleEnd.Broadcast();
