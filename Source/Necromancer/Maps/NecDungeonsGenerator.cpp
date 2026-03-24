@@ -293,6 +293,7 @@ void ANecDungeonsGenerator::CheckForOverlap()
 			else
 			{
 				RoomList = RoomListBase;
+				bIsSpecialList = false;
 			}
 			SpawnNextRoom();
 		}
