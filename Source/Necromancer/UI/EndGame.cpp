@@ -48,7 +48,7 @@ void UEndGame::InitGameScore()
 	{
         if (ClearLvDepthText)
         {
-            FString CombinedString = FString::Printf(TEXT("총 내려간 지하 깊이: %d"), NecGS->LvDepth * -100);
+            FString CombinedString = FString::Printf(TEXT("총 내려간 지하 깊이: %d"), (NecGS->LvDepth+1) * -100);
             ClearLvDepthText->SetText(FText::FromString(CombinedString));
         }
 
