@@ -7,6 +7,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Item/Weapon_Item_Base.h"
 #include "Component/PlayerMovementComponent.h"
+#include "DataAsset/WeaponDataAsset.h"
+#include "DamageType/NecDamageType.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -299,6 +301,31 @@ void UCombatComponent::UpdateGuardVisuals()
     }
 }
 
+void UCombatComponent::Server_ApplyDamage_Implementation(AActor* HitActor, FVector HitLocation, AWeapon_Item_Base* Weapon)
+{
+    if (!HitActor || !Weapon || !OwnerCharacter)
+    {
+        return;
+    }
+
+    float FinalDamage = Weapon->WeaponData ? Weapon->WeaponData->BaseDamage * Weapon->CurrentDamageMultiplier : 0.0f;
+
+    UGameplayStatics::ApplyDamage(
+        HitActor,
+        FinalDamage,
+        OwnerCharacter->GetController(),
+        Weapon,
+        UNecDamageType::StaticClass()
+    );
+    
+    Weapon->Multicast_PlayHitSound(HitLocation);
+}
+
+bool UCombatComponent::Server_ApplyDamage_Validate(AActor* HitActor, FVector HitLocation, AWeapon_Item_Base* Weapon)
+{
+    return true;
+}
+
 void UCombatComponent::PlayComboAttack()
 {
     const TArray<FComboActionInfo>& ComboList = CurrentWeapon->GetComboActions();
@@ -499,10 +526,10 @@ void UCombatComponent::Server_Attack_Implementation(int32 ComboIndex)
     {
         StaminaComp->ConsumeStamina(StaminaCost);
 
-        float DamageMultiplier = ComboList[CurrentComboIndex].DamageMultiplier;
+        float DamageMultiplier = ComboList[ComboIndex].DamageMultiplier;
         CurrentWeapon->SetDamageMultiplier(DamageMultiplier);
 
-        float PoiseDamageMultplier = ComboList[CurrentComboIndex].PoiseDamageMultiplier;
+        float PoiseDamageMultplier = ComboList[ComboIndex].PoiseDamageMultiplier;
         CurrentWeapon->SetPoiseDamageMultiplier(PoiseDamageMultplier);
 
         Multicast_Attack(ComboIndex);

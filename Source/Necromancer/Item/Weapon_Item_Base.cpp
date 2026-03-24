@@ -11,6 +11,7 @@
 #include "Character/NecPlayerCharacter.h"
 #include "Engine/AssetManager.h"
 #include "DamageType/NecDamageType.h"
+#include "Component/CombatComponent.h"
 
 AWeapon_Item_Base::AWeapon_Item_Base()
 {
@@ -230,16 +231,30 @@ void AWeapon_Item_Base::Multicast_PlayHitSound_Implementation(FVector HitLocatio
 
 void AWeapon_Item_Base::PerformTrace()
 {
+    APawn* OwnerPawn = Cast<APawn>(GetOwner());
+    if (!OwnerPawn)
+    {
+        OwnerPawn = Cast<APawn>(GetAttachParentActor());
+    }
+
+    if (!OwnerPawn)
+    {
+        UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Error: OwnerPawn is NULL!"), true, true, FLinearColor::Red, 2.0f);
+        return;
+    }
+
+    if (!OwnerPawn->IsLocallyControlled())
+    {
+        return;
+    }
+
     USkeletalMeshComponent* TraceMesh = WeaponMesh;
 
     if (bIsUnarmed)
     {
-        if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
+        if (ANecPlayerCharacter* OwnerChar = Cast<ANecPlayerCharacter>(OwnerPawn))
         {
-            if (ANecPlayerCharacter* OwnerChar = Cast<ANecPlayerCharacter>(OwnerPawn))
-            {
-                TraceMesh = OwnerChar->GetMesh();
-            }
+            TraceMesh = OwnerChar->GetMesh();
         }
     }
 
@@ -261,7 +276,7 @@ void AWeapon_Item_Base::PerformTrace()
 
     FCollisionQueryParams QueryParams;
     QueryParams.AddIgnoredActor(this);
-    QueryParams.AddIgnoredActor(GetOwner());
+    QueryParams.AddIgnoredActor(OwnerPawn);
     QueryParams.bTraceComplex = false;
     QueryParams.bReturnPhysicalMaterial = false;
 
@@ -288,13 +303,9 @@ void AWeapon_Item_Base::PerformTrace()
 
     if (bHit)
     {
-        APawn* OwnerPawn = Cast<APawn>(GetOwner());
-        if (!OwnerPawn)
-        {
-            return;
-        }
-
         IGenericTeamAgentInterface* AttackerTeam = Cast<IGenericTeamAgentInterface>(OwnerPawn);
+        ANecPlayerCharacter* OwnerChar = Cast<ANecPlayerCharacter>(OwnerPawn);
+        UCombatComponent* CombatComp = OwnerChar ? OwnerChar->FindComponentByClass<UCombatComponent>() : nullptr;
 
         for (const FHitResult& Hit : HitResults)
         {
@@ -317,18 +328,10 @@ void AWeapon_Item_Base::PerformTrace()
 
                 HitActors.Add(HitActor);
 
-                float FinalDamage = WeaponData ? WeaponData->BaseDamage * CurrentDamageMultiplier : 0;
-
-                UGameplayStatics::ApplyDamage(
-                    HitActor,
-                    FinalDamage,
-                    OwnerPawn->GetController(),
-                    this,
-                    UNecDamageType::StaticClass()
-                );
-
-                FVector HitLocation = Hit.ImpactPoint;
-                Multicast_PlayHitSound(HitLocation);
+                if (CombatComp)
+                {
+                    CombatComp->Server_ApplyDamage(HitActor, Hit.ImpactPoint, this);
+                }
             }
         }
     }
