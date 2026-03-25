@@ -36,6 +36,12 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Wall")
 	void CloseHoles();
 
+	UFUNCTION(BlueprintCallable, Category = "Trap")
+	void AddTrapSpawnPointToList();
+
+	UFUNCTION(BlueprintCallable, Category = "Trap")
+	void SpawnTrapAtLocation();
+
 	UFUNCTION(BlueprintCallable, Category = "Timer")
 	void StartDungeonTimer();
 
@@ -97,7 +103,6 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Door")
 	TArray<USceneComponent*>DoorList;
 
-	// 占쏙옙
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Door")
 	TArray<TSubclassOf<AActor>>DoorActor;
 
@@ -111,6 +116,12 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Overlapped")
 	TArray<UPrimitiveComponent*>OverlappedList;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Floor")
+	TArray<USceneComponent*>TrapSpawnList;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Trap")
+	TSubclassOf<AActor> TrapActor;
 
 	FTimerHandle DungeonTimerHandle;
 
