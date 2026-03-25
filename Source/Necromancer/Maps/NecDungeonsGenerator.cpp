@@ -72,7 +72,9 @@ void ANecDungeonsGenerator::SpawnStartRoom()
 
 		if (LatestRoom)
 		{
-			RoomLocations.Add(LatestRoom->GetActorLocation());
+			FVector Origin, Extent;
+			LatestRoom->GetActorBounds(false, Origin, Extent);
+			RoomLocations.Add(Origin);
 
 			TArray<USceneComponent*> Components;
 			LatestRoom->GetComponents<USceneComponent>(Components);
@@ -219,7 +221,9 @@ void ANecDungeonsGenerator::CheckForOverlap()
 
 			if (LatestRoom)
 			{
-				RoomLocations.Add(LatestRoom->GetActorLocation());
+				FVector Origin, Extent;
+				LatestRoom->GetActorBounds(false, Origin, Extent);
+				RoomLocations.Add(Origin);
 			}
 
 			ExitsList.Remove(SelectedExitPoint);
