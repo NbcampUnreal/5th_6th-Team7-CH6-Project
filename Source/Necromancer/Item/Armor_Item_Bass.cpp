@@ -5,6 +5,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Character.h"
 #include "Net/UnrealNetwork.h"
+#include "Character/NecPlayerCharacter.h"
 
 AArmor_Item_Bass::AArmor_Item_Bass()
 {
@@ -20,18 +21,45 @@ void AArmor_Item_Bass::Equip(AActor* Equip_Owner)
 {
 	Super::Equip(Equip_Owner);
 
-	ACharacter* Character = Cast<ACharacter>(Equip_Owner);
-	if (!Character) return;
+	//ACharacter* Character = Cast<ACharacter>(Equip_Owner);
+	//if (!Character) return;
 
-	USkeletalMeshComponent* CharacterMesh = Character->GetMesh();
-	if (!CharacterMesh) return;
-	//CharacterMesh->SetVisibility(false, true);
+	//USkeletalMeshComponent* CharacterMesh = Character->GetMesh();
+	//if (!CharacterMesh) return;
+	////CharacterMesh->SetVisibility(false, true);
+
+	ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(Equip_Owner);
+	if (!PlayerCharacter)
+	{
+		return;
+	}
+
+	USkeletalMeshComponent* MainMesh = PlayerCharacter->GetMesh();
+	if (!MainMesh)
+	{
+		return;
+	}
+
+	switch (ArmorSlotType)
+	{
+	case EEquipmentSlot::Head:
+		if (PlayerCharacter->HeadMesh) PlayerCharacter->HeadMesh->SetVisibility(false);
+		break;
+	case EEquipmentSlot::Body:
+		if (PlayerCharacter->BodyMesh) PlayerCharacter->BodyMesh->SetVisibility(false);
+		break;
+	case EEquipmentSlot::Legs:
+		if (PlayerCharacter->LegMesh) PlayerCharacter->LegMesh->SetVisibility(false);
+		break;
+	default:
+		break;
+	}
 
 	// 1️⃣ 부착
-	AttachToComponent(CharacterMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	AttachToComponent(MainMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
 	// 2️⃣ 애니메이션 동기화 (핵심)
-	ArmorMesh->SetLeaderPoseComponent(CharacterMesh);
+	ArmorMesh->SetLeaderPoseComponent(MainMesh);
 
 	// 3️⃣ 필요하면 충돌 끄기
 	ArmorMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);

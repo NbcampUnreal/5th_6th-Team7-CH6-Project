@@ -106,6 +106,14 @@ void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
                 PC->SetControlRotation(TargetRot);
             }
         }
+
+        if (OwnerCharacter && (OwnerCharacter->IsLocallyControlled() || OwnerCharacter->HasAuthority()))
+        {
+            FRotator CurrentActorRot = OwnerCharacter->GetActorRotation();
+            FRotator TargetActorRot = FRotator(CurrentActorRot.Pitch, LookAtRot.Yaw, CurrentActorRot.Roll);
+            FRotator NewActorRot = FMath::RInterpTo(CurrentActorRot, TargetActorRot, DeltaTime, 10.0f);
+            OwnerCharacter->SetActorRotation(NewActorRot);
+        }
     }
 
     UpdateLockOnUI();

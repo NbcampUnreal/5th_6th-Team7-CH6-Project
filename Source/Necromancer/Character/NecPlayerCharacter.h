@@ -256,4 +256,13 @@ public:
 protected:
 		void ReplicateRemoteViewRot();
 
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Mesh")
+	USkeletalMeshComponent* HeadMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Mesh")
+	USkeletalMeshComponent* BodyMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Mesh")
+	USkeletalMeshComponent* LegMesh;
 };

@@ -18,6 +18,7 @@
 #include "GameFramework/PlayerState.h"
 
 #include "Net/UnrealNetwork.h"
+#include "Character/NecPlayerCharacter.h"
 
 bool ItemTypeToEquipmentSlot(
 	EItemType ItemType,
@@ -409,10 +410,10 @@ void UNecInventoryComponent::OnRep_EquipmentActor()
 	APawn* Pawn = PS->GetPawn();
 	if (!Pawn) return;
 
-	ACharacter* Character = Cast<ACharacter>(Pawn);
+	ANecPlayerCharacter* Character = Cast<ANecPlayerCharacter>(Pawn);
 	if (!Character) return;
 
-	auto EquipIfValid = [&](AActor* Actor)
+	/*auto EquipIfValid = [&](AActor* Actor)
 		{
 			if (!Actor) return;
 
@@ -426,7 +427,28 @@ void UNecInventoryComponent::OnRep_EquipmentActor()
 	EquipIfValid(BodyActor);
 	EquipIfValid(LegsActor);
 	EquipIfValid(BagActor);
-	EquipIfValid(WeaponActor);
+	EquipIfValid(WeaponActor);*/
+
+	auto EquipIfValid = [&](AActor* Actor, USkeletalMeshComponent* PartMesh)
+		{
+			if (Actor)
+			{
+				if (AItemBass* Item = Cast<AItemBass>(Actor))
+				{
+					Item->Equip(Character);
+				}
+			}
+			else if (PartMesh)
+			{
+				PartMesh->SetVisibility(true);
+			}
+		};
+
+	EquipIfValid(HeadActor, Character->HeadMesh);
+	EquipIfValid(BodyActor, Character->BodyMesh);
+	EquipIfValid(LegsActor, Character->LegMesh);
+	EquipIfValid(BagActor, nullptr);
+	EquipIfValid(WeaponActor, nullptr);
 }
 
 UItemInstance* UNecInventoryComponent::GetEquipmentItem(EEquipmentSlot Slot) const
@@ -602,9 +624,31 @@ void UNecInventoryComponent::UnequipItem_Internal(EEquipmentSlot Slot)
 	//메쉬 다시 보이게
 	APlayerState* PS = Cast<APlayerState>(GetOwner());
 	if (!PS) return;
-	ACharacter* OwnerCharacter = Cast<ACharacter>(PS->GetPawn());
+	/*ACharacter* OwnerCharacter = Cast<ACharacter>(PS->GetPawn());
 	if (OwnerCharacter) {
 		OwnerCharacter->GetMesh()->SetVisibility(true, true);
+	}*/
+
+	ANecPlayerCharacter* OwnerCharacter = Cast<ANecPlayerCharacter>(PS->GetPawn());
+	if (OwnerCharacter)
+	{
+		switch (Slot)
+		{
+		case EEquipmentSlot::Head:
+			if (OwnerCharacter->HeadMesh) OwnerCharacter->HeadMesh->SetVisibility(true);
+			break;
+		case EEquipmentSlot::Body:
+			if (OwnerCharacter->BodyMesh) OwnerCharacter->BodyMesh->SetVisibility(true);
+			break;
+		case EEquipmentSlot::Legs:
+			if (OwnerCharacter->LegMesh) OwnerCharacter->LegMesh->SetVisibility(true);
+			break;
+		case EEquipmentSlot::Bag:
+		case EEquipmentSlot::Weapon:
+			break;
+		default:
+			break;
+		}
 	}
 
 }

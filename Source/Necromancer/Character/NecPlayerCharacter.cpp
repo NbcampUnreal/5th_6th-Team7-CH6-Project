@@ -63,7 +63,16 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 		this,
 		&ANecPlayerCharacter::OnSphereEnd);
 
+	HeadMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HeadMesh"));
+	HeadMesh->SetupAttachment(GetMesh());
 
+	BodyMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BodyMesh"));
+	BodyMesh->SetupAttachment(GetMesh());
+
+	LegMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LegMesh"));
+	LegMesh->SetupAttachment(GetMesh());
+
+	GetMesh()->bHiddenInGame = true;
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 }
 
@@ -79,6 +88,13 @@ void ANecPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	InventoryComponent->LoadEquipment();
+
+	if (GetMesh())
+	{
+		HeadMesh->SetLeaderPoseComponent(GetMesh());
+		BodyMesh->SetLeaderPoseComponent(GetMesh());
+		LegMesh->SetLeaderPoseComponent(GetMesh());
+	}
 }
 
 void ANecPlayerCharacter::Tick(float DeltaTime)
