@@ -320,7 +320,8 @@ void UNecInventoryComponent::DropItemInWorld_Internal(UItemInstance* DropItem)
 		return;
 	}
 
-	FVector SpawnLocation = DownHit.Location;
+	//FVector SpawnLocation = DownHit.Location;
+	FVector SpawnLocation = DownStart;
 	FRotator SpawnRotation = OwnerActor->GetActorRotation();
 
 	FActorSpawnParameters SpawnParams;
