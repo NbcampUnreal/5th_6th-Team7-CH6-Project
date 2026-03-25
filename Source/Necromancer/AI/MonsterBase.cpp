@@ -187,30 +187,33 @@ void AMonsterBase::SpawnDropItems()
 		return;
 	}
 
-	FVector DeathLocation = GetActorLocation();
+	// 랜덤으로 하나만 선택
+	int32 RandomIndex = FMath::RandRange(0, DropItemIDs.Num() - 1);
+	const FName& ItemID = DropItemIDs[RandomIndex];
 
-	for (const FName& ItemID : DropItemIDs)
+	const FItemData* Data = ItemSubsystem->GetItemData(ItemID);
+	if (!Data || !Data->DropItemActorClass)
 	{
-		const FItemData* Data = ItemSubsystem->GetItemData(ItemID);
-		if (!Data || !Data->DropItemActorClass)
-		{
-			UE_LOG(LogMonsterAI, Warning, TEXT("[MonsterBase] DropItem failed: ItemID=%s - Data or DropItemActorClass is null"), *ItemID.ToString());
-			continue;
-		}
-
-		FVector Offset = FVector(
-			FMath::FRandRange(-DropSpreadRadius, DropSpreadRadius),
-			FMath::FRandRange(-DropSpreadRadius, DropSpreadRadius),
-			0.0f
-		);
-		FVector SpawnLocation = DeathLocation + Offset;
-
-		GetWorld()->SpawnActor<AActor>(
-			Data->DropItemActorClass,
-			SpawnLocation,
-			FRotator::ZeroRotator
-		);
+		UE_LOG(LogMonsterAI, Warning, TEXT("[MonsterBase] DropItem failed: ItemID=%s - Data or DropItemActorClass is null"), *ItemID.ToString());
+		return;
 	}
+
+	FVector DeathLocation = GetActorLocation();
+	FVector Offset = FVector(
+		FMath::FRandRange(-DropSpreadRadius, DropSpreadRadius),
+		FMath::FRandRange(-DropSpreadRadius, DropSpreadRadius),
+		0.0f
+	);
+	FVector SpawnLocation = DeathLocation + Offset;
+
+	GetWorld()->SpawnActor<AActor>(
+		Data->DropItemActorClass,
+		SpawnLocation,
+		FRotator::ZeroRotator
+	);
+
+	UE_LOG(LogMonsterAI, Log, TEXT("[MonsterBase] Dropped random item: %s (%d/%d)"),
+		*ItemID.ToString(), RandomIndex + 1, DropItemIDs.Num());
 }
 
 void AMonsterBase::StartRagdoll()
