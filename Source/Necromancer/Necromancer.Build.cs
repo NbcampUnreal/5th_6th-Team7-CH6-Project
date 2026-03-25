@@ -23,6 +23,7 @@ public class Necromancer : ModuleRules
             //"AnimationModifierLibrary",
 
             "OnlineSubsystem", "OnlineSubsystemSteam", "OnlineSubsystemUtils",
+            "MotionWarping",
             
            
         });

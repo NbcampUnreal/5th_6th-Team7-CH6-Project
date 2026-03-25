@@ -72,7 +72,9 @@ void ANecDungeonsGenerator::SpawnStartRoom()
 
 		if (LatestRoom)
 		{
-			RoomLocations.Add(LatestRoom->GetActorLocation());
+			FVector Origin, Extent;
+			LatestRoom->GetActorBounds(false, Origin, Extent);
+			RoomLocations.Add(Origin);
 
 			TArray<USceneComponent*> Components;
 			LatestRoom->GetComponents<USceneComponent>(Components);
@@ -219,7 +221,9 @@ void ANecDungeonsGenerator::CheckForOverlap()
 
 			if (LatestRoom)
 			{
-				RoomLocations.Add(LatestRoom->GetActorLocation());
+				FVector Origin, Extent;
+				LatestRoom->GetActorBounds(false, Origin, Extent);
+				RoomLocations.Add(Origin);
 			}
 
 			ExitsList.Remove(SelectedExitPoint);
@@ -253,6 +257,8 @@ void ANecDungeonsGenerator::CheckForOverlap()
 			}
 
 			DoorList.Add(SelectedExitPoint);
+
+			AddTrapSpawnPointToList();
 		}
 
 		if (RoomCount < RoomAmount)
@@ -275,6 +281,8 @@ void ANecDungeonsGenerator::CheckForOverlap()
 			CloseHoles();
 			// 문 생성
 			SpawnDoor();
+			// 함정 생성
+			SpawnTrapAtLocation();
 
 			GetWorld()->GetTimerManager().ClearTimer(DungeonTimerHandle);
 
@@ -301,6 +309,52 @@ void ANecDungeonsGenerator::CloseHoles()
 			FTransform Transform = comp->GetComponentTransform();
 			GetWorld()->SpawnActor<AActor>(BlockHoles, Transform, SpawnParams);
 		}
+	}
+}
+
+void ANecDungeonsGenerator::AddTrapSpawnPointToList()
+{
+	if (LatestRoom)
+	{
+		TArray<USceneComponent*> Components;
+		LatestRoom->GetComponents<USceneComponent>(Components);
+
+		for (USceneComponent* comp : Components)
+		{
+			if (comp && comp->ComponentHasTag(FName("TrapSpawnPoint")))
+			{
+				// 신 컴포넌트 아래 컴포넌트들 배열에 저장
+				const TArray<USceneComponent*>ChildCom = comp->GetAttachChildren();
+				for (USceneComponent* Child : ChildCom)
+				{
+					// 스폰 위치 추가
+					TrapSpawnList.Add(Child);
+				}
+				break;
+			}
+		}
+	}
+}
+
+void ANecDungeonsGenerator::SpawnTrapAtLocation()
+{
+	if (TrapSpawnList.Num() == 0 || !TrapActor)
+	{
+		return;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	for (USceneComponent* SpawnPoint : TrapSpawnList)
+	{
+		if (!SpawnPoint)
+		{
+			continue;
+		}
+
+		FTransform Transform = SpawnPoint->GetComponentTransform();
+		GetWorld()->SpawnActor<AActor>(TrapActor, Transform, SpawnParams);
 	}
 }
 

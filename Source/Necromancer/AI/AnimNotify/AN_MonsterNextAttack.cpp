@@ -3,6 +3,7 @@
 
 #include "AN_MonsterNextAttack.h"
 #include "MonsterBase.h"
+#include "Necromancer.h"
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/Character.h"
@@ -32,7 +33,7 @@ void UAN_MonsterNextAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequen
 		UBlackboardComponent* BB = AIC->GetBlackboardComponent();
 		if (BB)
 		{
-			AActor* Target = Cast<AActor>(BB->GetValueAsObject(FName("TargetActor")));
+			AActor* Target = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
 			if (Target)
 			{
 				float Distance = FVector::Dist(Owner->GetActorLocation(), Target->GetActorLocation());

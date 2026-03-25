@@ -1,5 +1,6 @@
 #include "AI/MonsterSpawner.h"
 #include "AI/MonsterBase.h"
+#include "Necromancer.h"
 
 UMonsterSpawner::UMonsterSpawner()
 {
@@ -46,10 +47,10 @@ void UMonsterSpawner::CollectSpawnPoints()
 		}
 	}
 
-	UE_LOG(LogTemp, Log,TEXT("MonsterSpawner [%s]: Found %d SpawnPoints, %d MonsterClasses, %d matched"),*Owner->GetName(), SpawnPoints.Num(), MonsterClasses.Num(), SpawnDataList.Num());
+	UE_LOG(LogMonsterAI, Log,TEXT("MonsterSpawner [%s]: Found %d SpawnPoints, %d MonsterClasses, %d matched"),*Owner->GetName(), SpawnPoints.Num(), MonsterClasses.Num(), SpawnDataList.Num());
 
 	if (MonsterClasses.Num() != SpawnPoints.Num())
 	{
-		UE_LOG(LogTemp, Warning,TEXT("MonsterSpawner [%s]: MonsterClasses(%d)와 SpawnPoints(%d) 수가 다릅니다"),*Owner->GetName(), MonsterClasses.Num(), SpawnPoints.Num());
+		UE_LOG(LogMonsterAI, Warning,TEXT("MonsterSpawner [%s]: MonsterClasses(%d)와 SpawnPoints(%d) 수가 다릅니다"),*Owner->GetName(), MonsterClasses.Num(), SpawnPoints.Num());
 	}
 }

@@ -41,7 +41,7 @@ void UBTService_CheckLeash::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* N
 		FVector PawnLocation = Pawn->GetActorLocation();
 		BB->SetValueAsVector(FName(NAME_SpawnLocation), PawnLocation);
 		bSpawnLocationSaved = true;
-		UE_LOG(LogTemp, Log, TEXT("[CheckLeash] SpawnLocation Saved: %s"), *PawnLocation.ToString());
+		UE_LOG(LogMonsterAI, Log, TEXT("[CheckLeash] SpawnLocation Saved: %s"), *PawnLocation.ToString());
 		return;
 	}
 

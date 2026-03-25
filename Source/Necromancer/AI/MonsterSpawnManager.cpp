@@ -2,6 +2,8 @@
 #include "AI/MonsterSpawner.h"
 #include "AI/MonsterBase.h"
 #include "AI/MonsterStatComponent.h"
+#include "Necromancer.h"
+#include "Game/NecGameState.h"
 #include "Maps/NecDungeonsGenerator.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
@@ -40,11 +42,11 @@ void AMonsterSpawnManager::StartSpawning()
 
 	if (SpawnQueue.Num() == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SpawnManager: No spawn entries found"));
+		UE_LOG(LogMonsterAI, Warning, TEXT("SpawnManager: No spawn entries found"));
 		return;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("SpawnManager: %d monsters queued"), SpawnQueue.Num());
+	UE_LOG(LogMonsterAI, Log, TEXT("SpawnManager: %d monsters queued"), SpawnQueue.Num());
 	CurrentSpawnIndex = 0;
 
 	if (SpawnDelay <= 0.0f)
@@ -82,7 +84,7 @@ void AMonsterSpawnManager::SpawnNextInQueue()
 	if (CurrentSpawnIndex >= SpawnQueue.Num())
 	{
 		GetWorld()->GetTimerManager().ClearTimer(SpawnTimerHandle);
-		UE_LOG(LogTemp, Log, TEXT("SpawnManager: All %d monsters spawned"), SpawnQueue.Num());
+		UE_LOG(LogMonsterAI, Log, TEXT("SpawnManager: All %d monsters spawned"), SpawnQueue.Num());
 		return;
 	}
 
@@ -101,14 +103,28 @@ void AMonsterSpawnManager::SpawnNextInQueue()
 		if (Monster)
 		{
 			// 층별 스탯 스케일링 적용
+			const int32 Floor = GetFloorLevel();
 			if (UMonsterStatComponent* StatComp = Monster->FindComponentByClass<UMonsterStatComponent>())
 			{
-				StatComp->ApplyFloorScaling(FloorLevel);
+				StatComp->ApplyFloorScaling(Floor);
 			}
 
-			UE_LOG(LogTemp, Log, TEXT("Spawned [%d/%d]: %s (Floor:%d)"),CurrentSpawnIndex + 1,SpawnQueue.Num(),*Entry.MonsterClass->GetName(), FloorLevel);
+			UE_LOG(LogMonsterAI, Log, TEXT("Spawned [%d/%d]: %s (Floor:%d)"),CurrentSpawnIndex + 1,SpawnQueue.Num(),*Entry.MonsterClass->GetName(), Floor);
 		}
 	}
 
 	CurrentSpawnIndex++;
+}
+
+int32 AMonsterSpawnManager::GetFloorLevel() const
+{
+	if (const UWorld* World = GetWorld())
+	{
+		if (const ANecGameState* GS = World->GetGameState<ANecGameState>())
+		{
+			// LvDepth는 0-based, FloorLevel은 1-based
+			return FMath::Max(1, GS->LvDepth + 1);
+		}
+	}
+	return 1;
 }

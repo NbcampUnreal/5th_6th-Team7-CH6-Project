@@ -54,6 +54,7 @@ void ANecGameMode::HandleSeamlessTravelPlayer(AController*& C)
     {
         PlayerControllers.Add(NewNecPlayerController);
 
+        NewNecPlayerController->Client_CreateIngameHUDWidget();
         ANecGameState* NecGameState = GetGameState<ANecGameState>();
         if (NecGameState)
         {
@@ -117,11 +118,7 @@ void ANecGameMode::EndGame()
 
 void ANecGameMode::OnPlayerDeath(ANecPlayerController* DeadPC)
 {
-
-    GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Yellow, FString::Printf(TEXT("OnPlayerDeath 1 : %d"), PlayerControllers.Num()));
     PlayerControllers.RemoveSingle(DeadPC);
-
-    GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Yellow, FString::Printf(TEXT("OnPlayerDeath 2 : %d"), PlayerControllers.Num()));
     
     if (PlayerControllers.Num() < 1)
     {

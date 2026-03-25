@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -22,7 +22,7 @@ protected:
 public:
 	virtual void Interact_Implementation(AActor* Interactor) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	// virtual FText GetInteractText_Implementation() const override;
+	virtual FText GetInteractText_Implementation() const override;
 
 protected:
 	UFUNCTION()

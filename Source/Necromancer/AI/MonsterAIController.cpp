@@ -79,7 +79,7 @@ void AMonsterAIController::ClearTargetActor()
 	GetWorldTimerManager().SetTimer(AggroResetTimerHandle, this, &AMonsterAIController::ResetAggroPropagation, AggroResetTime, false);
 }
 
-void AMonsterAIController::SetlastLocation(FVector LastLocation)
+void AMonsterAIController::SetLastLocation(FVector LastLocation)
 {
 	if (UBlackboardComponent* BB = GetBlackboardComponent())
 	{
@@ -87,7 +87,7 @@ void AMonsterAIController::SetlastLocation(FVector LastLocation)
 	}
 }
 
-FVector AMonsterAIController::GetlastLocation() const
+FVector AMonsterAIController::GetLastLocation() const
 {
 	if (const UBlackboardComponent* BB = GetBlackboardComponent())
 	{
@@ -154,7 +154,7 @@ void AMonsterAIController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus 
 	{
 		// 감지를 잃어도 타겟을 유지 (귀환/사망 시에만 해제)
 		// 마지막 위치만 기록
-		SetlastLocation(Actor->GetActorLocation());
+		SetLastLocation(Actor->GetActorLocation());
 	}
 }
 

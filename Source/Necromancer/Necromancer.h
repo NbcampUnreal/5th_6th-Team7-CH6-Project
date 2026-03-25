@@ -58,3 +58,6 @@ enum class ETeleportMode : uint8
 	BehindTarget,	// 타겟 뒤쪽으로 순간이동
 	RandomAround	// 타겟 주변 랜덤 위치로 순간이동
 };
+
+// 몬스터 AI 로그 카테고리
+DECLARE_LOG_CATEGORY_EXTERN(LogMonsterAI, Log, All);

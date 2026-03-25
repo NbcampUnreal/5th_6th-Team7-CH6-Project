@@ -1,5 +1,6 @@
 #include "AN_BossAOEDamage.h"
 #include "MonsterStatComponent.h"
+#include "DamageType/NecDamageType.h"
 #include "Kismet/GameplayStatics.h"
 #include "GenericTeamAgentInterface.h"
 #include "NiagaraFunctionLibrary.h"
@@ -64,7 +65,7 @@ void UAN_BossAOEDamage::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBa
 				MonsterStatComponent->GetAttackPower(),
 				OwnerActor->GetInstigatorController(),
 				OwnerActor,
-				nullptr
+				UNecDamageType::StaticClass()
 			);
 		}
 

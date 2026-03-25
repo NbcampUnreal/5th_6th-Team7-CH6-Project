@@ -13,6 +13,8 @@ ADropItemBase::ADropItemBase()
 {
     ItemInstanceComponent = CreateDefaultSubobject<UItemInstanceComponent>(TEXT("ItemInstanceComponent"));
     bReplicates = true;
+    StaticMesh->SetSimulatePhysics(true);
+    StaticMesh->SetEnableGravity(true);
 }
 
 inline void ADropItemBase::BeginPlay()
