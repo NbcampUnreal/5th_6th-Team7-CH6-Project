@@ -94,9 +94,14 @@ void ANecGameMode::StartGame()
 
 void ANecGameMode::InitGameState()
 {
-    UNecSaveGameSubsystem* NecSaveGameSubsystem = GetGameInstance()->GetSubsystem<UNecSaveGameSubsystem>();
-    ANecGameState* NecGameState = GetGameState<ANecGameState>();
+    UGameInstance* GI = GetGameInstance();
+    if (!GI || !GameState)
+    {
+        return;
+    }
 
+    UNecSaveGameSubsystem* NecSaveGameSubsystem = GI->GetSubsystem<UNecSaveGameSubsystem>();
+    ANecGameState* NecGameState = GetGameState<ANecGameState>();
     if (NecGameState && NecSaveGameSubsystem)
     {
         NecGameState->LvDepth = NecSaveGameSubsystem->GetLvDepth();
