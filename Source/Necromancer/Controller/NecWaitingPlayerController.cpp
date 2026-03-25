@@ -27,7 +27,8 @@ void ANecWaitingPlayerController::BeginPlay()
 			{
 				ReadyWidgetInstance->AddToViewport();
 
-				FInputModeUIOnly Mode;
+				//FInputModeUIOnly Mode;
+				FInputModeGameAndUI Mode;
 				Mode.SetWidgetToFocus(ReadyWidgetInstance->GetCachedWidget());
 				SetInputMode(Mode);
 

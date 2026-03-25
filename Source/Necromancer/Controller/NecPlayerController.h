@@ -98,6 +98,8 @@ protected:
 public:
 	UFUNCTION(Client, Reliable)
 	void Client_CreateEndGameWidget();
+	UFUNCTION(Client, Reliable)
+	void Client_CreateIngameHUDWidget();
 
 protected:
 	void CreateInGameHUD();

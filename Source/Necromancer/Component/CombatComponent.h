@@ -60,6 +60,9 @@ public:
 
 	void UpdateGuardVisuals();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ApplyDamage(AActor* HitActor, FVector HitLocation, class AWeapon_Item_Base* Weapon);
+
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponChangedSignature OnWeaponChanged;
 

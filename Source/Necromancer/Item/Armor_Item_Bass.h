@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Item/ItemBass.h"
+#include "GridInventory/NecInventoryComponent.h"
 #include "Armor_Item_Bass.generated.h"
 
 class USkeletalMeshComponent;
@@ -24,6 +25,9 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Armor")
 	USkeletalMeshComponent* ArmorMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Armor|Slot")
+	EEquipmentSlot ArmorSlotType;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Armor|Sound")
 	USoundBase* ArmorSound;

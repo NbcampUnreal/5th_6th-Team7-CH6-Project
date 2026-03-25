@@ -52,9 +52,17 @@ public:
 
 	virtual void Equip(AActor* Equip_Owner)override;
 
-protected:
 	UFUNCTION(NetMulticast, Unreliable)
 	void Multicast_PlayHitSound(FVector HitLocation);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TObjectPtr<UWeaponDataAsset> WeaponData;
+
+	float CurrentDamageMultiplier = 1.0f;
+
+protected:
+	/*UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlayHitSound(FVector HitLocation);*/
 
 	void PerformTrace();
 
@@ -76,8 +84,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
 	FName EndSocketName = FName("TraceEnd");
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
-	TObjectPtr<UWeaponDataAsset> WeaponData;
+	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TObjectPtr<UWeaponDataAsset> WeaponData;*/
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
 	bool bDrawDebug = false;
@@ -85,7 +93,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Combat")
 	bool bIsUnarmed;
 
-	float CurrentDamageMultiplier = 1.0f;
+	/*float CurrentDamageMultiplier = 1.0f;*/
 
 	float CurrentPoiseDamageMultiplier = 1.0f;
 
