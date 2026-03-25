@@ -228,6 +228,12 @@ public:
 	void CleanupInvalidTargets();
 	UFUNCTION(BlueprintCallable)
 	AActor* GetCurrentInteractTarget() const;
+	UFUNCTION(BlueprintCallable)
+	bool HasMultipleInteractTargets() const {
+		if (InteractTargets.Num() > 1)
+			return true;
+		return false;
+	}
 	void CycleTarget(bool bNext);
 #pragma endregion
 
