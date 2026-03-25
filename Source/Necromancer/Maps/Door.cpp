@@ -1,10 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Maps/Door.h"
 #include "Components/TimelineComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "AI/BossMonsterBase.h"
 #include "AIController.h"
+#include "Character/NecPlayerCharacter.h"
 
 ADoor::ADoor()
 {
@@ -50,11 +51,17 @@ void ADoor::Interact_Implementation(AActor* Interactor)
 {
 	if (!HasAuthority())
 	{
+		ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(Interactor);
+		if (!PlayerCharacter)
+		{
+			return;
+		}
+		PlayerCharacter->Server_TryInteract(this);
+	}
+	else {
 		Server_ToggleDoor();
-		return;
 	}
 
-	Server_ToggleDoor();
 }
 
 void ADoor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -63,17 +70,17 @@ void ADoor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimePro
 	DOREPLIFETIME(ADoor, bDoorOpen);
 }
 
-//FText ADoor::GetInteractText_Implementation() const
-//{
-//	if (!bDoorOpen)
-//	{
-//		return FText::FromString(TEXT("����"));
-//	}
-//	else
-//	{
-//		return FText::FromString(TEXT("�ݱ�"));
-//	}
-//}
+FText ADoor::GetInteractText_Implementation() const
+{
+	if (!bDoorOpen)
+	{
+		return FText::FromString(TEXT("열기"));
+	}
+	else
+	{
+		return FText::FromString(TEXT("닫기"));
+	}
+}
 
 void ADoor::DoorOpenTimeLineFunc(float Output)
 {

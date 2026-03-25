@@ -702,6 +702,7 @@ void UGridInventoryComponent::RequestAddItemToOther(
             InPosY
         );
     }
+    OtherComp->RebuildItemOwnerMap();
     RebuildItemOwnerMap();
     OnInventoryUpdated.Broadcast();
 }
