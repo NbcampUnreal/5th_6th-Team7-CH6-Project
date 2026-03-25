@@ -68,6 +68,11 @@ void ANecGameMode::Logout(AController* Exiting)
 {
     Super::Logout(Exiting);
 
+
+    if (GetWorld()->bIsTearingDown) {
+        return;
+    }
+
     // 관전자가 나갓을때, 게임이 종료되는 버그가..있는거같은데 확인필요
     ANecPlayerController* ExitingNecPC = Cast<ANecPlayerController>(Exiting);
     if (ExitingNecPC)
