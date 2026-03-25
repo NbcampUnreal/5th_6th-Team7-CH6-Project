@@ -97,6 +97,11 @@ void ANecPlayerController::Client_CreateEndGameWidget_Implementation()
 	}
 }
 
+void ANecPlayerController::Client_CreateIngameHUDWidget_Implementation()
+{
+	CreateInGameHUD();
+}
+
 void ANecPlayerController::CreateInGameHUD()
 {
 	FInputModeGameOnly GameOnly;
@@ -346,6 +351,8 @@ void ANecPlayerController::HandleRevive()
 
 		// and controller camera view
 		Client_HandleCameraTarget(MyBody);
+		// Re Create InGameHUDWidget
+		Client_CreateIngameHUDWidget();
 	}
 }
 

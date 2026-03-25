@@ -706,6 +706,41 @@ void UGridInventoryComponent::RequestAddItemToOther(
     OnInventoryUpdated.Broadcast();
 }
 
+void UGridInventoryComponent::RequestRemoveItemToOther(UGridInventoryComponent* OtherComp, UItemInstance* TargetItem)
+{
+    if (!IsValid(OtherComp) || !IsValid(TargetItem))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("RequestAddItemToOther: OtherComp or NewItem is invalid"));
+        return;
+    }
+
+    if (GetOwnerRole() < ROLE_Authority)
+    {
+        Server_RequestRemoveItemToOther(
+            OtherComp,
+            TargetItem
+        );
+
+    }
+    else {
+
+        Implement_RequestRemoveItemToOther(
+            OtherComp,
+            TargetItem
+        );
+    }
+    RebuildItemOwnerMap();
+    OnInventoryUpdated.Broadcast();
+}
+
+void UGridInventoryComponent::Server_RequestRemoveItemToOther_Implementation(UGridInventoryComponent* OtherComp, UItemInstance* TargetItem)
+{
+    Implement_RequestRemoveItemToOther(
+        OtherComp,
+        TargetItem
+    );
+}
+
 void UGridInventoryComponent::Implement_RequestAddItemToOther(
     UGridInventoryComponent* OtherComp,
     UItemInstance* NewItem,
@@ -720,8 +755,8 @@ void UGridInventoryComponent::Implement_RequestAddItemToOther(
         UE_LOG(LogTemp, Warning, TEXT("Implement_RequestAddItemToOther: OtherComp or NewItem is invalid"));
         return;
     }
-
-    // 서버에서 대상 인벤토리에 실제 추가 요청
+    TArray<UItemInstance*> Childrens;
+    GetAllChildrenRecursive(NewItem->InstanceID, Childrens);
     OtherComp->AddItemToPos(
         NewItem,
         ContainerGuid,
@@ -730,6 +765,18 @@ void UGridInventoryComponent::Implement_RequestAddItemToOther(
         InPosX,
         InPosY
     );
+    OtherComp->AddChildItems(Childrens);
+
+}
+
+void UGridInventoryComponent::Implement_RequestRemoveItemToOther(UGridInventoryComponent* OtherComp, UItemInstance* TargetItem)
+{
+    if (!IsValid(OtherComp) || !IsValid(TargetItem))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("RequestAddItemToOther: OtherComp or NewItem is invalid"));
+        return;
+    }
+    OtherComp->RemoveItem(TargetItem);
 }
 
 void UGridInventoryComponent::Server_RequestAddItemToOther_Implementation(
