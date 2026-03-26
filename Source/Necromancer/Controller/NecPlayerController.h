@@ -142,6 +142,8 @@ public:
 	/// </summary>
 	UFUNCTION()
 	void HandleRevive();
+	UFUNCTION(Client, Reliable)
+	void Client_ResetSpectatingTarget();
 
 
 protected:

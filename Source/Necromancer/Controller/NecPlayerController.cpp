@@ -350,9 +350,23 @@ void ANecPlayerController::HandleRevive()
 		}
 
 		// and controller camera view
-		Client_HandleCameraTarget(MyBody);
+		Client_ResetSpectatingTarget();
+	 
 		// Re Create InGameHUDWidget
 		Client_CreateIngameHUDWidget();
+	}
+}
+
+void ANecPlayerController::Client_ResetSpectatingTarget_Implementation()
+{
+	GetWorldTimerManager().ClearTimer(SpectateRotationTimerHandle);
+
+	if (MyBody)
+	{
+		this->SetViewTargetWithBlend(MyBody, 0.2f);
+
+		SpectatingTarget = nullptr;
+		CurSpectatingTargetState = nullptr;
 	}
 }
 
