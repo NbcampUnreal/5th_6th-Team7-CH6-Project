@@ -249,6 +249,10 @@ void UNecInventoryComponent::AddNecInventory_Internal(AActor* NewItemActor)
 
 void UNecInventoryComponent::DropItemInWorld_Internal(UItemInstance* DropItem)
 {
+	if (!DropItem) {
+		return;
+	}
+		
 	APlayerState* PS = Cast<APlayerState>(GetOwner());
 	if (!PS) return;
 	AActor* OwnerActor = Cast<AActor>(PS->GetPawn());
