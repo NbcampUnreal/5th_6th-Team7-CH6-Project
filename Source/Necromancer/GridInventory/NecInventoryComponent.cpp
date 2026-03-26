@@ -77,12 +77,11 @@ inline void UNecInventoryComponent::BeginPlay()
 		TArray<UItemInstance*> InItems;
 		GetInventory(InItems);
 		if (InItems.IsEmpty()) {
-			DefaultContainer = NewObject<UItemInstance>(this);
-			DefaultContainer->InitializeIdentity(
-				FName("TempBag")
+			UItemInstance*  Container = NewObject<UItemInstance>(this);
+			Container->InitializeIdentity(
+				FName("1_001")
 			);
-
-			AddRootItem(DefaultContainer);
+			EquipItem(Container);
 		}
 	}
 }

@@ -581,58 +581,46 @@ bool UGridInventoryComponent::CanAddToConatiner(UItemInstance* NewItem, const FG
     UItemInstance* ContainerItem = nullptr;
     for (UItemInstance* Item : Items)
     {
-        if (Item->InstanceID == ContainerGuid)
+        if (Item && Item->InstanceID == ContainerGuid)
         {
             ContainerItem = Item;
             break;
         }
     }
-    if (!ContainerItem) {
-        return false;
-    }
+
+    if (!ContainerItem || !NewItem) return false;
 
     UDataTableSubsystem* Subsystem = GetOwner()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
-    const FItemData* Data = Subsystem->GetItemData(NewItem->ItemID);
+    const FItemData* NewItemData = Subsystem->GetItemData(NewItem->ItemID);
     const FItemData* ContainerData = Subsystem->GetItemData(ContainerItem->ItemID);
-    if (!Data || !ContainerData) {
-        return false;
-    }
-    if (ContainerData->Rows.Num() < 1)
+
+    if (!NewItemData || !ContainerData) return false;
+
+    for (int32 RowIdx = 0; RowIdx < ContainerData->Rows.Num(); ++RowIdx)
     {
-        return false;
-    }
-    int32 InPosX = 0; int32 InPosY = 0;
-    int32 RowIndex = ContainerData->Rows.Num();
-    int32 InRowIndex = 0;
-    bool bFoundPos = false;
+        const FInventoryRow& CurrentRow = ContainerData->Rows[RowIdx];
 
+        for (int32 SectionIdx = 0; SectionIdx < CurrentRow.Sections.Num(); ++SectionIdx)
+        {
+            const FInventorySection& CurrentSection = CurrentRow.Sections[SectionIdx];
 
-    int32 SectionIndex = ContainerData->Rows[InRowIndex].Sections.Num();
-    int32 InSectionIndex = 0;
-
-
-    for (; InRowIndex < RowIndex; InRowIndex++) {
-        for (; InSectionIndex < SectionIndex; InSectionIndex++) {
-            for (InPosX = 0; InPosX < ContainerData->Rows[InRowIndex].Sections[InSectionIndex].Width; InPosX++) {
-                for (InPosY = 0; InPosY < ContainerData->Rows[InRowIndex].Sections[InSectionIndex].Height; InPosY++) {
-                    if (CanAddItemToPos(
-                        NewItem,
-                        ContainerGuid,
-                        InRowIndex,
-                        InSectionIndex,
-                        InPosX,
-                        InPosY))
+            for (int32 X = 0; X < CurrentSection.Width; ++X)
+            {
+                for (int32 Y = 0; Y < CurrentSection.Height; ++Y)
+                {
+                    if (CanAddItemToPos(NewItem, ContainerGuid, RowIdx, SectionIdx, X, Y))
                     {
-                        OutRowIndex = InRowIndex;
-                        OutSectionIndex = InSectionIndex;
-                        OutPosX = InPosX;
-                        OutPosY = InPosY;
+                        OutRowIndex = RowIdx;
+                        OutSectionIndex = SectionIdx;
+                        OutPosX = X;
+                        OutPosY = Y;
                         return true;
                     }
                 }
             }
         }
     }
+
     return false;
 }
 
