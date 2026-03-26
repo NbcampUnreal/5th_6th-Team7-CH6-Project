@@ -139,6 +139,11 @@ void UCombatComponent::SetCurrentWeapon(AActor* NewWeaponActor)
     }
 
     CurrentWeapon = NewWeapon;
+
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->SetOwner(OwnerCharacter);
+    }
     
     /*EWeaponType WeaponType = CurrentWeapon ? CurrentWeapon->GetWeaponType() : EWeaponType::Unarmed;
     OnWeaponChanged.Broadcast(WeaponType);*/
@@ -247,6 +252,11 @@ void UCombatComponent::OnRep_bIsGuarding()
 
 void UCombatComponent::OnRep_CurrentWeapon()
 {
+    if (!OwnerCharacter)
+    {
+        OwnerCharacter = Cast<ANecPlayerCharacter>(GetOwner());
+    }
+
     EWeaponType WeaponType = IsValid(CurrentWeapon) ? CurrentWeapon->GetWeaponType() : EWeaponType::Unarmed;
     OnWeaponChanged.Broadcast(WeaponType);
 
