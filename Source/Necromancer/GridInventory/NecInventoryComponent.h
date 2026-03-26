@@ -69,6 +69,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void AddNecInventory(AActor* NewItemActor);
 
+	UFUNCTION(BlueprintCallable)
 	bool AddItemToInventory(UItemInstance* NewItem);
 
 	UFUNCTION(BlueprintPure, Category = "Inventory")

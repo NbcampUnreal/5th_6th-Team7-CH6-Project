@@ -662,7 +662,7 @@ void UGridInventoryComponent::Implement_RemoveItem(UItemInstance*& Item)
     MarkInventoryDirty();
 }
 
-void UGridInventoryComponent::RequestAddItemToOther(
+bool UGridInventoryComponent::RequestAddItemToOther(
     UGridInventoryComponent* OtherComp,
     UItemInstance* NewItem,
     const FGuid& ContainerGuid,
@@ -674,9 +674,17 @@ void UGridInventoryComponent::RequestAddItemToOther(
     if (!IsValid(OtherComp) || !IsValid(NewItem))
     {
         UE_LOG(LogTemp, Warning, TEXT("RequestAddItemToOther: OtherComp or NewItem is invalid"));
-        return;
+        return false;
     }
-
+    if (!OtherComp->CanAddItemToPos(
+        NewItem,
+        ContainerGuid,
+        InRowIndex,
+        InSectionIndex,
+        InPosX,
+        InPosY)) {
+        return false;
+    }
     if (GetOwnerRole() < ROLE_Authority)
     {
         Server_RequestAddItemToOther(
@@ -705,6 +713,8 @@ void UGridInventoryComponent::RequestAddItemToOther(
     OtherComp->RebuildItemOwnerMap();
     RebuildItemOwnerMap();
     OnInventoryUpdated.Broadcast();
+
+    return true;
 }
 
 void UGridInventoryComponent::RequestRemoveItemToOther(UGridInventoryComponent* OtherComp, UItemInstance* TargetItem)

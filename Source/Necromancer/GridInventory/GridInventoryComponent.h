@@ -163,7 +163,7 @@ private:
 #pragma region OtherInventoryComponent
 public:
     UFUNCTION(BlueprintCallable)
-    void RequestAddItemToOther(
+    bool RequestAddItemToOther(
         UGridInventoryComponent* OtherComp,
         UItemInstance* NewItem,
         const FGuid& ContainerGuid,
