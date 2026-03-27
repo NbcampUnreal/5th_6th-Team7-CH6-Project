@@ -277,6 +277,13 @@ void ANecPlayerController::SetSpectateTargetInternal(AActor* TargetToSpectate)
 		bAutoManageActiveCameraTarget = true;
 		this->SetViewTargetWithBlend(TargetToSpectate, 0.5f);
 
+		USpringArmComponent* SpringArm = TargetCharacter->FindComponentByClass<USpringArmComponent>();
+		if (SpringArm)
+		{
+			SpringArm->bUsePawnControlRotation = false;
+			TargetCharacter->bUseControllerRotationYaw = false;
+		}
+
 		GetWorldTimerManager().SetTimer(
 			SpectateRotationTimerHandle,
 			this,
@@ -309,10 +316,7 @@ void ANecPlayerController::UpdateSpectateRotation()
 			USpringArmComponent* SpringArm = TargetCharacter->FindComponentByClass<USpringArmComponent>();
 			if (SpringArm)
 			{
-				SpringArm->bUsePawnControlRotation = false;
 				SpringArm->SetWorldRotation(TargetRot);
-
-				TargetCharacter->bUseControllerRotationYaw = false;
 			}
 		}
 		else
@@ -367,6 +371,9 @@ void ANecPlayerController::Client_ResetSpectatingTarget_Implementation()
 
 		SpectatingTarget = nullptr;
 		CurSpectatingTargetState = nullptr;
+
+
+		//bAutoManageActiveCameraTarget = 
 	}
 }
 
