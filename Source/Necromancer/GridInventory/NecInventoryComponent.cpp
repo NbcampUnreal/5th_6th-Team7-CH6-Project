@@ -143,7 +143,7 @@ void UNecInventoryComponent::LoadEquipment()
 {
 	TArray<UItemInstance*> InItems;
 	GetInventory(InItems);
-	DefaultContainer = InItems[0];
+	///DefaultContainer = InItems[0];
 	for (UItemInstance* Item : InItems)
 	{
 		if (!IsValid(Item))
