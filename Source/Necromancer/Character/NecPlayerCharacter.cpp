@@ -3,6 +3,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Controller/NecPlayerController.h"
+#include "Controller/NecWaitingPlayerController.h"
+
 #include "Game/NecPlayerState.h"
 #include "EnhancedInputComponent.h"
 #include "Necromancer.h"
@@ -240,6 +242,45 @@ void ANecPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 					ETriggerEvent::Triggered,
 					this,
 					&ANecPlayerCharacter::Action_CycleTarget
+				);
+			}
+		} 
+		else if (ANecWaitingPlayerController* WaitingPlayerController = Cast<ANecWaitingPlayerController>(GetController()))
+		{
+			if (WaitingPlayerController->MoveAction)
+			{
+				EnhancedInputComp->BindAction(
+					WaitingPlayerController->MoveAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ANecPlayerCharacter::Move
+				);
+			}
+
+			if (WaitingPlayerController->LookAction)
+			{
+				EnhancedInputComp->BindAction(
+					WaitingPlayerController->LookAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ANecPlayerCharacter::Look
+				);
+			}
+
+			if (WaitingPlayerController->SprintAction)
+			{
+				EnhancedInputComp->BindAction(
+					WaitingPlayerController->SprintAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ANecPlayerCharacter::StartSprint
+				);
+
+				EnhancedInputComp->BindAction(
+					WaitingPlayerController->SprintAction,
+					ETriggerEvent::Completed,
+					this,
+					&ANecPlayerCharacter::StopSprint
 				);
 			}
 		}

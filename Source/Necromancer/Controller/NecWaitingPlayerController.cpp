@@ -1,6 +1,8 @@
 
 #include "Controller/NecWaitingPlayerController.h"
 
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
 
 #include "GameMode/NecWaitingGameMode.h"
 #include "UI/ReadyWidget.h"
@@ -51,6 +53,30 @@ void ANecWaitingPlayerController::BeginPlay()
 
 				bShowMouseCursor = true;
 			}
+		}
+	}
+}
+
+void ANecWaitingPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+		{
+			if (InputMappingContext)
+			{
+				Subsystem->AddMappingContext(InputMappingContext, 0);
+			}
+		}
+	}
+
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+	{
+		if (MenuAction)
+		{
+			EnhancedInputComponent->BindAction(MenuAction, ETriggerEvent::Triggered, this, &ANecWaitingPlayerController::StartGame);
 		}
 	}
 }

@@ -7,6 +7,10 @@
 #include "NecWaitingPlayerController.generated.h"
 
 
+
+class UInputMappingContext;
+class UInputAction;
+
 class UReadyWidget;
 /**
  * 
@@ -22,6 +26,25 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void SetupInputComponent() override;
+
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TObjectPtr<UInputMappingContext> InputMappingContext;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TObjectPtr<UInputAction> MoveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TObjectPtr<UInputAction> LookAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TObjectPtr<UInputAction> SprintAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TObjectPtr<UInputAction> MenuAction;
+
 public:
 	void StartGame();
 
@@ -32,7 +55,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UReadyWidget> ClientReadyWidgetClass;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UReadyWidget> ReadyWidgetInstance;
+
 	
 };
