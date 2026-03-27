@@ -222,6 +222,20 @@ void UCombatComponent::SetGuard(bool bInGuarding)
     }
 }
 
+bool UCombatComponent::IsPlayingAttackMontage() const
+{
+    if (OwnerCharacter && ActiveAttackMontage)
+    {
+        UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+        if (AnimInstance)
+        {
+            return AnimInstance->Montage_IsPlaying(ActiveAttackMontage);
+        }
+    }
+
+    return false;
+}
+
 void UCombatComponent::ResetCombatState()
 {
     bIsAttacking = false;

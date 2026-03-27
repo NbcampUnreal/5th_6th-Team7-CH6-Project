@@ -306,7 +306,7 @@ void ANecPlayerCharacter::OnRep_PlayerState()
 
 void ANecPlayerCharacter::Move(const FInputActionValue& Value)
 {
-	if (IsValid(CombatComponent) && CombatComponent->IsAttacking())
+	if (IsValid(CombatComponent) && CombatComponent->IsPlayingAttackMontage())
 	{
 		return;
 	}
