@@ -85,19 +85,19 @@ private:
     /* ===== Drain ===== */
 
     UPROPERTY(EditAnywhere)
-    float DrainPerTick = 0.f;
+    float DrainPerTick = 1.f;
 
     UPROPERTY(EditAnywhere)
     float DrainInterval = 1.0f;
 
     UPROPERTY(EditAnywhere)
-    float BaseHPDrain = 5.f;
+    float BaseHPDrain = 2.f;
 
     UPROPERTY(EditAnywhere)
     float DrainAcceleration = 2.f;
 
     UPROPERTY(EditAnywhere)
-    float MaxHPDrain = 30.f;
+    float MaxHPDrain = 10.f;
 
     float CurrentHPDrain;
 
