@@ -183,6 +183,32 @@ bool UNecInventoryComponent::AddItemToInventory(UItemInstance* NewItem)
 		return false;
 	}
 
+	UDataTableSubsystem* Subsystem =
+		GetWorld()->GetGameInstance()->GetSubsystem<UDataTableSubsystem>();
+
+	if (!Subsystem)
+	{
+		return false;
+	}
+
+	const FItemData* Data = Subsystem->GetItemData(NewItem->ItemID);
+	if (!Data)
+	{
+		return false;
+	}
+
+	EEquipmentSlot TargetSlot;
+	if (ItemTypeToEquipmentSlot(Data->m_ItemType, TargetSlot))
+	{
+		UItemInstance* equipItem = GetEquipmentItem(TargetSlot);
+		if (!equipItem)
+		{
+			EquipItem(NewItem);
+			return true;
+		}
+	}
+	
+
 	if (BodyItem && AddItemToContainer(NewItem, BodyItem->InstanceID))	{
 	}
 	else if (BagItem && AddItemToContainer(NewItem, BagItem->InstanceID))	{
