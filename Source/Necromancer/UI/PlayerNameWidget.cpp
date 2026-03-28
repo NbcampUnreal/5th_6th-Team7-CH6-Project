@@ -13,3 +13,11 @@ void UPlayerNameWidget::SetPlayerName(FString Name)
         PlayerNameText->SetText(FText::FromString(CombinedString));
     }
 }
+
+void UPlayerNameWidget::SetPlayerNameColor(bool bIsDead)
+{
+    if (PlayerNameText)
+    {
+        PlayerNameText->SetColorAndOpacity(bIsDead ? FSlateColor(FColor(255, 0, 0, 255)) : FSlateColor(FColor(255, 255, 255, 255)));
+    }
+}

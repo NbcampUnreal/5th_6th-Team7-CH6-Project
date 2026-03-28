@@ -79,10 +79,11 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 	GetMesh()->bHiddenInGame = true;
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 
+	
 	PlayerNameWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("PlayerNameWidgetComponent"));
+	PlayerNameWidgetComponent->SetupAttachment(RootComponent);
 
-	PlayerNameWidgetComponent->SetupAttachment(GetMesh());
-	PlayerNameWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 210.f));
+	PlayerNameWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 110.f));
 	PlayerNameWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
 	//PlayerNameWidgetComponent->SetOwnerNoSee(true);
 }
@@ -135,6 +136,25 @@ void ANecPlayerCharacter::UpdatePlayerNameCompRot()
 	FRotator FixedPitchRot = FRotator(0, NewRot.Yaw, NewRot.Roll);
 
 	PlayerNameWidgetComponent->SetWorldRotation(FixedPitchRot);
+}
+
+void ANecPlayerCharacter::Multicast_SetPlayerNameColor_Implementation(bool bIsDead)
+{
+	UUserWidget* RawWidget = PlayerNameWidgetComponent->GetUserWidgetObject();
+	if (RawWidget == nullptr)
+	{
+		PlayerNameWidgetComponent->InitWidget();
+		RawWidget = PlayerNameWidgetComponent->GetUserWidgetObject();
+	}
+
+	if (RawWidget != nullptr)
+	{
+		UPlayerNameWidget* PlayerNameWidget = Cast<UPlayerNameWidget>(RawWidget);
+		if (PlayerNameWidget != nullptr)
+		{
+			PlayerNameWidget->SetPlayerNameColor(bIsDead);
+		}
+	}
 }
 
 FString ANecPlayerCharacter::GetEnumText(ENetRole _Role)
@@ -563,6 +583,7 @@ void ANecPlayerCharacter::HandleDeath()
 			5.0f,
 			false
 		);*/
+		Multicast_SetPlayerNameColor(true);
 	}
 }
 
@@ -595,6 +616,8 @@ void ANecPlayerCharacter::HandleRevive()
 		StatComponent->SetCurrentHealth(50.f);
 		StatComponent->SetStatus(ECharacterStatus::Alive);
 		StatComponent->OnRep_Status();
+
+		Multicast_SetPlayerNameColor(false);
 	}
 }
 

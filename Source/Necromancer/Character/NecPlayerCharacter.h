@@ -264,6 +264,9 @@ protected:
 	/// 플레이어 닉네임 위젯의 회전
 	/// </summary>
 	void UpdatePlayerNameCompRot();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SetPlayerNameColor(bool bIsDead);
 public:
 	/// <summary>
 	/// 컨트롤러 회전값 복제용 -> 클라이언트의 관전에 필요(not server)

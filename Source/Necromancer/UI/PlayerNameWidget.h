@@ -6,7 +6,6 @@
 #include "Blueprint/UserWidget.h"
 #include "PlayerNameWidget.generated.h"
 
-
 class UTextBlock;
 /**
  * 
@@ -15,12 +14,13 @@ UCLASS()
 class NECROMANCER_API UPlayerNameWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> PlayerNameText;
 
 public:
 	void SetPlayerName(FString Name);
+	void SetPlayerNameColor(bool bIsDead);
 
 };
