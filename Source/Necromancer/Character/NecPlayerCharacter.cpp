@@ -112,7 +112,7 @@ void ANecPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//DrawDebugString(GetWorld(), FVector(0, 0, 100), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);
+	DrawDebugString(GetWorld(), FVector(0, 0, 100), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);
 
 	ReplicateRemoteViewRot();
 	UpdatePlayerNameCompRot();
@@ -594,6 +594,7 @@ void ANecPlayerCharacter::HandleRevive()
 		Multicast_HandleRevive();
 		StatComponent->SetCurrentHealth(50.f);
 		StatComponent->SetStatus(ECharacterStatus::Alive);
+		StatComponent->OnRep_Status();
 	}
 }
 

@@ -60,6 +60,13 @@ void UStatComponent::OnRep_Status()
         if (GetOwner()->HasAuthority())
         {
             GetWorld()->GetTimerManager().ClearTimer(DeathTimerHandle);
+
+            ANecPlayerState* NecPS = Cast<ANecPlayerState>(GetOwner());
+            if (NecPS)
+            {
+                NecPS->GraceTimeForRevive = -1;
+                NecPS->OnRep_GraceTimeForRevive(); //for server(host)
+            }
         }
         break;
 
@@ -67,6 +74,7 @@ void UStatComponent::OnRep_Status()
         if (GetOwner()->HasAuthority())
         {
             GetWorld()->GetTimerManager().ClearTimer(DeathTimerHandle);
+            CurGraceTimeForRevive = 0;
 
             GetWorld()->GetTimerManager().SetTimer(
                 DeathTimerHandle,
@@ -82,11 +90,22 @@ void UStatComponent::OnRep_Status()
                             return;
                         }
 
-                        Status = ECharacterStatus::Death;
-                        OnRep_Status();
+                        CurGraceTimeForRevive += 1;
+                        ANecPlayerState* NecPS = Cast<ANecPlayerState>(GetOwner());
+                        if (NecPS)
+                        {
+                            NecPS->GraceTimeForRevive = GraceTimeForRevive - CurGraceTimeForRevive;
+                            NecPS->OnRep_GraceTimeForRevive(); //for server(host)
+                        }
+
+                        if (CurGraceTimeForRevive >= GraceTimeForRevive)
+                        {
+                            Status = ECharacterStatus::Death;
+                            OnRep_Status();
+                        }
                     }),
-                10.0f,
-                false
+                1,
+                true
             );
         }
         break;

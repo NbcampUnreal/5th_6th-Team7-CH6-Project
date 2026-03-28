@@ -29,8 +29,20 @@ void ANecWaitingGameMode::PostLogin(APlayerController* NewPlayer)
 	}
 }
 
+void ANecWaitingGameMode::Logout(AController* Exiting)
+{
+	Super::Logout(Exiting);
+
+	PlayerControllers.RemoveSingle(Cast<APlayerController>(Exiting));
+	ANecGameState* NecGameState = GetGameState<ANecGameState>();
+	if (NecGameState)
+	{
+		NecGameState->PlayerControllerCount = PlayerControllers.Num();
+		NecGameState->OnRep_PlayerControllerCount();
+	}
+}
+
 void ANecWaitingGameMode::StartGame()
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::Printf(TEXT("StartGame")));
 	GetWorld()->ServerTravel("/Game/Necromancer/Maps/InDungeonLevel?listen",true );
 }

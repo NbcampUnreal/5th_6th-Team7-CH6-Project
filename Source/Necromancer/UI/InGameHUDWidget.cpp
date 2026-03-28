@@ -7,12 +7,27 @@
 #include "GridInventory/GridInventoryComponent.h"
 
 #include "Character/NecPlayerCharacter.h"
+#include "Game/NecPlayerState.h"
 
 void UInGameHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT(" UInGameHUDWidget::NativeConstruct() %d"), 1));
 	InitHUD();
+
+	APawn* OwningPawn = GetOwningPlayerPawn();
+	if (OwningPawn)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT(" UInGameHUDWidget::NativeConstruct() %d"),2 ));
+		ANecPlayerState* NecPS = OwningPawn->GetPlayerState<ANecPlayerState>();
+		if (NecPS)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT(" UInGameHUDWidget::NativeConstruct() %d"), 3));
+			NecPS->OnGraceTimeChanged.AddDynamic(this, &UInGameHUDWidget::UpdateGraceTimeForReviveText);
+			UpdateGraceTimeForReviveText(NecPS->GraceTimeForRevive);
+		}
+	}
 }
 
 void UInGameHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -111,4 +126,23 @@ void UInGameHUDWidget::InitHUD()
 	SoulComponent = Character->GetSoulComponent();
 
 	NecInventoryComponent = Character->GetInventoryComponent();
+}
+
+void UInGameHUDWidget::UpdateGraceTimeForReviveText(int32 GraceTimeForRevive)
+{
+	if (GraceTimeForReviveText == nullptr) {
+		return;
+	}
+	
+	if (GraceTimeForRevive > 0)
+	{
+		GraceTimeForReviveText->SetVisibility(ESlateVisibility::Visible);
+
+		FString CombinedString = FString::Printf(TEXT("부활가능까지 남은시간 %d"), GraceTimeForRevive);
+		GraceTimeForReviveText->SetText(FText::FromString(CombinedString));
+	}
+	else
+	{
+		GraceTimeForReviveText->SetVisibility(ESlateVisibility::Hidden);
+	}
 }

@@ -3,7 +3,7 @@
 #include "Component/StaminaComponent.h"
 #include "Component/SoulComponent.h"
 #include "GridInventory/NecInventoryComponent.h"
-
+#include "Net/UnrealNetwork.h"
 
 
 ANecPlayerState::ANecPlayerState()
@@ -45,5 +45,22 @@ void ANecPlayerState::CopyProperties(APlayerState* PlayerState)
 		{
 			NewPS->SoulComponent->CopySoulDataFrom(SoulComponent);
 		}
+	}
+}
+
+void ANecPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ANecPlayerState, GraceTimeForRevive);
+}
+
+void ANecPlayerState::OnRep_GraceTimeForRevive()
+{
+	APawn* MyPawn = GetPawn();
+	if (MyPawn && MyPawn->IsLocallyControlled())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT("Gracetime for revive %d"), GraceTimeForRevive));
+		OnGraceTimeChanged.Broadcast(GraceTimeForRevive);
 	}
 }
