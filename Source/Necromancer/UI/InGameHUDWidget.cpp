@@ -13,20 +13,25 @@ void UInGameHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT(" UInGameHUDWidget::NativeConstruct() %d"), 1));
 	InitHUD();
 
+	TryBindPlayerState();
+}
+
+void UInGameHUDWidget::TryBindPlayerState()
+{
 	APawn* OwningPawn = GetOwningPlayerPawn();
-	if (OwningPawn)
+	ANecPlayerState* NecPS = OwningPawn ? OwningPawn->GetPlayerState<ANecPlayerState>() : nullptr;
+
+	if (NecPS)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT(" UInGameHUDWidget::NativeConstruct() %d"),2 ));
-		ANecPlayerState* NecPS = OwningPawn->GetPlayerState<ANecPlayerState>();
-		if (NecPS)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT(" UInGameHUDWidget::NativeConstruct() %d"), 3));
-			NecPS->OnGraceTimeChanged.AddDynamic(this, &UInGameHUDWidget::UpdateGraceTimeForReviveText);
-			UpdateGraceTimeForReviveText(NecPS->GraceTimeForRevive);
-		}
+		NecPS->OnGraceTimeChanged.AddDynamic(this, &UInGameHUDWidget::UpdateGraceTimeForReviveText);
+		UpdateGraceTimeForReviveText(NecPS->GraceTimeForRevive);
+	}
+	else
+	{
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UInGameHUDWidget::TryBindPlayerState, 0.1f, false);
 	}
 }
 

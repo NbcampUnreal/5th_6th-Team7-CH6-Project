@@ -60,7 +60,7 @@ void ANecPlayerState::OnRep_GraceTimeForRevive()
 	APawn* MyPawn = GetPawn();
 	if (MyPawn && MyPawn->IsLocallyControlled())
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT("Gracetime for revive %d"), GraceTimeForRevive));
+		//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Yellow, FString::Printf(TEXT("Gracetime for revive %d"), GraceTimeForRevive));
 		OnGraceTimeChanged.Broadcast(GraceTimeForRevive);
 	}
 }

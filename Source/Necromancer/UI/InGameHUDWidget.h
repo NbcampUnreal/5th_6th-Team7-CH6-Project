@@ -29,6 +29,7 @@ public:
 	void UpdateStamina(float CurrentStamina, float MaxStamina);
 
 	void InitHUD();
+	void TryBindPlayerState();
 
 protected:
 	UPROPERTY(meta = (BindWidget))
