@@ -95,10 +95,12 @@ protected:
     float MaxPoiseTest = 100.0f;
 
     float CurrentPoiseDamage;
-
+public:
     UFUNCTION()
     void OnRep_Status();
 
 private:
     FTimerHandle DeathTimerHandle;
+    float GraceTimeForRevive = 10.0f;
+    float CurGraceTimeForRevive = -1;
 };

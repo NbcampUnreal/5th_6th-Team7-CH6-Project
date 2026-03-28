@@ -9,6 +9,8 @@ class UStaminaComponent;
 class UNecInventoryComponent;
 class USoulComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGraceTimeChanged, int32, NewTime);
+
 UCLASS()
 class NECROMANCER_API ANecPlayerState : public APlayerState
 {
@@ -35,4 +37,17 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Component")
 	TObjectPtr<USoulComponent> SoulComponent;
+
+public:
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UPROPERTY(ReplicatedUsing = OnRep_GraceTimeForRevive)
+	int32 GraceTimeForRevive = -1;
+
+	UFUNCTION()
+	void OnRep_GraceTimeForRevive();
+
+	UPROPERTY()
+	FOnGraceTimeChanged OnGraceTimeChanged;
 };

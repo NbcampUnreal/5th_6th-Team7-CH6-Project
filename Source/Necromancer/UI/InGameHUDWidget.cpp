@@ -7,12 +7,32 @@
 #include "GridInventory/GridInventoryComponent.h"
 
 #include "Character/NecPlayerCharacter.h"
+#include "Game/NecPlayerState.h"
 
 void UInGameHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
 	InitHUD();
+
+	TryBindPlayerState();
+}
+
+void UInGameHUDWidget::TryBindPlayerState()
+{
+	APawn* OwningPawn = GetOwningPlayerPawn();
+	ANecPlayerState* NecPS = OwningPawn ? OwningPawn->GetPlayerState<ANecPlayerState>() : nullptr;
+
+	if (NecPS)
+	{
+		NecPS->OnGraceTimeChanged.AddDynamic(this, &UInGameHUDWidget::UpdateGraceTimeForReviveText);
+		UpdateGraceTimeForReviveText(NecPS->GraceTimeForRevive);
+	}
+	else
+	{
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UInGameHUDWidget::TryBindPlayerState, 0.1f, false);
+	}
 }
 
 void UInGameHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -111,4 +131,25 @@ void UInGameHUDWidget::InitHUD()
 	SoulComponent = Character->GetSoulComponent();
 
 	NecInventoryComponent = Character->GetInventoryComponent();
+}
+
+void UInGameHUDWidget::UpdateGraceTimeForReviveText(int32 GraceTimeForRevive)
+{
+	if (GraceTimeForReviveText == nullptr) {
+		return;
+	}
+	
+	if (GraceTimeForRevive > 0)
+	{
+		GraceTimeForReviveText->SetVisibility(ESlateVisibility::Visible);
+		GraceTimeForReviveLabel->SetVisibility(ESlateVisibility::Visible);
+
+		FString CombinedString = FString::Printf(TEXT("%d"), GraceTimeForRevive);
+		GraceTimeForReviveText->SetText(FText::FromString(CombinedString));
+	}
+	else
+	{
+		GraceTimeForReviveText->SetVisibility(ESlateVisibility::Hidden);
+		GraceTimeForReviveLabel->SetVisibility(ESlateVisibility::Hidden);
+	}
 }

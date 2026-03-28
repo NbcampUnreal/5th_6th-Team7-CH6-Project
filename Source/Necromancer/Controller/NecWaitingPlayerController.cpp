@@ -47,7 +47,8 @@ void ANecWaitingPlayerController::BeginPlay()
 			{
 				ReadyWidgetInstance->AddToViewport();
 
-				FInputModeUIOnly Mode;
+				//FInputModeUIOnly Mode;
+				FInputModeGameAndUI Mode;
 				Mode.SetWidgetToFocus(ReadyWidgetInstance->GetCachedWidget());
 				SetInputMode(Mode);
 
@@ -69,14 +70,6 @@ void ANecWaitingPlayerController::SetupInputComponent()
 			{
 				Subsystem->AddMappingContext(InputMappingContext, 0);
 			}
-		}
-	}
-
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
-	{
-		if (MenuAction)
-		{
-			EnhancedInputComponent->BindAction(MenuAction, ETriggerEvent::Triggered, this, &ANecWaitingPlayerController::StartGame);
 		}
 	}
 }

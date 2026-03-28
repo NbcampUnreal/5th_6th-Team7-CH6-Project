@@ -29,6 +29,7 @@ public:
 	void UpdateStamina(float CurrentStamina, float MaxStamina);
 
 	void InitHUD();
+	void TryBindPlayerState();
 
 protected:
 	UPROPERTY(meta = (BindWidget))
@@ -55,6 +56,12 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UNecInventoryComponent> NecInventoryComponent;
 
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> GraceTimeForReviveLabel;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> GraceTimeForReviveText;
+
 protected:
 	UPROPERTY(EditAnywhere, Category = "HUD")
 	float HealthTickDownBarInterpSpeed = 3.0f;
@@ -67,4 +74,8 @@ protected:
 
 	float TargetStaminaPercent = 1.0f;
 	float CurrentStaminaTickDownPercent = 1.0f;
+
+public:
+	UFUNCTION()
+	void UpdateGraceTimeForReviveText(int32 GraceTimeForRevive);
 };
