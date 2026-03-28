@@ -19,6 +19,7 @@ class USphereComponent;
 class AWeapon_Item_Base;
 class USoulComponent;
 class UNiagaraSystem;
+class UWidgetComponent;
 struct FInputActionValue;
 
 
@@ -36,6 +37,8 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
+
+	void GetPlayerSteamName();
 
 	UFUNCTION()
 	void Move(const FInputActionValue& Value);
@@ -139,6 +142,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Combat")
 	TObjectPtr<UTargetingComponent> TargetingComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UWidgetComponent> PlayerNameWidgetComponent;
+
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> InGameMenuClass;
@@ -252,6 +259,11 @@ protected:
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+
+	/// <summary>
+	/// 플레이어 닉네임 위젯의 회전
+	/// </summary>
+	void UpdatePlayerNameCompRot();
 public:
 	/// <summary>
 	/// 컨트롤러 회전값 복제용 -> 클라이언트의 관전에 필요(not server)

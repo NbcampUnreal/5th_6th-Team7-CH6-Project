@@ -28,6 +28,8 @@
 #include "WorldActor/Interactable.h"
 #include "WorldActor/InteractableActor.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Components/WidgetComponent.h"
+#include "UI/PlayerNameWidget.h"
 
 ANecPlayerCharacter::ANecPlayerCharacter()
 {
@@ -76,6 +78,13 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 
 	GetMesh()->bHiddenInGame = true;
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+
+	PlayerNameWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("PlayerNameWidgetComponent"));
+
+	PlayerNameWidgetComponent->SetupAttachment(GetMesh());
+	PlayerNameWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 210.f));
+	PlayerNameWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
+	//PlayerNameWidgetComponent->SetOwnerNoSee(true);
 }
 
 
@@ -103,9 +112,29 @@ void ANecPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	DrawDebugString(GetWorld(), FVector(0, 0, 100), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);
+	//DrawDebugString(GetWorld(), FVector(0, 0, 100), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);
 
 	ReplicateRemoteViewRot();
+	UpdatePlayerNameCompRot();
+}
+
+void ANecPlayerCharacter::UpdatePlayerNameCompRot()
+{
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (PC == nullptr) return;
+
+	ACharacter* Chracter = PC->GetCharacter();
+	if (Chracter == nullptr) return;
+
+	UCameraComponent* Cam = Chracter->GetComponentByClass<UCameraComponent>();
+	if (Cam == nullptr) return;
+
+	FVector StartLocation = Cam->GetComponentLocation();
+	FVector EndLocation = PlayerNameWidgetComponent->GetComponentLocation();
+	FRotator NewRot = (StartLocation - EndLocation).Rotation();
+	FRotator FixedPitchRot = FRotator(0, NewRot.Yaw, NewRot.Roll);
+
+	PlayerNameWidgetComponent->SetWorldRotation(FixedPitchRot);
 }
 
 FString ANecPlayerCharacter::GetEnumText(ENetRole _Role)
@@ -292,6 +321,11 @@ void ANecPlayerCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	LinkPlayerStateComponents();
+	
+	if (GetPlayerState())
+	{
+		GetPlayerSteamName();
+	}
 }
 
 void ANecPlayerCharacter::OnRep_PlayerState()
@@ -299,10 +333,28 @@ void ANecPlayerCharacter::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 
 	LinkPlayerStateComponents();
-
+	GetPlayerSteamName();
 }
 
+void ANecPlayerCharacter::GetPlayerSteamName()
+{
+	UUserWidget* RawWidget = PlayerNameWidgetComponent->GetUserWidgetObject();
+	if (RawWidget == nullptr)
+	{
+		PlayerNameWidgetComponent->InitWidget();
+		RawWidget = PlayerNameWidgetComponent->GetUserWidgetObject();
+	} 
 
+	if(RawWidget != nullptr)
+	{
+		APlayerState* PS = GetPlayerState();
+		UPlayerNameWidget* PlayerNameWidget = Cast<UPlayerNameWidget>(RawWidget);
+		if (PlayerNameWidget != nullptr && PS != nullptr)
+		{
+			PlayerNameWidget->SetPlayerName(PS->GetPlayerName());
+		}
+	}
+}
 
 void ANecPlayerCharacter::Move(const FInputActionValue& Value)
 {
