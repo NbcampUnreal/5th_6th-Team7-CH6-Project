@@ -85,7 +85,7 @@ ANecPlayerCharacter::ANecPlayerCharacter()
 
 	PlayerNameWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 110.f));
 	PlayerNameWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
-	//PlayerNameWidgetComponent->SetOwnerNoSee(true);
+	PlayerNameWidgetComponent->SetOwnerNoSee(true);
 }
 
 
