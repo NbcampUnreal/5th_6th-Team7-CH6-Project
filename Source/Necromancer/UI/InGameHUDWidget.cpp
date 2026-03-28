@@ -142,12 +142,14 @@ void UInGameHUDWidget::UpdateGraceTimeForReviveText(int32 GraceTimeForRevive)
 	if (GraceTimeForRevive > 0)
 	{
 		GraceTimeForReviveText->SetVisibility(ESlateVisibility::Visible);
+		GraceTimeForReviveLabel->SetVisibility(ESlateVisibility::Visible);
 
-		FString CombinedString = FString::Printf(TEXT("부활가능까지 남은시간 %d"), GraceTimeForRevive);
+		FString CombinedString = FString::Printf(TEXT("%d"), GraceTimeForRevive);
 		GraceTimeForReviveText->SetText(FText::FromString(CombinedString));
 	}
 	else
 	{
 		GraceTimeForReviveText->SetVisibility(ESlateVisibility::Hidden);
+		GraceTimeForReviveLabel->SetVisibility(ESlateVisibility::Hidden);
 	}
 }

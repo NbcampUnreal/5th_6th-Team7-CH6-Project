@@ -56,6 +56,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UNecInventoryComponent> NecInventoryComponent;
 
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> GraceTimeForReviveLabel;
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> GraceTimeForReviveText;
 
