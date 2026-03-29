@@ -113,7 +113,7 @@ void UGridInventoryComponent::LoadItemsFromSaveData(const TArray<FItemInstanceSa
             continue;
 
         NewItem->LoadFromSaveData(Data);
-
+        RegisterItemEvents(NewItem);
         Items.Add(NewItem);
     }
 
