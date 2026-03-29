@@ -876,6 +876,14 @@ void ANecPlayerCharacter::CleanupInvalidTargets()
 	InteractTargets.RemoveAll(
 		[](const TWeakObjectPtr<AActor>& Target)
 		{
+			if (ANecPlayerCharacter* Player=Cast<ANecPlayerCharacter>(Target))
+			{
+				if (Player->GetStatComponent()->GetStatus() == ECharacterStatus::Alive) {
+					return true;
+				}
+				else
+					return false;
+			}
 			return !Target.IsValid();
 		}
 	);
