@@ -83,10 +83,10 @@ protected:
 	TObjectPtr<UInGameHUDWidget> InGameHUDWidgetInstance;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UInGameHUDWidget> SpectatorHUDWidgetClass;
+	TSubclassOf<UUserWidget> SpectatorHUDWidgetClass;
 
 	UPROPERTY()
-	TObjectPtr<UInGameHUDWidget> SpectatorHUDWidgetInstance;
+	TObjectPtr<UUserWidget> SpectatorHUDWidgetInstance;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UEndGame> EndGameWidgetClass;
@@ -100,6 +100,8 @@ public:
 	void Client_CreateEndGameWidget();
 	UFUNCTION(Client, Reliable)
 	void Client_CreateIngameHUDWidget();
+	UFUNCTION(Client, Reliable)
+	void Client_CreateSpectatorHUD();
 
 protected:
 	void CreateInGameHUD();
