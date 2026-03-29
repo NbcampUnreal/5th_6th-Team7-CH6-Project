@@ -110,6 +110,22 @@ void ANecGameMode::InitGameState()
     }
 }
 
+void ANecGameMode::ReadyToServerTravelForNextLv()
+{
+    for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+    {
+        APlayerController* PC = It->Get();
+        if (PC)
+        {
+            ANecPlayerController* NecPC = Cast<ANecPlayerController>(PC);
+            if (NecPC)
+            {
+                NecPC->Client_ResetSpectatingTarget();
+            }
+        }
+    }
+}
+
 void ANecGameMode::EndGame()
 {
     for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)

@@ -30,6 +30,9 @@ public:
 	void StartGame();
 	void InitGameState();
 
+	UFUNCTION(BlueprintCallable)
+	void ReadyToServerTravelForNextLv();
+
 	void EndGame();
 
 	void OnPlayerDeath(ANecPlayerController* DeadPlayerController);
