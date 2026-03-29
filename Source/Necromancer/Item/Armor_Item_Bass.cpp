@@ -47,21 +47,30 @@ void AArmor_Item_Bass::Equip(AActor* Equip_Owner)
 		if (PlayerCharacter->HeadMesh)
 		{
 			PlayerCharacter->HeadMesh->SetVisibility(false);
-			PlayerCharacter->GetStatComponent()->AddArmor(HeadArmor);
+			if (PlayerCharacter->GetStatComponent())
+			{
+				PlayerCharacter->GetStatComponent()->AddArmor(HeadArmor);
+			}
 		}
 		break;
 	case EEquipmentSlot::Body:
 		if (PlayerCharacter->BodyMesh)
 		{
 			PlayerCharacter->BodyMesh->SetVisibility(false);
-			PlayerCharacter->GetStatComponent()->AddArmor(BodyArmor);
+			if (PlayerCharacter->GetStatComponent())
+			{
+				PlayerCharacter->GetStatComponent()->AddArmor(BodyArmor);
+			}
 		}
 		break;
 	case EEquipmentSlot::Legs:
 		if (PlayerCharacter->LegMesh)
 		{
 			PlayerCharacter->LegMesh->SetVisibility(false);
-			PlayerCharacter->GetStatComponent()->AddArmor(LegArmor);
+			if (PlayerCharacter->GetStatComponent())
+			{
+				PlayerCharacter->GetStatComponent()->AddArmor(LegArmor);
+			}
 		}
 		break;
 	default:
