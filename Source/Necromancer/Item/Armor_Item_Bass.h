@@ -35,4 +35,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Replicated, Category = "Armor|Defense")
 	float Defense;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor|Stat")
+	float HeadArmor = 2.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor|Stat")
+	float BodyArmor = 3.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor|Stat")
+	float LegArmor = 1.0f;
 };

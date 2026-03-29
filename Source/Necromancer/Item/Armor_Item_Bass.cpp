@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Net/UnrealNetwork.h"
 #include "Character/NecPlayerCharacter.h"
+#include "Component/StatComponent.h"
 
 AArmor_Item_Bass::AArmor_Item_Bass()
 {
@@ -43,13 +44,25 @@ void AArmor_Item_Bass::Equip(AActor* Equip_Owner)
 	switch (ArmorSlotType)
 	{
 	case EEquipmentSlot::Head:
-		if (PlayerCharacter->HeadMesh) PlayerCharacter->HeadMesh->SetVisibility(false);
+		if (PlayerCharacter->HeadMesh)
+		{
+			PlayerCharacter->HeadMesh->SetVisibility(false);
+			PlayerCharacter->GetStatComponent()->AddArmor(HeadArmor);
+		}
 		break;
 	case EEquipmentSlot::Body:
-		if (PlayerCharacter->BodyMesh) PlayerCharacter->BodyMesh->SetVisibility(false);
+		if (PlayerCharacter->BodyMesh)
+		{
+			PlayerCharacter->BodyMesh->SetVisibility(false);
+			PlayerCharacter->GetStatComponent()->AddArmor(BodyArmor);
+		}
 		break;
 	case EEquipmentSlot::Legs:
-		if (PlayerCharacter->LegMesh) PlayerCharacter->LegMesh->SetVisibility(false);
+		if (PlayerCharacter->LegMesh)
+		{
+			PlayerCharacter->LegMesh->SetVisibility(false);
+			PlayerCharacter->GetStatComponent()->AddArmor(LegArmor);
+		}
 		break;
 	default:
 		break;
