@@ -102,29 +102,36 @@ void ANecPlayerController::Client_CreateIngameHUDWidget_Implementation()
 	CreateInGameHUD();
 }
 
+void ANecPlayerController::Client_CreateSpectatorHUD_Implementation()
+{
+	CreateSpectatorHUD();
+}
+
 void ANecPlayerController::CreateInGameHUD()
 {
 	FInputModeGameOnly GameOnly;
 	SetInputMode(GameOnly);
 	bShowMouseCursor = false;
 
-	if (IsValid(InGameHUDWidgetInstance))
+	if (IsValid(InGameHUDWidgetInstance) == false)
 	{
-		if (!InGameHUDWidgetInstance->IsInViewport())
+		if (IsValid(InGameHUDWidgetClass))
 		{
-			InGameHUDWidgetInstance->AddToViewport(1);
+			InGameHUDWidgetInstance = CreateWidget<UInGameHUDWidget>(this, InGameHUDWidgetClass);
 		}
-
-		InGameHUDWidgetInstance->InitHUD();
-		return;
 	}
 
-	if (IsValid(InGameHUDWidgetClass))
+	if (IsValid(InGameHUDWidgetInstance) == true)
 	{
-		InGameHUDWidgetInstance = CreateWidget<UInGameHUDWidget>(this, InGameHUDWidgetClass);
-		if (IsValid(InGameHUDWidgetInstance))
+		if (IsValid(SpectatorHUDWidgetInstance) && SpectatorHUDWidgetInstance->IsInViewport())
 		{
-			InGameHUDWidgetInstance->AddToViewport(1);
+			SpectatorHUDWidgetInstance->RemoveFromViewport();
+
+		}
+
+		if (!InGameHUDWidgetInstance->IsInViewport())
+		{
+			InGameHUDWidgetInstance->AddToViewport(0);
 			InGameHUDWidgetInstance->InitHUD();
 		}
 	}
@@ -136,7 +143,7 @@ void ANecPlayerController::CreateSpectatorHUD()
 	{
 		if (IsValid(SpectatorHUDWidgetClass))
 		{
-			SpectatorHUDWidgetInstance = CreateWidget<UInGameHUDWidget>(this, SpectatorHUDWidgetClass);
+			SpectatorHUDWidgetInstance = CreateWidget<UUserWidget>(this, SpectatorHUDWidgetClass);
 		}
 	}
 
@@ -144,13 +151,12 @@ void ANecPlayerController::CreateSpectatorHUD()
 	{
 		if (IsValid(InGameHUDWidgetInstance) && InGameHUDWidgetInstance->IsInViewport())
 		{
-			InGameHUDWidgetInstance->RemoveFromParent();
+			InGameHUDWidgetInstance->RemoveFromViewport();
 		}
 
-		if (!SpectatorHUDWidgetInstance->IsInViewport() && 
-			(EndGameWidgetInstance != nullptr && !EndGameWidgetInstance->IsInViewport()))
+		if (!SpectatorHUDWidgetInstance->IsInViewport() )
 		{
-			SpectatorHUDWidgetInstance->AddToViewport(1);
+			SpectatorHUDWidgetInstance->AddToViewport(0);
 		}
 	}
 }
@@ -198,14 +204,15 @@ void ANecPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();
 
-	if (IsLocalController())
-	{
-		FString MapName = GetWorld()->GetMapName();
-		if (!MapName.Contains("Lobby"))
-		{
-			CreateInGameHUD();
-		}
-	}
+	//if (IsLocalController())
+	//{
+	//	FString MapName = GetWorld()->GetMapName();
+	//	if (!MapName.Contains("Lobby"))
+	//	{
+	//		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, TEXT("OnRep_Pawn"));
+	//		CreateInGameHUD();
+	//	}
+	//}
 }
 
 void ANecPlayerController::SpectatingTargetUp()
@@ -234,9 +241,9 @@ void ANecPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 void ANecPlayerController::OnPlayerDeath()
 {
 	bIsSpectating = true;
-	Server_NotifyDeath();
 
-	CreateSpectatorHUD();
+	Client_CreateSpectatorHUD();
+	Server_NotifyDeath();
 }
 
 void ANecPlayerController::Server_NotifyDeath_Implementation()
