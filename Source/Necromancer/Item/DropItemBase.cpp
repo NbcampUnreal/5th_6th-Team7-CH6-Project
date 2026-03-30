@@ -15,6 +15,9 @@ ADropItemBase::ADropItemBase()
     bReplicates = true;
     StaticMesh->SetSimulatePhysics(true);
     StaticMesh->SetEnableGravity(true);
+
+    StaticMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+    StaticMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
 inline void ADropItemBase::BeginPlay()
