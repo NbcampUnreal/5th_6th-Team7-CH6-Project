@@ -121,6 +121,8 @@ public:
 
 	bool GetISDead();
 
+	bool IsRetired() const { return bIsRetired; }
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component|Camera")
 	TObjectPtr<USpringArmComponent> SpringArmComponent;
@@ -286,4 +288,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Mesh")
 	USkeletalMeshComponent* LegMesh;
+
+protected:
+	bool bIsRetired = false;
 };

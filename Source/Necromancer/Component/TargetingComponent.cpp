@@ -7,31 +7,32 @@
 #include "Blueprint/UserWidget.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Component/StatComponent.h"
 
 UTargetingComponent::UTargetingComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+    PrimaryComponentTick.bCanEverTick = true;
 
-	SetIsReplicatedByDefault(true);
+    SetIsReplicatedByDefault(true);
 }
 
 void UTargetingComponent::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-	OwnerCharacter = Cast<ANecPlayerCharacter>(GetOwner());
+    OwnerCharacter = Cast<ANecPlayerCharacter>(GetOwner());
 }
 
 void UTargetingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UTargetingComponent, CurrentTarget);
+    DOREPLIFETIME(UTargetingComponent, CurrentTarget);
 }
 
 void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
     if (!LockOnWidgetInstance)
     {
@@ -40,6 +41,18 @@ void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
     if (!IsValid(OwnerCharacter))
     {
+        return;
+    }
+
+    if (OwnerCharacter->IsRetired())
+    {
+        ClearLockOn();
+
+        if (!OwnerCharacter->HasAuthority())
+        {
+            Server_ClearLockOn();
+        }
+
         return;
     }
 
@@ -60,13 +73,11 @@ void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
         AMonsterBase* MonsterTarget = Cast<AMonsterBase>(CurrentTarget);
         if (MonsterTarget && MonsterTarget->GetIsDead())
         {
-            if (OwnerCharacter->HasAuthority())
+            ClearLockOn();
+
+            if (!OwnerCharacter->HasAuthority())
             {
-                ClearLockOn();
-            }
-            else
-            {
-                Server_ToggleLockOn();
+                Server_ClearLockOn();
             }
 
             return;
@@ -75,13 +86,11 @@ void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
         float Dist = OwnerCharacter->GetDistanceTo(CurrentTarget);
         if (Dist > SearchRadius * 1.5f)
         {
-            if (OwnerCharacter->HasAuthority())
+            ClearLockOn();
+
+            if (!OwnerCharacter->HasAuthority())
             {
-                ClearLockOn();
-            }
-            else
-            {
-                Server_ToggleLockOn();
+                Server_ClearLockOn();
             }
 
             return;
@@ -91,7 +100,7 @@ void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
         FVector OwnerLocation = OwnerCharacter->GetActorLocation();
 
         FVector TargetLocForYaw = TargetLocation;
-        TargetLocForYaw.Z = OwnerLocation.Z;        
+        TargetLocForYaw.Z = OwnerLocation.Z;
 
         FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(OwnerLocation, TargetLocForYaw);
         LookAtRot.Pitch = LockOnPitch;
@@ -124,6 +133,11 @@ void UTargetingComponent::ToggleLockOn()
     if (CurrentTarget)
     {
         ClearLockOn();
+
+        if (OwnerCharacter && !OwnerCharacter->HasAuthority())
+        {
+            Server_ClearLockOn();
+        }
     }
     else
     {
@@ -132,17 +146,17 @@ void UTargetingComponent::ToggleLockOn()
         if (CurrentTarget && OwnerCharacter)
         {
             OwnerCharacter->SetLockOn(true);
+
+            if (!OwnerCharacter->HasAuthority())
+            {
+                Server_SetLockOnTarget(CurrentTarget);
+            }
         }
     }
 
     if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
     {
         OnRep_CurrentTarget();
-    }
-
-    if (OwnerCharacter && !OwnerCharacter->HasAuthority())
-    {
-        Server_ToggleLockOn();
     }
 }
 
@@ -161,28 +175,6 @@ void UTargetingComponent::HandleLockOnInput(FVector2D LookInput)
         Server_SwitchTarget(bIsRight);
 
         LastSwitchTime = CurrentTime;
-    }
-}
-
-void UTargetingComponent::Server_ToggleLockOn_Implementation()
-{
-    if (CurrentTarget)
-    {
-        ClearLockOn();
-    }
-    else
-    {
-        FindTarget();
-
-        if (CurrentTarget && OwnerCharacter)
-        {
-            OwnerCharacter->SetLockOn(true);
-        }
-    }
-
-    if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
-    {
-        OnRep_CurrentTarget();
     }
 }
 
@@ -269,7 +261,7 @@ void UTargetingComponent::Server_SwitchTarget_Implementation(bool bIsRight)
     if (BestNewTarget)
     {
         CurrentTarget = BestNewTarget;
-        
+
         if (OwnerCharacter)
         {
             OwnerCharacter->SetLockOn(true);
@@ -279,6 +271,21 @@ void UTargetingComponent::Server_SwitchTarget_Implementation(bool bIsRight)
         {
             OnRep_CurrentTarget();
         }
+    }
+}
+
+void UTargetingComponent::Server_ClearLockOn_Implementation()
+{
+    ClearLockOn();
+}
+
+void UTargetingComponent::Server_SetLockOnTarget_Implementation(AActor* NewTarget)
+{
+    CurrentTarget = NewTarget;
+
+    if (OwnerCharacter)
+    {
+        OwnerCharacter->SetLockOn(true);
     }
 }
 
@@ -394,7 +401,7 @@ void UTargetingComponent::FindTarget()
 
 void UTargetingComponent::ClearLockOn()
 {
-	CurrentTarget = nullptr;
+    CurrentTarget = nullptr;
 
     if (OwnerCharacter)
     {

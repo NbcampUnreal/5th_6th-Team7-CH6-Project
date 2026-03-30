@@ -561,6 +561,8 @@ void ANecPlayerCharacter::Server_TryInteract_Implementation(AActor* Target)
 
 void ANecPlayerCharacter::HandleDeath()
 {
+	bIsRetired = true;
+
 	if (HasAuthority())
 	{		
 		//AController* CurrentController = GetController();

@@ -12,10 +12,10 @@ class NECROMANCER_API UTargetingComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:		
+public:
 	UTargetingComponent();
 
-protected:	
+protected:
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -28,10 +28,13 @@ public:
 
 protected:
 	UFUNCTION(Server, Reliable)
-	void Server_ToggleLockOn();
+	void Server_SwitchTarget(bool bIsRight);
 
 	UFUNCTION(Server, Reliable)
-	void Server_SwitchTarget(bool bIsRight);
+	void Server_ClearLockOn();
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetLockOnTarget(AActor* NewTarget);
 
 	UFUNCTION()
 	void OnRep_CurrentTarget();
@@ -69,5 +72,5 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Targeting")
 	float SwitchThreshold = 5.0f;
 
-	float LastSwitchTime = 0.0f;	
+	float LastSwitchTime = 0.0f;
 };
