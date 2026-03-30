@@ -27,8 +27,7 @@ public:
 	void HandleLockOnInput(FVector2D LookInput);
 
 protected:
-	UFUNCTION(Server, Reliable)
-	void Server_SwitchTarget(bool bIsRight);
+	void SwitchTarget(bool bIsRight);
 
 	UFUNCTION(Server, Reliable)
 	void Server_ClearLockOn();

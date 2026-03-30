@@ -172,13 +172,13 @@ void UTargetingComponent::HandleLockOnInput(FVector2D LookInput)
     {
         bool bIsRight = LookInput.X > 0;
 
-        Server_SwitchTarget(bIsRight);
+        SwitchTarget(bIsRight);
 
         LastSwitchTime = CurrentTime;
     }
 }
 
-void UTargetingComponent::Server_SwitchTarget_Implementation(bool bIsRight)
+void UTargetingComponent::SwitchTarget(bool bIsRight)
 {
     if (!OwnerCharacter || !CurrentTarget)
     {
@@ -257,7 +257,7 @@ void UTargetingComponent::Server_SwitchTarget_Implementation(bool bIsRight)
             }
         }
     }
-
+    
     if (BestNewTarget)
     {
         CurrentTarget = BestNewTarget;
@@ -265,6 +265,11 @@ void UTargetingComponent::Server_SwitchTarget_Implementation(bool bIsRight)
         if (OwnerCharacter)
         {
             OwnerCharacter->SetLockOn(true);
+
+            if (!OwnerCharacter->HasAuthority())
+            {
+                Server_SetLockOnTarget(BestNewTarget);
+            }
         }
 
         if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
