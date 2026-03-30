@@ -1042,9 +1042,9 @@ void ANecPlayerCharacter::Interact_Implementation(AActor* Interactor)
 		}
 		FSoulBattery Battery;
 
-		if (PlayerCharacter->GetSoulComponent()->TakeReserveBattery(Battery))
+		if (PlayerCharacter->GetSoulComponent()->TakeReserveBattery())
 		{
-			SoulComponent->AddReserveBattery(Battery);
+			SoulComponent->AddReserveBattery();
 		}
 		else
 		{
@@ -1069,6 +1069,6 @@ void ANecPlayerCharacter::AddSubmissionReward()
 	if (StatComponent->GetStatus() == ECharacterStatus::Death)
 		return;
 	if (SoulComponent) {
-		SoulComponent->AddReserveBattery(FSoulBattery());
+		SoulComponent->AddReserveBattery();
 	}
 }

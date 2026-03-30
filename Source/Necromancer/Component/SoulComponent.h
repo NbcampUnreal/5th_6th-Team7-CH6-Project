@@ -72,16 +72,12 @@ protected:
 private:
 
     /* ===== Batteries ===== */
-
     UPROPERTY(VisibleAnywhere, Replicated)
-    FSoulBattery ActiveBattery;
-
+    int32 Stack_Battery;
+    UPROPERTY(VisibleAnywhere)
+    float MaxCapacity = 100.f;
     UPROPERTY(VisibleAnywhere, Replicated)
-    TArray<FSoulBattery> ReserveBatteries;
-
-    UPROPERTY(EditAnywhere)
-    int32 MaxReserveSlots = 4;
-
+    float CurrentCapacity = 100.f;
     /* ===== Drain ===== */
 
     UPROPERTY(EditAnywhere)
@@ -150,18 +146,17 @@ public:
     FOnInvincibleEnd OnInvincibleEnd;
 
     /* ===== API ===== */
-    bool TakeReserveBattery(FSoulBattery& OutBattery);
-    void AddReserveBattery(const FSoulBattery& NewBattery);
+    bool TakeReserveBattery();
+    void AddReserveBattery();
     void EnterDownState();
     void TryRevive();
     bool IsInvincible() const { return bIsInvincible; }
 
     UFUNCTION(BlueprintCallable)
-    const FSoulBattery& GetActiveBattery() const;
-    UFUNCTION(BlueprintCallable)
     int32 GetReserveBatteryCount() const;
+
     UFUNCTION(BlueprintCallable)
-    int32 GetMaxReserveSlots() const;
+    float GetCaplcityPercent() const;
 
     void CopySoulDataFrom(const USoulComponent* Other);
 };

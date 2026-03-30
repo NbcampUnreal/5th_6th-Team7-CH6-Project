@@ -13,20 +13,8 @@ USoulComponent::USoulComponent()
     PrimaryComponentTick.bCanEverTick = true;
     CurrentHPDrain = BaseHPDrain;
 
-    ReserveBatteries.Empty();
-
-    for (int32 i = 0; i <2; ++i)
-    {
-        FSoulBattery TestBattery;
-        TestBattery.MaxCapacity = 100.f;
-        TestBattery.CurrentCapacity = 100.f;
-        AddReserveBattery(TestBattery);
-    }
-
-    FSoulBattery TestBattery;
-    TestBattery.MaxCapacity = 100.f;
-    TestBattery.CurrentCapacity = 100.f;
-    ActiveBattery = TestBattery;
+    Stack_Battery = 3;
+    CurrentCapacity = MaxCapacity;
 }
 
 void USoulComponent::BeginPlay()
@@ -50,22 +38,25 @@ void USoulComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(USoulComponent, ActiveBattery);
-    DOREPLIFETIME(USoulComponent, ReserveBatteries);
     DOREPLIFETIME(USoulComponent, CurrentState);
+
+    DOREPLIFETIME(USoulComponent, Stack_Battery);
+    DOREPLIFETIME(USoulComponent, MaxCapacity);
+    DOREPLIFETIME(USoulComponent, CurrentCapacity);
 }
 
 void USoulComponent::HandleDrain(float DeltaTime)
 {
     float DrainThisFrame = DrainPerTick * DeltaTime;
-    float Used = ActiveBattery.Consume(DrainThisFrame);
+    float Used = FMath::Min(CurrentCapacity, DrainThisFrame);
+    CurrentCapacity -= Used;
 
-    if (ActiveBattery.IsEmpty())
+    if (CurrentCapacity <= KINDA_SMALL_NUMBER)
     {
         SwapReserveToActive();
     }
 
-    if (ActiveBattery.IsEmpty() && ReserveBatteries.Num() == 0)
+    if (CurrentCapacity <= KINDA_SMALL_NUMBER && Stack_Battery <= 0)
     {
         EnterDepletedState();
         IncreaseHPDrain(DeltaTime);
@@ -87,10 +78,10 @@ void USoulComponent::HandleDrain(float DeltaTime)
 
 void USoulComponent::SwapReserveToActive()
 {
-    if (ReserveBatteries.Num() == 0)
+    if (Stack_Battery <= 0)
         return;
-
-    ActiveBattery = ReserveBatteries.Pop();
+    Stack_Battery--;
+    CurrentCapacity = MaxCapacity;
 }
 
 void USoulComponent::EnterDepletedState()
@@ -172,13 +163,12 @@ void USoulComponent::TryRevive()
         return;
     }
 
-    if (ReserveBatteries.Num() <= 0)
+    if (Stack_Battery <= 0)
     {
         return;
     }
-
-    ActiveBattery = ReserveBatteries.Pop();
-    ActiveBattery.SetHalf();
+    Stack_Battery--;
+    CurrentCapacity = MaxCapacity / 2;
 
     CurrentState = ESoulState::Normal;
     CurrentHPDrain = BaseHPDrain;
@@ -201,45 +191,40 @@ void USoulComponent::TryRevive()
     );
 }
 
-const FSoulBattery& USoulComponent::GetActiveBattery() const
-{
-    return ActiveBattery;
-}
-
 int32 USoulComponent::GetReserveBatteryCount() const
 {
-    return ReserveBatteries.Num();
+    return Stack_Battery;
 }
 
-int32 USoulComponent::GetMaxReserveSlots() const
+float USoulComponent::GetCaplcityPercent() const
 {
-    return MaxReserveSlots;
+    return CurrentCapacity/ MaxCapacity;
 }
 
 void USoulComponent::CopySoulDataFrom(const USoulComponent* Other)
 {
     if (!Other) return;
-    ReserveBatteries = Other->ReserveBatteries;
+    Stack_Battery = Other->GetReserveBatteryCount();
+
 }
 
 
 /* ===== API ===== */
-bool USoulComponent::TakeReserveBattery(FSoulBattery& OutBattery)
+bool USoulComponent::TakeReserveBattery()
 {
-    if (ReserveBatteries.Num() == 0)
+    if (Stack_Battery <= 0)
     {
         return false;
     }
-
-    OutBattery = ReserveBatteries.Pop();
+    Stack_Battery--;
     return true;
 }
 
-void USoulComponent::AddReserveBattery(const FSoulBattery& NewBattery)
+void USoulComponent::AddReserveBattery()
 {
-    if (ReserveBatteries.Num() < MaxReserveSlots)
+    if (true)
     {
-        ReserveBatteries.Add(NewBattery);
+        Stack_Battery++;
 
         if (CurrentState == ESoulState::Depleted)
         {
