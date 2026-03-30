@@ -239,7 +239,7 @@ void AWeapon_Item_Base::PerformTrace()
 
     if (!OwnerPawn)
     {
-        UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Error: OwnerPawn is NULL!"), true, true, FLinearColor::Red, 2.0f);
+        //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Error: OwnerPawn is NULL!"), true, true, FLinearColor::Red, 2.0f);
         return;
     }
 
