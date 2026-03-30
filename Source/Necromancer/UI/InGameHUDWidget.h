@@ -11,6 +11,7 @@ class UStatComponent;
 class UStaminaComponent;
 class USoulComponent;
 class UNecInventoryComponent;
+class UNecCompassWidget;
 
 UCLASS()
 class NECROMANCER_API UInGameHUDWidget : public UUserWidget
@@ -61,6 +62,16 @@ protected:
 	TObjectPtr<UTextBlock> GraceTimeForReviveLabel;
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> GraceTimeForReviveText;
+
+	// 나침반 위젯 클래스 (블루프린트에서 할당)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Compass")
+	TSubclassOf<UNecCompassWidget> CompassWidgetClass;
+
+	UPROPERTY()
+	UNecCompassWidget* CompassWidget;
+
+	UFUNCTION()
+	void InitCompass();
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "HUD")

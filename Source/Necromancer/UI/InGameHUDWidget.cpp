@@ -5,6 +5,7 @@
 #include "Component/StatComponent.h"
 #include "Component/StaminaComponent.h"
 #include "GridInventory/GridInventoryComponent.h"
+#include "UI/NecCompassWidget.h"
 
 #include "Character/NecPlayerCharacter.h"
 #include "Game/NecPlayerState.h"
@@ -16,6 +17,8 @@ void UInGameHUDWidget::NativeConstruct()
 	InitHUD();
 
 	TryBindPlayerState();
+
+	InitCompass();
 }
 
 void UInGameHUDWidget::TryBindPlayerState()
@@ -131,6 +134,17 @@ void UInGameHUDWidget::InitHUD()
 	SoulComponent = Character->GetSoulComponent();
 
 	NecInventoryComponent = Character->GetInventoryComponent();
+}
+
+void UInGameHUDWidget::InitCompass()
+{
+	if (!CompassWidgetClass) return;
+
+	CompassWidget = CreateWidget<UNecCompassWidget>(GetOwningPlayer(), CompassWidgetClass);
+	if (CompassWidget)
+	{
+		CompassWidget->AddToViewport(0);
+	}
 }
 
 void UInGameHUDWidget::UpdateGraceTimeForReviveText(int32 GraceTimeForRevive)
