@@ -41,7 +41,7 @@ void USoulComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
     DOREPLIFETIME(USoulComponent, CurrentState);
 
     DOREPLIFETIME(USoulComponent, Stack_Battery);
-    DOREPLIFETIME(USoulComponent, MaxCapacity);
+    //DOREPLIFETIME(USoulComponent, MaxCapacity);
     DOREPLIFETIME(USoulComponent, CurrentCapacity);
 }
 
