@@ -9,6 +9,7 @@ enum class EWeaponType : uint8
 {
 	Unarmed,
 	OneHanded,
+	OneHanded_Unique,
 	TwoHanded,
 };
 
