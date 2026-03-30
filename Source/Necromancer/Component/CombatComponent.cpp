@@ -422,8 +422,9 @@ void UCombatComponent::PlayRunningAttack()
     {
         StaminaComp->ConsumeStamina_Predictive(StaminaCost);
 
-        CurrentWeapon->SetDamageMultiplier(5.0f);
-        CurrentWeapon->SetPoiseDamageMultiplier(5.0f);
+        float RunningAttackDamageMultiplier = CurrentWeapon->WeaponData->RunningAttackDamageMultiplier;
+        CurrentWeapon->SetDamageMultiplier(RunningAttackDamageMultiplier);
+        CurrentWeapon->SetPoiseDamageMultiplier(RunningAttackDamageMultiplier);
 
         ActiveAttackMontage = RunningMontage;
 
@@ -481,8 +482,9 @@ void UCombatComponent::Server_RunningAttack_Implementation()
     {
         StaminaComp->ConsumeStamina(StaminaCost);
 
-        CurrentWeapon->SetDamageMultiplier(5.0f);
-        CurrentWeapon->SetPoiseDamageMultiplier(5.0f);
+        float RunningAttackDamageMultiplier = CurrentWeapon->WeaponData->RunningAttackDamageMultiplier;
+        CurrentWeapon->SetDamageMultiplier(RunningAttackDamageMultiplier);
+        CurrentWeapon->SetPoiseDamageMultiplier(RunningAttackDamageMultiplier);
 
         Multicast_RunningAttack();
     }
