@@ -415,7 +415,7 @@ void UCombatComponent::PlayRunningAttack()
         return;
     }
 
-    float StaminaCost = 20.0f;
+    float StaminaCost = CurrentWeapon->WeaponData->RunningAttackStaminaCost;
     UStaminaComponent* StaminaComp = OwnerCharacter->GetStaminaComponent();
 
     if (StaminaComp && StaminaComp->GetCurrentStamina() >= StaminaCost)
@@ -474,7 +474,7 @@ void UCombatComponent::Server_RunningAttack_Implementation()
         return;
     }
     
-    float StaminaCost = 50.0f;
+    float StaminaCost = CurrentWeapon->WeaponData->RunningAttackStaminaCost;
     UStaminaComponent* StaminaComp = OwnerCharacter->GetStaminaComponent();
 
     if (StaminaComp && StaminaComp->GetCurrentStamina() >= StaminaCost)

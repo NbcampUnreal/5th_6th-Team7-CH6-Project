@@ -61,6 +61,9 @@ public:
 	float GuardStaminaCost = 30.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	float RunningAttackStaminaCost = 30.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
 	TArray<FComboActionInfo> ComboActions;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")

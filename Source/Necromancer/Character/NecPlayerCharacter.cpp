@@ -457,6 +457,11 @@ void ANecPlayerCharacter::Attack(const FInputActionValue& Value)
 	{
 		CombatComponent->Attack();
 	}
+
+	if (IsValid(PlayerMovementComponent) && PlayerMovementComponent->GetIsSprinting())
+	{
+		StopSprint(Value);
+	}
 }
 
 void ANecPlayerCharacter::StartGuard(const FInputActionValue& Value)
