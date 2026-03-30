@@ -45,6 +45,9 @@ protected:
 
 
 
+	UPROPERTY(EditDefaultsOnly, Category = "BGM")
+	TObjectPtr<USoundBase> TitleBGM;
+
 # pragma region CreateSession
 public:
 	UFUNCTION(BlueprintCallable)

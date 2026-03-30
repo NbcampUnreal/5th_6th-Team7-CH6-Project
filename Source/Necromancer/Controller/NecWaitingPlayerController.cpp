@@ -6,6 +6,7 @@
 
 #include "GameMode/NecWaitingGameMode.h"
 #include "UI/ReadyWidget.h"
+#include "Kismet/GameplayStatics.h"
 
 ANecWaitingPlayerController::ANecWaitingPlayerController()
 {
@@ -55,6 +56,11 @@ void ANecWaitingPlayerController::BeginPlay()
 				bShowMouseCursor = true;
 			}
 		}
+	}
+
+	if (WaitingBGM)
+	{
+		UGameplayStatics::SpawnSound2D(this, WaitingBGM);
 	}
 }
 

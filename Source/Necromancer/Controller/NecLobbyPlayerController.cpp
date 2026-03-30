@@ -42,6 +42,11 @@ void ANecLobbyPlayerController::BeginPlay()
 	}
 
 	//Login();
+
+	if (TitleBGM)
+	{
+		UGameplayStatics::SpawnSound2D(this, TitleBGM);
+	}
 }
 
 void ANecLobbyPlayerController::GetOnlineSubsystem()

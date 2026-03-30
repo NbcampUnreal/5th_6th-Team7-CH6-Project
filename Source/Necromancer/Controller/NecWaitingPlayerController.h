@@ -59,4 +59,6 @@ protected:
 	TObjectPtr<UReadyWidget> ReadyWidgetInstance;
 
 	
+	UPROPERTY(EditDefaultsOnly, Category = "BGM")
+	TObjectPtr<USoundBase> WaitingBGM;
 };
