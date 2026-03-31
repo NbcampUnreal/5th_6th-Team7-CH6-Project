@@ -31,16 +31,41 @@ void ANecPlayerState::CopyProperties(APlayerState* PlayerState)
 	ANecPlayerState* NewPS = Cast<ANecPlayerState>(PlayerState);
 	if (NewPS)
 	{
+		//if (NewPS->StatComponent && StatComponent)
+		//{
+		//	NewPS->StatComponent->SetCurrentHealth(StatComponent->GetCurrentHealth());
+		//	// ...
+		//}
+		//if (NewPS->InventoryComponent) {
+		//	TArray<UItemInstance*> TempItems;
+		//	;
+		//	NewPS->InventoryComponent->LoadItemsFromSaveData(InventoryComponent->GetSavedItems());
+		//}
+		//if (NewPS->SoulComponent)
+		//{
+		//	NewPS->SoulComponent->CopySoulDataFrom(SoulComponent);
+		//}
+
 		if (NewPS->StatComponent && StatComponent)
 		{
-			NewPS->StatComponent->SetCurrentHealth(StatComponent->GetCurrentHealth());
-			// ...
+			float PreviousHealth = StatComponent->GetCurrentHealth();
+
+			if (PreviousHealth <= 0.0f)
+			{
+				NewPS->StatComponent->SetCurrentHealth(30.0f);
+			}
+			else
+			{
+				NewPS->StatComponent->SetCurrentHealth(PreviousHealth);
+			}
 		}
+
 		if (NewPS->InventoryComponent) {
 			TArray<UItemInstance*> TempItems;
-			;
+			// ...
 			NewPS->InventoryComponent->LoadItemsFromSaveData(InventoryComponent->GetSavedItems());
 		}
+
 		if (NewPS->SoulComponent)
 		{
 			NewPS->SoulComponent->CopySoulDataFrom(SoulComponent);
