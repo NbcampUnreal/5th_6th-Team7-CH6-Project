@@ -19,6 +19,7 @@
 
 #include "Net/UnrealNetwork.h"
 #include "Character/NecPlayerCharacter.h"
+#include "Item/Armor_Item_Bass.h"
 
 bool ItemTypeToEquipmentSlot(
 	EItemType ItemType,
@@ -645,6 +646,12 @@ void UNecInventoryComponent::UnequipItem_Internal(EEquipmentSlot Slot)
 	AActor* OldActor = GetEquipmentActor(Slot);
 	if (OldActor)
 	{
+		AArmor_Item_Bass* EquipArmor = Cast<AArmor_Item_Bass>(OldActor);
+		if (EquipArmor)
+		{
+			EquipArmor->Unequip();
+		}
+
 		OldActor->Destroy();
 	}
 

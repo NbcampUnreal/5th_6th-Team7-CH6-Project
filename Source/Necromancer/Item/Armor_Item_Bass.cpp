@@ -87,6 +87,35 @@ void AArmor_Item_Bass::Equip(AActor* Equip_Owner)
 	ArmorMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
+void AArmor_Item_Bass::Unequip()
+{
+	ANecPlayerCharacter* PlayerCharacter = Cast<ANecPlayerCharacter>(GetOwner());
+	if (PlayerCharacter && PlayerCharacter->GetStatComponent())
+	{
+		switch (ArmorSlotType)
+		{
+		case EEquipmentSlot::Head:
+			PlayerCharacter->GetStatComponent()->AddArmor(-HeadArmor);
+			break;
+		case EEquipmentSlot::Body:
+			PlayerCharacter->GetStatComponent()->AddArmor(-BodyArmor);
+			break;
+		case EEquipmentSlot::Legs:
+			PlayerCharacter->GetStatComponent()->AddArmor(-LegArmor);
+			break;
+		default:
+			break;
+		}
+	}
+
+	if (ArmorMesh)
+	{
+		ArmorMesh->SetLeaderPoseComponent(nullptr);
+	}
+
+	DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
+}
+
 void AArmor_Item_Bass::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
