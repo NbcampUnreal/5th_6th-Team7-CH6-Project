@@ -55,6 +55,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReviveRequested);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInvincibleStart);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInvincibleEnd);
 
+// 클라이언트 UI용 델리게이트 (OnRep에서 발동)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBatteryCountChanged, int32, NewCount);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSoulCapacityChanged, float, NewPercent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSoulStateChanged, ESoulState, NewState);
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class NECROMANCER_API USoulComponent : public UActorComponent
 {
@@ -72,11 +77,11 @@ protected:
 private:
 
     /* ===== Batteries ===== */
-    UPROPERTY(VisibleAnywhere, Replicated)
+    UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_Battery)
     int32 Stack_Battery;
     UPROPERTY(VisibleAnywhere)
     float MaxCapacity = 100.f;
-    UPROPERTY(VisibleAnywhere, Replicated)
+    UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_Capacity)
     float CurrentCapacity = 100.f;
     /* ===== Drain ===== */
 
@@ -110,10 +115,18 @@ private:
     FTimerHandle DownTimer;
     FTimerHandle InvincibleTimer;
 
-    UPROPERTY(Replicated)
+    UPROPERTY(ReplicatedUsing = OnRep_State)
     ESoulState CurrentState = ESoulState::Normal;
 
     bool bIsInvincible = false;
+
+    // OnRep 콜백
+    UFUNCTION()
+    void OnRep_Battery();
+    UFUNCTION()
+    void OnRep_Capacity();
+    UFUNCTION()
+    void OnRep_State();
 
 private:
     void HandleDrain(float DeltaTime);
@@ -144,6 +157,16 @@ public:
 
     UPROPERTY(BlueprintAssignable)
     FOnInvincibleEnd OnInvincibleEnd;
+
+    // 클라이언트 UI용 (OnRep에서 발동)
+    UPROPERTY(BlueprintAssignable)
+    FOnBatteryCountChanged OnBatteryCountChanged;
+
+    UPROPERTY(BlueprintAssignable)
+    FOnSoulCapacityChanged OnSoulCapacityChanged;
+
+    UPROPERTY(BlueprintAssignable)
+    FOnSoulStateChanged OnSoulStateChanged;
 
     /* ===== API ===== */
     bool TakeReserveBattery();

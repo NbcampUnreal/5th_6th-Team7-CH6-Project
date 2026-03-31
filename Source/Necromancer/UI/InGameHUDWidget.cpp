@@ -4,6 +4,7 @@
 #include "Components/TextBlock.h"
 #include "Component/StatComponent.h"
 #include "Component/StaminaComponent.h"
+#include "Component/SoulComponent.h"
 #include "GridInventory/GridInventoryComponent.h"
 #include "UI/NecCompassWidget.h"
 
@@ -132,6 +133,11 @@ void UInGameHUDWidget::InitHUD()
 	{		return;
 	}
 	SoulComponent = Character->GetSoulComponent();
+	if (SoulComponent)
+	{
+		SoulComponent->OnBatteryCountChanged.Broadcast(SoulComponent->GetReserveBatteryCount());
+		SoulComponent->OnSoulCapacityChanged.Broadcast(SoulComponent->GetCaplcityPercent());
+	}
 
 	NecInventoryComponent = Character->GetInventoryComponent();
 }
