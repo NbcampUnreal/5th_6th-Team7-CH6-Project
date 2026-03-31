@@ -22,6 +22,8 @@ public:
 
 	virtual void Equip(AActor* Equip_Owner)override;
 
+	void Unequip();
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Armor")
 	USkeletalMeshComponent* ArmorMesh;

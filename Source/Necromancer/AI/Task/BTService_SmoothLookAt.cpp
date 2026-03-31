@@ -53,6 +53,13 @@ void UBTService_SmoothLookAt::TickNode(UBehaviorTreeComponent& OwnerComp, uint8*
 	{
 		Monster->SetCombatMovementMode(true);
 	}
+
+	// 포커스 대상이 변경되면 즉시 네트워크 업데이트 강제
+	AActor* CurrentFocus = AIC->GetFocusActor();
+	if (CurrentFocus != Target)
+	{
+		Pawn->ForceNetUpdate();
+	}
 	AIC->SetFocus(Target, EAIFocusPriority::Gameplay);
 }
 

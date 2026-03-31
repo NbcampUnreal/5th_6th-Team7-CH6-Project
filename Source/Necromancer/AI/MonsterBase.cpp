@@ -23,8 +23,8 @@ AMonsterBase::AMonsterBase()
 
 	bReplicates = true;
 	SetReplicatingMovement(true);
-	SetNetUpdateFrequency(10.0f);
-	SetMinNetUpdateFrequency(2.0f);
+	SetNetUpdateFrequency(30.0f);
+	SetMinNetUpdateFrequency(5.0f);
 
 
 	bUseControllerRotationYaw = false;
