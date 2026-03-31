@@ -57,7 +57,17 @@ void AMonsterAIController::SetTargetActor(AActor* NewTarget)
 {
 	if (UBlackboardComponent* BB = GetBlackboardComponent())
 	{
+		AActor* OldTarget = Cast<AActor>(BB->GetValueAsObject(NAME_TargetActor));
 		BB->SetValueAsObject(NAME_TargetActor, NewTarget);
+
+		// 타겟이 변경되면 즉시 네트워크 업데이트 → 클라이언트에 회전 변경 즉각 반영
+		if (OldTarget != NewTarget)
+		{
+			if (APawn* MyPawn = GetPawn())
+			{
+				MyPawn->ForceNetUpdate();
+			}
+		}
 	}
 }
 
