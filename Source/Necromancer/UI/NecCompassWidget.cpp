@@ -56,10 +56,5 @@ void UNecCompassWidget::FindEndRoom()
     if (FoundActors.Num() > 0)
     {
         EndRoom = FoundActors[0];
-        UE_LOG(LogTemp, Log, TEXT("EndRoom 찾음: %s"), *EndRoom->GetName());
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("EndRoom 못 찾음"));
     }
 }
