@@ -31,6 +31,7 @@ public:
 
 	void InitHUD();
 	void TryBindPlayerState();
+	void TryBindSoulComponent();
 
 protected:
 	UPROPERTY(meta = (BindWidget))

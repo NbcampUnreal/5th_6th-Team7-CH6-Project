@@ -18,6 +18,7 @@ void UInGameHUDWidget::NativeConstruct()
 	InitHUD();
 
 	TryBindPlayerState();
+	TryBindSoulComponent();
 
 	InitCompass();
 }
@@ -130,13 +131,8 @@ void UInGameHUDWidget::InitHUD()
 
 	ANecPlayerCharacter* Character = Cast<ANecPlayerCharacter>(PC->GetCharacter());
 	if (!IsValid(Character))
-	{		return;
-	}
-	SoulComponent = Character->GetSoulComponent();
-	if (SoulComponent)
 	{
-		SoulComponent->OnBatteryCountChanged.Broadcast(SoulComponent->GetReserveBatteryCount());
-		SoulComponent->OnSoulCapacityChanged.Broadcast(SoulComponent->GetCaplcityPercent());
+		return;
 	}
 
 	NecInventoryComponent = Character->GetInventoryComponent();
@@ -150,6 +146,32 @@ void UInGameHUDWidget::InitCompass()
 	if (CompassWidget)
 	{
 		CompassWidget->AddToViewport(0);
+	}
+}
+
+void UInGameHUDWidget::TryBindSoulComponent()
+{
+	if (SoulComponent)
+	{
+		return;
+	}
+
+	APlayerController* PC = Cast<APlayerController>(GetOwningPlayer());
+	if (!PC)
+	{
+		return;
+	}
+
+	ANecPlayerCharacter* Character = Cast<ANecPlayerCharacter>(PC->GetCharacter());
+	if (Character)
+	{
+		SoulComponent = Character->GetSoulComponent();
+	}
+
+	if (!SoulComponent)
+	{
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UInGameHUDWidget::TryBindSoulComponent, 0.1f, false);
 	}
 }
 
