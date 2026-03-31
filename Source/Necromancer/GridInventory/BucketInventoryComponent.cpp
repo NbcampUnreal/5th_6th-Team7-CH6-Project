@@ -63,6 +63,7 @@ void UBucketInventoryComponent::RebuildItemOwnerMap()
     CurBucketTotalCost = TotalCost;
     if (RequirCost < TotalCost) {
         OnInventoryUpdated.Broadcast();
+        if(GetOwner()->HasAuthority())
         OnSubmit.Broadcast();
     }
 }
