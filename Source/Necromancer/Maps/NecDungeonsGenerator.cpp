@@ -286,8 +286,6 @@ void ANecDungeonsGenerator::CheckForOverlap()
 
 			GetWorld()->GetTimerManager().ClearTimer(DungeonTimerHandle);
 
-
-			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Blue, TEXT("Dungeon Complete"));
 			bIsDungeonComplete = true;
 		}
 	}
@@ -405,5 +403,4 @@ void ANecDungeonsGenerator::StartDelay()
 void ANecDungeonsGenerator::OnDelayComplete()
 {
 	CheckForOverlap();
-	UE_LOG(LogTemp, Log, TEXT("딜레이 끝"));
 }
