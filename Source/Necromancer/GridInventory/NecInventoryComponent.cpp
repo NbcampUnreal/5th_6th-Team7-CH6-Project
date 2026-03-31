@@ -72,7 +72,7 @@ UNecInventoryComponent::UNecInventoryComponent()
 inline void UNecInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	if (GetOwner()->HasAuthority())
+	if (!BagActor)
 	{
 		TArray<UItemInstance*> InItems;
 		GetInventory(InItems);

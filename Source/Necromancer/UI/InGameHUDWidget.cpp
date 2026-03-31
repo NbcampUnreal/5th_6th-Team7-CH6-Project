@@ -123,19 +123,30 @@ void UInGameHUDWidget::InitHUD()
 		}
 	}
 
-	APlayerController* PC = Cast<APlayerController>(GetOwningPlayer());
-	if (!IsValid(PC))
+	if (!IsValid(SoulComponent))
 	{
-		return;
+		SoulComponent = PS->GetSoulComponent();
+		if (IsValid(SoulComponent))
+		{
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("InGameHUD: Could not find SoulComponent."));
+		}
+	}
+	if (!IsValid(NecInventoryComponent))
+	{
+		NecInventoryComponent = PS->GetInventoryComponent();
+		if (IsValid(NecInventoryComponent))
+		{
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("InGameHUD: Could not find NecInventoryComponent."));
+		}
 	}
 
-	ANecPlayerCharacter* Character = Cast<ANecPlayerCharacter>(PC->GetCharacter());
-	if (!IsValid(Character))
-	{
-		return;
-	}
-
-	NecInventoryComponent = Character->GetInventoryComponent();
+	
 }
 
 void UInGameHUDWidget::InitCompass()
