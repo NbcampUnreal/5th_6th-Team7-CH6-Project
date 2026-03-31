@@ -229,7 +229,7 @@ private:
 	TArray<TWeakObjectPtr<AActor>> InteractTargets;
 
 public:
-	UFUNCTION(Server, Reliable)
+	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void Server_TryInteract(AActor* Target);
 	void AddInteractTarget(AActor* Target);
 	void RemoveInteractTarget(AActor* Target);
