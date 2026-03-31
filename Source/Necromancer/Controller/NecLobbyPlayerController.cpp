@@ -84,11 +84,11 @@ void ANecLobbyPlayerController::Login()
 
 void ANecLobbyPlayerController::OnLoginComplete(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Logged In %d"), bWasSuccessful);
+	/*UE_LOG(LogTemp, Warning, TEXT("Logged In %d"), bWasSuccessful);
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::Printf(TEXT("Logged In % d"), bWasSuccessful));
-	}
+	}*/
 
 	IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
 	if (OnlineSubsystem)
@@ -103,27 +103,27 @@ void ANecLobbyPlayerController::OnLoginComplete(int32 LocalUserNum, bool bWasSuc
 
 void ANecLobbyPlayerController::OnClickCreateSession()
 {
-	if (!OnlineSessionInterface.IsValid())
+	/*if (!OnlineSessionInterface.IsValid())
 	{
 		if (GEngine)
 			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("Game Session Interface is invailed")));
 
 		return;
-	}
+	}*/
 
 	auto ExistingSession = OnlineSessionInterface->GetNamedSession(NAME_GameSession);
 	if (ExistingSession != nullptr)
 	{
 		OnlineSessionInterface->DestroySession(NAME_GameSession);
 
-		if (GEngine)
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Black, FString::Printf(TEXT("Destroy session")));
+		/*if (GEngine)
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Black, FString::Printf(TEXT("Destroy session")));*/
 	}
 
-	if (GEngine)
+	/*if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::Printf(TEXT("Create Session...")));
-	}
+	}*/
 
 	OnlineSessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 	TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings());
@@ -149,19 +149,19 @@ void ANecLobbyPlayerController::OnCreateSessionComplete(FName SessionName, bool 
 	if (!bWasSuccessful || !OnlineSessionInterface.IsValid()) return;
 
 	FString Address;
-	if (OnlineSessionInterface->GetResolvedConnectString(SessionName, Address))
+	/*if (OnlineSessionInterface->GetResolvedConnectString(SessionName, Address))
 	{
 		if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Cyan,
 				FString::Printf(TEXT("Server Connect String: %s"), *Address));
 		}
-	}
+	}*/
 
-	if (GEngine)
+	/*if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, FString::Printf(TEXT("Complete Create Seesion : % s"), *SessionName.ToString()));
-	}
+	}*/
 
 	FNamedOnlineSession* Session = OnlineSessionInterface->GetNamedSession(SessionName);
 	if (Session)
@@ -172,7 +172,7 @@ void ANecLobbyPlayerController::OnCreateSessionComplete(FName SessionName, bool 
 
 void ANecLobbyPlayerController::OnClickFindSession()
 {
-	if (!OnlineSessionInterface.IsValid())
+	/*if (!OnlineSessionInterface.IsValid())
 	{
 		if (GEngine)
 		{
@@ -180,7 +180,7 @@ void ANecLobbyPlayerController::OnClickFindSession()
 		}
 
 		return;
-	}
+	}*/
 
 	if (FindSessionsCompleteDelegateHandle.IsValid() == false)
 	{
@@ -195,7 +195,7 @@ void ANecLobbyPlayerController::OnClickFindSession()
 	if (GEngine)
 	{
 		IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
-		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Cyan, FString::Printf(TEXT("Find Sessions...")));
+		// GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Cyan, FString::Printf(TEXT("Find Sessions...")));
 	}
 
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
@@ -210,10 +210,10 @@ void ANecLobbyPlayerController::OnFindSessionComplete(bool bWasSuccessful)
 	}
 
 	UE_LOG(LogTemp, Error, TEXT("Found Session Count : %d"), SessionSearch->SearchResults.Num());
-	if (GEngine)
+	/*if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Cyan, FString::Printf(TEXT("Found Session Count : %d"), SessionSearch->SearchResults.Num()));
-	}
+	}*/
 
 	for (auto Result : SessionSearch->SearchResults)
 	{
@@ -223,10 +223,10 @@ void ANecLobbyPlayerController::OnFindSessionComplete(bool bWasSuccessful)
 		FString SessionName;
 		//Result.Session.SessionSettings.Get(FName("SessionName"), SessionName);
 
-		if (GEngine)
+		/*if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Cyan, FString::Printf(TEXT("%s Session: %s(%s)"), *User, *SessionName, *Id));
-		}
+		}*/
 
 		OnlineSessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
 
@@ -247,19 +247,19 @@ void ANecLobbyPlayerController::OnJoinSessionComplate(FName SessionName, EOnJoin
 		return;
 	}
 
-	if (GEngine)
+	/*if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Cyan,
 			FString::Printf(TEXT("OnJoinSessionComplete: Name=%s, Result=%d"), *SessionName.ToString(), (int32)Result));
-	}
+	}*/
 
 	FString Address;
 	if (OnlineSessionInterface->GetResolvedConnectString(SessionName, Address))
 	{
-		if (GEngine)
+		/*if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Yellow, FString::Printf(TEXT("Joined Session Name : %s(%s)"), *SessionName.ToString(), *Address));
-		}
+		}*/
 
 		APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController();
 		if (PlayerController)
@@ -286,19 +286,19 @@ void ANecLobbyPlayerController::OnInviteAccepted(bool bWasSuccessful, int32 Loca
 {
 	if (bWasSuccessful && InviteResult.IsValid())
 	{
-		if (GEngine) 
+		/*if (GEngine) 
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, TEXT("Invite Accepted! Joining..."));
-		}
+		}*/
 
 		FString OwningUser = InviteResult.Session.OwningUserName;
 		FString SessionId = InviteResult.GetSessionIdStr();
 
-		if (GEngine)
+		/*if (GEngine)
 		{
 
 			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString::Printf(TEXT("Invite From: %s, Session ID: %s"), *OwningUser, *SessionId));
-		}
+		}*/
 
 		OnlineSessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
 		const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();

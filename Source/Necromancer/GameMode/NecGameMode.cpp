@@ -166,11 +166,11 @@ void ANecGameMode::OnPlayerRevive(ANecPlayerController* RevivedPlayerController)
 
 void ANecGameMode::Server_ReqeustSpectatingTarget_Implementation(ANecPlayerController* RequestPC, AActor* CurSpectatingTarget, bool bIsUp)
 {
-    if (!(PlayerControllers.Num() > 0 && PlayerControllers[0])) 
+    /*if (!(PlayerControllers.Num() > 0 && PlayerControllers[0])) 
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("There are no Target To Spectating"));
         return;
-    }
+    }*/
 
     if (CurSpectatingTarget == nullptr)
     {
