@@ -45,6 +45,21 @@ void USoulComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
     DOREPLIFETIME(USoulComponent, CurrentCapacity);
 }
 
+void USoulComponent::OnRep_Battery()
+{
+    OnBatteryCountChanged.Broadcast(Stack_Battery);
+}
+
+void USoulComponent::OnRep_Capacity()
+{
+    OnSoulCapacityChanged.Broadcast(CurrentCapacity / MaxCapacity);
+}
+
+void USoulComponent::OnRep_State()
+{
+    OnSoulStateChanged.Broadcast(CurrentState);
+}
+
 void USoulComponent::HandleDrain(float DeltaTime)
 {
     float DrainThisFrame = DrainPerTick * DeltaTime;
@@ -66,6 +81,7 @@ void USoulComponent::HandleDrain(float DeltaTime)
         if (CurrentState == ESoulState::Depleted)
         {
             CurrentState = ESoulState::Normal;
+            OnSoulStateChanged.Broadcast(CurrentState);
         }
 
         CurrentHPDrain = FMath::Max(
@@ -82,6 +98,8 @@ void USoulComponent::SwapReserveToActive()
         return;
     Stack_Battery--;
     CurrentCapacity = MaxCapacity;
+
+    OnBatteryCountChanged.Broadcast(Stack_Battery);
 }
 
 void USoulComponent::EnterDepletedState()
@@ -92,6 +110,7 @@ void USoulComponent::EnterDepletedState()
     CurrentState = ESoulState::Depleted;
 
     OnSoulDepleted.Broadcast();
+    OnSoulStateChanged.Broadcast(CurrentState);
 }
 
 void USoulComponent::IncreaseHPDrain(float DeltaTime)
@@ -143,6 +162,7 @@ void USoulComponent::EnterDownState()
     CurrentState = ESoulState::Down;
 
     OnEnterDownState.Broadcast();
+    OnSoulStateChanged.Broadcast(CurrentState);
 }
 
 void USoulComponent::TryRevive()
@@ -174,6 +194,9 @@ void USoulComponent::TryRevive()
     CurrentHPDrain = BaseHPDrain;
 
     OnReviveRequested.Broadcast();
+    OnBatteryCountChanged.Broadcast(Stack_Battery);
+    OnSoulCapacityChanged.Broadcast(CurrentCapacity / MaxCapacity);
+    OnSoulStateChanged.Broadcast(CurrentState);
 
     bIsInvincible = true;
     OnInvincibleStart.Broadcast();
@@ -217,22 +240,22 @@ bool USoulComponent::TakeReserveBattery()
         return false;
     }
     Stack_Battery--;
+    OnBatteryCountChanged.Broadcast(Stack_Battery);
     return true;
 }
 
 void USoulComponent::AddReserveBattery()
 {
-    if (true)
+    Stack_Battery++;
+    OnBatteryCountChanged.Broadcast(Stack_Battery);
+
+    if (CurrentState == ESoulState::Depleted)
     {
-        Stack_Battery++;
-
-        if (CurrentState == ESoulState::Depleted)
-        {
-            CurrentState = ESoulState::Normal;
-
-        }
-        if (CurrentState == ESoulState::Down) {
-            TryRevive();
-        }
+        CurrentState = ESoulState::Normal;
+        OnSoulStateChanged.Broadcast(CurrentState);
+    }
+    if (CurrentState == ESoulState::Down)
+    {
+        TryRevive();
     }
 }
