@@ -46,11 +46,14 @@ void UTargetingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
     if (OwnerCharacter->IsRetired())
     {
-        ClearLockOn();
-
-        if (!OwnerCharacter->HasAuthority())
+        if (IsValid(CurrentTarget))
         {
-            Server_ClearLockOn();
+            ClearLockOn();
+
+            if (!OwnerCharacter->HasAuthority())
+            {
+                Server_ClearLockOn();
+            }
         }
 
         return;

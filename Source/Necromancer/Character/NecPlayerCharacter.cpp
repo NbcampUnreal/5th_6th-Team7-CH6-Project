@@ -617,6 +617,8 @@ void ANecPlayerCharacter::Multicast_HandleDeath_Implementation()
 
 void ANecPlayerCharacter::HandleRevive()
 {
+	bIsRetired = false;
+
 	if (HasAuthority())
 	{		
 		Multicast_HandleRevive();
@@ -635,6 +637,8 @@ void ANecPlayerCharacter::Server_RequestRevive_Implementation()
 
 void ANecPlayerCharacter::Multicast_HandleRevive_Implementation()
 {
+	bIsRetired = false;
+
 	USkeletalMeshComponent* MeshComp = GetMesh();
 	UCapsuleComponent* CapsuleComp = GetCapsuleComponent();
 
