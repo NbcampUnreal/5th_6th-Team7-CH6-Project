@@ -103,6 +103,7 @@ private:
     float CurrentHPDrain;
 
     FTimerHandle DrainTimer;
+    FTimerHandle HPDrainTimer;
 
     /* ===== Down & Revive ===== */
 
@@ -130,7 +131,7 @@ private:
 
 private:
     void HandleDrain(float DeltaTime);
-    void IncreaseHPDrain(float DeltaTime);
+    void IncreaseHPDrain();
 
     void SwapReserveToActive();
     void EnterDepletedState();

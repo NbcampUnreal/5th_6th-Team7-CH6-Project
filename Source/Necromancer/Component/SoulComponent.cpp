@@ -5,7 +5,8 @@
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
-
+#include "Game/NecPlayerState.h"
+#include "TimerManager.h"
 #include "Engine/Engine.h"
 
 USoulComponent::USoulComponent()
@@ -13,7 +14,8 @@ USoulComponent::USoulComponent()
     PrimaryComponentTick.bCanEverTick = true;
     CurrentHPDrain = BaseHPDrain;
 
-    Stack_Battery = 3;
+    Stack_Battery = 1;
+    //CurrentCapacity = MaxCapacity;
     CurrentCapacity = MaxCapacity;
 }
 
@@ -74,12 +76,12 @@ void USoulComponent::HandleDrain(float DeltaTime)
     if (CurrentCapacity <= KINDA_SMALL_NUMBER && Stack_Battery <= 0)
     {
         EnterDepletedState();
-        IncreaseHPDrain(DeltaTime);
     }
     else
     {
         if (CurrentState == ESoulState::Depleted)
         {
+                GetWorld()->GetTimerManager().ClearTimer(HPDrainTimer);
             CurrentState = ESoulState::Normal;
             OnSoulStateChanged.Broadcast(CurrentState);
         }
@@ -108,30 +110,37 @@ void USoulComponent::EnterDepletedState()
         return;
 
     CurrentState = ESoulState::Depleted;
-
+    GetWorld()->GetTimerManager().SetTimer(
+        HPDrainTimer,
+        this,
+        &USoulComponent::IncreaseHPDrain,
+        DrainInterval,   // 실행 간격
+        true             // 반복
+    );
     OnSoulDepleted.Broadcast();
     OnSoulStateChanged.Broadcast(CurrentState);
 }
 
-void USoulComponent::IncreaseHPDrain(float DeltaTime)
+void USoulComponent::IncreaseHPDrain() // Removed DeltaTime parameter
 {
-    if (CurrentState != ESoulState::Depleted)
-        return;
 
+    // Accelerate CurrentHPDrain by a fixed amount per tick, not by DeltaTime
     CurrentHPDrain = FMath::Min(
-        CurrentHPDrain + (DrainAcceleration * DeltaTime),
+        CurrentHPDrain + (DrainAcceleration * DrainInterval), // Use DrainInterval as the fixed time step
         MaxHPDrain
     );
 
-    AActor* OwnerActor = GetOwner();
+    APawn* OwnerActor = Cast<APawn>(Cast<APlayerState>(GetOwner())->GetPawn());
+
     if (!OwnerActor)
         return;
 
-    float DamageThisFrame = CurrentHPDrain * DeltaTime;
+    // Apply a fixed amount of damage per timer tick
+    float DamageThisTick = CurrentHPDrain; // Damage is now CurrentHPDrain per DrainInterval
 
     UGameplayStatics::ApplyDamage(
         OwnerActor,
-        DamageThisFrame,
+        DamageThisTick,
         nullptr,
         OwnerActor,
         nullptr
