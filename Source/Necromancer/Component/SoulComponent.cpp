@@ -14,8 +14,7 @@ USoulComponent::USoulComponent()
     PrimaryComponentTick.bCanEverTick = true;
     CurrentHPDrain = BaseHPDrain;
 
-    Stack_Battery = 1;
-    //CurrentCapacity = MaxCapacity;
+    Stack_Battery = 2;
     CurrentCapacity = MaxCapacity;
 }
 
